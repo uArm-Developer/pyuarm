@@ -1,3 +1,13 @@
+## [1.1.1] - 2016-04-21
+### Updated - Alex Tan
+
+### Fix
+- rename self.uarm to self.sp
+
+### Changes
+- Provide uarm isConnected Function
+
+
 ## [1.1.0] - 2016-04-18
 ### Updated - Alex Tan
 

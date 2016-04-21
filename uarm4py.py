@@ -75,36 +75,41 @@ def get_uarm():
 class uArm(object):
 
     firmware_major_version  = 0
-    uar  = 0
-    isConnected = False
 
     def __init__(self,port):
         self.port = port
-        self.uarm = serial.Serial(port,baudrate=57600)
-        self.isConnected = True
+        self.sp = serial.Serial(port,baudrate=57600)
         self.setFirmwareVersion()
 
+    def isConnected(self):
+        if self.sp.isOpen() == False:
+            return False
+        else:
+            return True
+
     def disconnect(self):
-        self.uarm.close()
-        self.isConnected = False
+        self.sp.close()
 
     def reconnect(self):
-        if not self.isConnected:
-            self.uarm = serial.Serial(self.port,baudrate=57600)
+        if not self.isConnected():
+            self.sp.open()
             self.setFirmwareVersion()
 
     def setFirmwareVersion(self):
-        msg = bytearray([START_SYSEX, REPORT_VERSION, END_SYSEX])
-        self.uarm.write(msg)
-        while self.uarm.readable():
-            readData = ord(self.uarm.read(1))
-            received_data = []
-            if readData == START_SYSEX:
-                readData = ord(self.uarm.read(1))
-                if readData == REPORT_VERSION:
-                    self.firmware_major_version = ord(self.uarm.read(1))
-                    self.firmware_minor_version = ord(self.uarm.read(1))
-                    break
+        try:
+            msg = bytearray([START_SYSEX, REPORT_VERSION, END_SYSEX])
+            self.sp.write(msg)
+            while self.sp.readable():
+                readData = ord(self.sp.read(1))
+                received_data = []
+                if readData == START_SYSEX:
+                    readData = ord(self.sp.read(1))
+                    if readData == REPORT_VERSION:
+                        self.firmware_major_version = ord(self.sp.read(1))
+                        self.firmware_minor_version = ord(self.sp.read(1))
+                        break
+        except Exception as e:
+            print "Serial Exception: ",e.strerror
 
     def readServoAngle(self,servo_add,data_offset):
         msg = bytearray([START_SYSEX, UARM_CODE, READ_ANGLE])
@@ -113,17 +118,17 @@ class uArm(object):
         msg.append(END_SYSEX)
         # print binascii.hexlify(bytearray(msg))
 
-        self.uarm.write(msg)
-        while self.uarm.readable():
-            readData = ord(self.uarm.read(1))
+        self.sp.write(msg)
+        while self.sp.readable():
+            readData = ord(self.sp.read(1))
             received_data = []
             if (readData == START_SYSEX):
-                readData = ord(self.uarm.read(1))
+                readData = ord(self.sp.read(1))
                 if (readData == UARM_CODE):
-                    readData = ord(self.uarm.read(1))
+                    readData = ord(self.sp.read(1))
                     while readData != END_SYSEX:
                         received_data.append(readData)
-                        readData = ord(self.uarm.read(1))
+                        readData = ord(self.sp.read(1))
                     return received_data[1]*128+received_data[0]+received_data[2]/100.00
 
     def readEEPROM(self,data_type, eeprom_add):
@@ -133,19 +138,19 @@ class uArm(object):
         msg.append(END_SYSEX)
         # print binascii.hexlify(bytearray(msg))
 
-        self.uarm.write(msg)
-        while self.uarm.readable():
-            readData = ord(self.uarm.read(1))
+        self.sp.write(msg)
+        while self.sp.readable():
+            readData = ord(self.sp.read(1))
             received_data = []
             if (readData == START_SYSEX):
-                readData = ord(self.uarm.read(1))
+                readData = ord(self.sp.read(1))
                 if (readData == UARM_CODE):
-                    readData = ord(self.uarm.read(1))
+                    readData = ord(self.sp.read(1))
                     if (readData == READ_EEPROM):
-                        readData = ord(self.uarm.read(1))
+                        readData = ord(self.sp.read(1))
                         while readData != END_SYSEX:
                             received_data.append(readData)
-                            readData = ord(self.uarm.read(1))
+                            readData = ord(self.sp.read(1))
                         if data_type == EEPROM_DATA_TYPE_BYTE:
                             return (received_data[1]<<7)+received_data[0]
                         if data_type == EEPROM_DATA_TYPE_FLOAT:
@@ -163,17 +168,17 @@ class uArm(object):
         msg.extend(getValueAsOne7bitBytes(pin_mode))
         msg.append(END_SYSEX)
 
-        self.uarm.write(msg)
-        while self.uarm.readable():
-            readData = ord(self.uarm.read(1))
+        self.sp.write(msg)
+        while self.sp.readable():
+            readData = ord(self.sp.read(1))
             received_data = []
             if (readData == START_SYSEX):
-                readData = ord(self.uarm.read(1))
+                readData = ord(self.sp.read(1))
                 if (readData == UARM_CODE):
-                    readData = ord(self.uarm.read(1))
+                    readData = ord(self.sp.read(1))
                     while readData != END_SYSEX:
                         received_data.append(readData)
-                        readData = ord(self.uarm.read(1))
+                        readData = ord(self.sp.read(1))
                     return received_data[0]
 
     def readAnalog(self,pin_num):
@@ -182,17 +187,17 @@ class uArm(object):
         msg.append(END_SYSEX)
         # print binascii.hexlify(bytearray(msg))
 
-        self.uarm.write(msg)
-        while self.uarm.readable():
-            readData = ord(self.uarm.read(1))
+        self.sp.write(msg)
+        while self.sp.readable():
+            readData = ord(self.sp.read(1))
             received_data = []
             if (readData == START_SYSEX):
-                readData = ord(self.uarm.read(1))
+                readData = ord(self.sp.read(1))
                 if (readData == UARM_CODE):
-                    readData = ord(self.uarm.read(1))
+                    readData = ord(self.sp.read(1))
                     while readData != END_SYSEX:
                         received_data.append(readData)
-                        readData = ord(self.uarm.read(1))
+                        readData = ord(self.sp.read(1))
                     return received_data[1]*128+received_data[0]
 
 
@@ -200,19 +205,19 @@ class uArm(object):
         msg = bytearray([START_SYSEX, UARM_CODE, READ_COORDS])
         msg.extend(getValueAsOne7bitBytes(pin_num))
         msg.append(END_SYSEX)
-        self.uarm.write(msg)
-        while self.uarm.readable():
-            readData = ord(self.uarm.read(1))
+        self.sp.write(msg)
+        while self.sp.readable():
+            readData = ord(self.sp.read(1))
             received_data = []
             coords = []
             coords_val = []
             if (readData == START_SYSEX):
-                readData = ord(self.uarm.read(1))
+                readData = ord(self.sp.read(1))
                 if (readData == UARM_CODE):
-                    readData = ord(self.uarm.read(1))
+                    readData = ord(self.sp.read(1))
                     while readData != END_SYSEX:
                         received_data.append(readData)
-                        readData = ord(self.uarm.read(1))
+                        readData = ord(self.sp.read(1))
                     for i in range(0,3):
                         coords_sign = (received_data[i*4] == 1 and -1 or 1)
                         if i == 1 or i == 2:
@@ -230,14 +235,14 @@ class uArm(object):
             msg.extend(getValueAsFour7bitBytes(eeprom_val))
             # print getValueAsFour7bitBytes(eeprom_val)[0]
         msg.append(END_SYSEX)
-        self.uarm.write(msg)
+        self.sp.write(msg)
 
     def writeAnalog(self,pin_number,pin_value):
         msg = bytearray([START_SYSEX, UARM_CODE, WRITE_ANALOG])
         msg.extend(getValueAsOne7bitBytes(pin_number))
         msg.extend(getValueAsTwo7bitBytes(pin_value))
         msg.append(END_SYSEX)
-        self.uarm.write(msg)
+        self.sp.write(msg)
 
     def writeDigital(self,pin_number,pin_mode):
         pin_number = int (pin_number)
@@ -247,11 +252,11 @@ class uArm(object):
         msg.extend(getValueAsOne7bitBytes(pin_number))
         msg.extend(getValueAsOne7bitBytes(pin_mode))
         msg.append(END_SYSEX)
-        self.uarm.write(msg)
+        self.sp.write(msg)
 
     def detachAll(self):
         msg = bytearray([START_SYSEX, UARM_CODE, DETACH_SERVO, END_SYSEX])
-        self.uarm.write(msg)
+        self.sp.write(msg)
 
     def writeServoAngle(self,servo_number,servo_angle,writeWithoffset):
         servo_number = int(servo_number)
@@ -263,7 +268,7 @@ class uArm(object):
         msg.extend(getValueAsOne7bitBytes(writeWithoffset))
         msg.append(END_SYSEX)
         # print binascii.hexlify(bytearray(msg))
-        self.uarm.write(msg)
+        self.sp.write(msg)
 
     def writeLeftRightServoAngle(self, servo_left_angle, servo_right_angle, writeWithoffset):
         writeWithoffset = int(writeWithoffset)
@@ -275,7 +280,7 @@ class uArm(object):
         msg.extend(getValueAsOne7bitBytes(writeWithoffset))
         msg.append(END_SYSEX)
         # print binascii.hexlify(bytearray(msg))
-        self.uarm.write(msg)
+        self.sp.write(msg)
 
     def move(self,x,y,z):
         x,y,z = float(x), float(y), float(z)
@@ -290,14 +295,14 @@ class uArm(object):
         msg = bytearray([START_SYSEX, UARM_CODE, PUMP_STATUS])
         msg.extend(getValueAsOne7bitBytes(pump_status))
         msg.append(END_SYSEX)
-        self.uarm.write(msg)
+        self.sp.write(msg)
 
     def gripperStatus(self,val):
         gripper_status = int (val)
         msg = bytearray([START_SYSEX, UARM_CODE, GRIPPER_STATUS])
         msg.extend(getValueAsOne7bitBytes(gripper_status))
         msg.append(END_SYSEX)
-        self.uarm.write(msg)
+        self.sp.write(msg)
 
     def moveToOpts(self,x,y,z,hand_angle,relative_flags,time_spend,path_type,ease_type,enable_hand):
         msg = bytearray([START_SYSEX, UARM_CODE, WRITE_COORDS])
@@ -312,7 +317,7 @@ class uArm(object):
         msg.extend(1 if enable_hand else 0)
         msg.append(END_SYSEX)
         time.sleep(0.01)
-        self.uarm.write(msg)
+        self.sp.write(msg)
 
     def moveToSimple(self,x,y,z,hand_angle,relative_flags,time_spend):
         self.moveToOpts(x,y,z,hand_angle,relative_flags,time_spend,0,0, True)
@@ -325,7 +330,7 @@ class uArm(object):
         msg.extend(getValueAsFour7bitBytes(length))
         msg.extend(getValueAsFour7bitBytes(height))
         msg.append(END_SYSEX)
-        self.uarm.write(msg)
+        self.sp.write(msg)
 
 class ConnectError(RuntimeError):
    def __init__(self, arg):
