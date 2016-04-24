@@ -1,3 +1,10 @@
+## [1.1.2] - 2016-04-24
+### Updated - Alex Tan
+
+### Changes
+- add setup.py for script install
+- rename calibrate.py function names to match the Python Standard
+
 ## [1.1.1] - 2016-04-21
 ### Updated - Alex Tan
 
