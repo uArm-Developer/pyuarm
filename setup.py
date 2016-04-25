@@ -1,9 +1,9 @@
 
 from setuptools import setup, find_packages
 import uarm
-setup(name='uarm',
+setup(name='uarm4py',
     version=uarm.VERSION,
-    py_modules=['uarm4py'],
+    py_modules=['uarm'],
     author='Joey Song/Alex Tan',
     packages=['uarm'],
     author_email='developer@ufactory.cc',
