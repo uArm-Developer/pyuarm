@@ -333,12 +333,12 @@ class Calibration(object):
         return stretch_offset
 
     def read_calibration_flag(self):
-        self.isAllCalibrated = (self.uarm.readEEPROM(EEPROM_DATA_TYPE_BYTE, CALIBRATION_FLAG) == CALIBRATION_FLAG)
-        self.isLinearCalibrated = (
+        self.is_all_calibrated = (self.uarm.readEEPROM(EEPROM_DATA_TYPE_BYTE, CALIBRATION_FLAG) == CALIBRATION_FLAG)
+        self.is_linear_calibrated = (
             self.uarm.readEEPROM(EEPROM_DATA_TYPE_BYTE, CALIBRATION_LINEAR_FLAG) == CALIBRATION_LINEAR_FLAG)
-        self.isServoCalibrated = (
+        self.is_manual_calibrated = (
             self.uarm.readEEPROM(EEPROM_DATA_TYPE_BYTE, CALIBRATION_SERVO_FLAG) == CALIBRATION_SERVO_FLAG)
-        self.isStretchCalibrated = (
+        self.is_stretch_calibrated = (
             self.uarm.readEEPROM(EEPROM_DATA_TYPE_BYTE, CALIBRATION_STRETCH_FLAG) == CALIBRATION_STRETCH_FLAG)
 
 def basic_linear_regression(x, y):

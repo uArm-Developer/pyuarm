@@ -1,3 +1,10 @@
+## [1.1.3] - 2016-04-25
+### Updated - Alex Tan
+
+### Fix
+- calibrate.py is_all_calibrated, is_stretch_calibrated, is_manual_calibrated, is_linear_calibrated rename
+
+
 ## [1.1.2] - 2016-04-24
 ### Updated - Alex Tan
 
