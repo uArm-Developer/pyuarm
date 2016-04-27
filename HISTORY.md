@@ -1,3 +1,17 @@
+## [1.1.4] - 2016-04-25
+### Updated - Alex Tan
+
+### Fix
+- calibrate.py Fix is_all_calibrated, is_manual_calibrated, is_linear_calibrated, name issue
+- uarm.py Fix PumpStatus , GripperStatus
+
+### Changes
+
+- Add Comment into calibrate.py
+- Add Function Complete Flag
+- Add Calibrate All Function
+
+
 ## [1.1.3] - 2016-04-25
 ### Updated - Alex Tan
 
