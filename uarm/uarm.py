@@ -6,7 +6,7 @@ from serial.tools import list_ports
 # version
 MAJOR_VERSION = 1
 MINOR_VERSION = 1
-BUGFIX_VERSION = 3
+BUGFIX_VERSION = 4
 VERSION = str(MAJOR_VERSION) + "." + str(MINOR_VERSION) + "." + str(BUGFIX_VERSION)
 
 # Firmata
@@ -58,6 +58,13 @@ OFFSET_STRETCH_START_ADDRESS        = 20
 
 EEPROM_DATA_TYPE_BYTE               = 1
 EEPROM_DATA_TYPE_FLOAT              = 4
+
+BUTTON_D7 = 7
+BUTTON_D4 = 4
+BUTTON_D2 = 2
+
+PULL_UP = 1
+INPUT = 0
 
 UARM_HWID_KEYWORD = "USB VID:PID=0403:6001"
 
@@ -166,7 +173,7 @@ class uArm(object):
                             # print "EEPROM: ", val
                             return val
 
-    def readDigital(self,pin_number,pin_mode):
+    def readDigital(self,pin_number, pin_mode):
         pin_number = int (pin_number)#(sys.argv[2])
         pin_mode = (int(pin_mode) == 1 )and 1 or 0  # 1means pullup 0 means input
         msg = bytearray([START_SYSEX, UARM_CODE, READ_DIGITAL])
@@ -232,7 +239,7 @@ class uArm(object):
                         coords.append(coords_sign*coords_val)
                     return coords
 
-    def writeEEPROM(self,data_type,eeprom_add,eeprom_val):
+    def writeEEPROM(self,data_type, eeprom_add, eeprom_val):
         msg = bytearray([START_SYSEX, UARM_CODE, WRITE_EEPROM, data_type])
         msg.extend(getValueAsTwo7bitBytes(eeprom_add))
         if data_type == EEPROM_DATA_TYPE_BYTE:
@@ -296,15 +303,15 @@ class uArm(object):
         x,y,z = float(x), float(y), float(z)
         self.moveToOpts(x,y,z,0,0,0,0,0,False)
 
-    def pumpStatus(self,val):
-        pump_status = int (val)
+    def pumpStatus(self, val):
+        pump_status = 1 if val else 0
         msg = bytearray([START_SYSEX, UARM_CODE, PUMP_STATUS])
         msg.extend(getValueAsOne7bitBytes(pump_status))
         msg.append(END_SYSEX)
         self.sp.write(msg)
 
-    def gripperStatus(self,val):
-        gripper_status = int (val)
+    def gripperStatus(self, val):
+        gripper_status = 1 if val else 0
         msg = bytearray([START_SYSEX, UARM_CODE, GRIPPER_STATUS])
         msg.extend(getValueAsOne7bitBytes(gripper_status))
         msg.append(END_SYSEX)
@@ -320,7 +327,7 @@ class uArm(object):
         msg.extend(getValueAsThree7bitBytes(time_spend))
         msg.extend(getValueAsOne7bitBytes(path_type))
         msg.extend(getValueAsOne7bitBytes(ease_type))
-        msg.extend(1 if enable_hand else 0)
+        msg.append(1 if enable_hand else 0)
         msg.append(END_SYSEX)
         time.sleep(0.01)
         self.sp.write(msg)
