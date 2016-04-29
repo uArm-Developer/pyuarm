@@ -1,3 +1,10 @@
+## [1.1.5] - 2016-04-29
+### Updated - Alex Tan
+
+### Fix
+- uarm.py Fix MoveTo, Move, moveToOpts
+
+
 ## [1.1.4] - 2016-04-25
 ### Updated - Alex Tan
 

@@ -6,7 +6,7 @@ from serial.tools import list_ports
 # version
 MAJOR_VERSION = 1
 MINOR_VERSION = 1
-BUGFIX_VERSION = 4
+BUGFIX_VERSION = 5
 VERSION = str(MAJOR_VERSION) + "." + str(MINOR_VERSION) + "." + str(BUGFIX_VERSION)
 
 # Firmata
@@ -297,11 +297,11 @@ class uArm(object):
 
     def move(self,x,y,z):
         x,y,z = float(x), float(y), float(z)
-        self.moveToOpts(x,y,z,0,1,0,0,0,False)
+        self.moveToOpts(x,y,z,0,1,0,0,0)
 
     def moveTo(self,x,y,z):
         x,y,z = float(x), float(y), float(z)
-        self.moveToOpts(x,y,z,0,0,0,0,0,False)
+        self.moveToOpts(x,y,z,0,0,0,0,0)
 
     def pumpStatus(self, val):
         pump_status = 1 if val else 0
@@ -317,7 +317,7 @@ class uArm(object):
         msg.append(END_SYSEX)
         self.sp.write(msg)
 
-    def moveToOpts(self,x,y,z,hand_angle,relative_flags,time_spend,path_type,ease_type,enable_hand):
+    def moveToOpts(self,x,y,z,hand_angle,relative_flags,time_spend,path_type,ease_type):
         msg = bytearray([START_SYSEX, UARM_CODE, WRITE_COORDS])
         msg.extend(getValueAsFour7bitBytes(x))
         msg.extend(getValueAsFour7bitBytes(y))
@@ -327,7 +327,7 @@ class uArm(object):
         msg.extend(getValueAsThree7bitBytes(time_spend))
         msg.extend(getValueAsOne7bitBytes(path_type))
         msg.extend(getValueAsOne7bitBytes(ease_type))
-        msg.append(1 if enable_hand else 0)
+        # msg.append(1 if enable_hand else 0)
         msg.append(END_SYSEX)
         time.sleep(0.01)
         self.sp.write(msg)
