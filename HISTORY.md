@@ -1,3 +1,9 @@
+## [1.1.6] - 2016-04-30
+### Updated - Alex Tan
+
+### Fix
+- read Analog, read EEPROM, read Digital, read Servo Angle, add pin number/ address / servo number before receive data
+
 ## [1.1.5] - 2016-04-29
 ### Updated - Alex Tan
 

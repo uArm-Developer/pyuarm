@@ -6,7 +6,7 @@ from serial.tools import list_ports
 # version
 MAJOR_VERSION = 1
 MINOR_VERSION = 1
-BUGFIX_VERSION = 5
+BUGFIX_VERSION = 6
 VERSION = str(MAJOR_VERSION) + "." + str(MINOR_VERSION) + "." + str(BUGFIX_VERSION)
 
 # Firmata
@@ -142,7 +142,8 @@ class uArm(object):
                     while readData != END_SYSEX:
                         received_data.append(readData)
                         readData = ord(self.sp.read(1))
-                    return received_data[1]*128+received_data[0]+received_data[2]/100.00
+                    if received_data[0] == servo_add:
+                        return received_data[2]*128+received_data[1]+received_data[3]/100.00
 
     def readEEPROM(self,data_type, eeprom_add):
         msg = bytearray([START_SYSEX, UARM_CODE, READ_EEPROM])
@@ -164,14 +165,15 @@ class uArm(object):
                         while readData != END_SYSEX:
                             received_data.append(readData)
                             readData = ord(self.sp.read(1))
-                        if data_type == EEPROM_DATA_TYPE_BYTE:
-                            return (received_data[1]<<7)+received_data[0]
-                        if data_type == EEPROM_DATA_TYPE_FLOAT:
-                            val = (received_data[2]<<7)+received_data[1]+float(received_data[3])/100.00
-                            val =  val if received_data[0] == 0 else -val
-                            # print "received_data[3]: ", received_data[3]
-                            # print "EEPROM: ", val
-                            return val
+                        res_eeprom_add = received_data[1]*128 + received_data[0]
+                        # print res_eeprom_add
+                        if res_eeprom_add == eeprom_add:
+                            if data_type == EEPROM_DATA_TYPE_BYTE:
+                                return (received_data[3]<<7)+received_data[2]
+                            if data_type == EEPROM_DATA_TYPE_FLOAT:
+                                val = (received_data[4]<<7)+received_data[3]+float(received_data[5])/100.00
+                                val =  val if received_data[2] == 0 else -val
+                                return val
 
     def readDigital(self,pin_number, pin_mode):
         pin_number = int (pin_number)#(sys.argv[2])
@@ -192,7 +194,8 @@ class uArm(object):
                     while readData != END_SYSEX:
                         received_data.append(readData)
                         readData = ord(self.sp.read(1))
-                    return received_data[0]
+                    if received_data[0] == pin_number:
+                        return received_data[1]
 
     def readAnalog(self,pin_num):
         msg = bytearray([START_SYSEX, UARM_CODE, READ_ANALOG])
@@ -211,7 +214,8 @@ class uArm(object):
                     while readData != END_SYSEX:
                         received_data.append(readData)
                         readData = ord(self.sp.read(1))
-                    return received_data[1]*128+received_data[0]
+                    if received_data[0] == pin_num:
+                        return received_data[2]*128+received_data[1]
 
 
     def readCoords(self,pin_num):
