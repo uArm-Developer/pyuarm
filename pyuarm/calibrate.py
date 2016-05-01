@@ -103,11 +103,11 @@ class Calibration(object):
         if self.read_linear_offset() == self.linear_offset:
             self.uf_print("    1.3 Mark Completed Flag in EEPROM")
             self.write_completed_flag(CALIBRATION_LINEAR_FLAG, True)
-            self.uf_print("    1.4 Disconnecting uArm to load offset")
-            self.uarm.disconnect()  # reconnect to load offset
-            time.sleep(1)
-            self.uf_print("    1.5 Reconnecting, Please wait...")
-            self.uarm.reconnect()
+            # self.uf_print("    1.4 Disconnecting uArm to load offset")
+            # self.uarm.disconnect()  # reconnect to load offset
+            # time.sleep(1)
+            # self.uf_print("    1.5 Reconnecting, Please wait...")
+            # self.uarm.reconnect()
             self.linear_calibration_start_flag = False
         else:
             self.uf_print("Error - 1. Linear Offset not equal to EEPROM, Please retry.")
@@ -220,7 +220,7 @@ class Calibration(object):
             self.temp_manual_offset_arr[1] = servo_2_offset
             self.temp_manual_offset_arr[2] = servo_3_offset
             if self.manual_offset_correct_flag[0] & self.manual_offset_correct_flag[1] & self.manual_offset_correct_flag[2]:
-                self.uf_print("All servo in the right positions, Please click Confirm Button")
+                self.uf_print(str(self.servo_calibrate_timeout - time_counts) + ", Please Confirm the positions")
             if callback is not None:
                 callback(self.temp_manual_offset_arr, self.manual_offset_correct_flag)
             time.sleep(0.1)
@@ -240,7 +240,7 @@ class Calibration(object):
             self.uf_print("Error - 2, read_manual_offset: ", self.read_manual_offset())
         self.uarm.detachAll()
 
-    def stretch_calibration_section(self, callback):
+    def stretch_calibrate_section(self, callback):
         self.uf_print("3.0. Clearing Stretch Completed Flag in EEPROM.")
         self.write_completed_flag(CALIBRATION_STRETCH_FLAG, False)
         self.uf_print("3. Start Calibrate Stretch Offset")
