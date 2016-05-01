@@ -1,4 +1,4 @@
-from uarm import *
+from pyuarm import *
 import copy
 
 

@@ -1,3 +1,11 @@
+## [1.1.6] - 2016-05-01
+### Updated - Alex Tan
+
+### Changes
+- Changes library name uarm4py to pyuarm  
+
+
+
 ## [1.1.6] - 2016-04-30
 ### Updated - Alex Tan
 
