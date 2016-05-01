@@ -1,8 +1,8 @@
 
 from setuptools import setup, find_packages
-import uarm
+import pyuarm
 setup(name='pyuarm',
-    version=uarm.VERSION,
+    version=pyuarm.VERSION,
     py_modules=['pyuarm'],
     author='Joey Song/Alex Tan',
     packages=['pyuarm'],
