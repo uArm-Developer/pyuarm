@@ -59,20 +59,20 @@ class Calibration(object):
         self.write_completed_flag(CALIBRATION_FLAG, False)
 
         if linear_callback is None:  # If not provide callback function use default
-            self.linear_calibrate_section(None)
+            self.linear_calibration_section(None)
         else:
             linear_callback()
 
         if self.read_completed_flag(CALIBRATION_LINEAR_FLAG):
             if manual_callback is None:  # If not provide callback function use default
-                self.manual_calibrate_section(None)
+                self.manual_calibration_section(None)
             else:
                 manual_callback()
             time.sleep(0.5)
 
         if self.read_completed_flag(CALIBRATION_SERVO_FLAG):
             if stretch_callback is None:  # If not provide callback function use default
-                self.stretch_calibrate_section(None)
+                self.stretch_calibration_section(None)
             else:
                 stretch_callback()
             time.sleep(0.5)
@@ -81,7 +81,7 @@ class Calibration(object):
             self.write_completed_flag(CALIBRATION_FLAG, True)
             self.uf_print("Calibration DONE!!")
 
-    def linear_calibrate_section(self, callback):
+    def linear_calibration_section(self, callback):
         self.linear_calibration_start_flag = True
         self.uf_print("1.0. Clearing Linear Completed Flag in EEPROM.")
         self.write_completed_flag(CALIBRATION_LINEAR_FLAG, False)
@@ -173,7 +173,7 @@ class Calibration(object):
         # self.ab_values_b.append(new_ab[1])
         # self.complete_display(number,'linear')
 
-    def manual_calibrate_section(self, callback):
+    def manual_calibration_section(self, callback):
         self.uf_print("2.0. Clearing Servo Completed Flag in EEPROM.")
         self.write_completed_flag(CALIBRATION_SERVO_FLAG, False)
         self.uf_print("2. Start Calibrate Servo Offset")
@@ -240,7 +240,7 @@ class Calibration(object):
             self.uf_print("Error - 2, read_manual_offset: ", self.read_manual_offset())
         self.uarm.detachAll()
 
-    def stretch_calibrate_section(self, callback):
+    def stretch_calibration_section(self, callback):
         self.uf_print("3.0. Clearing Stretch Completed Flag in EEPROM.")
         self.write_completed_flag(CALIBRATION_STRETCH_FLAG, False)
         self.uf_print("3. Start Calibrate Stretch Offset")

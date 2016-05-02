@@ -1,10 +1,14 @@
+## [1.1.7] - 2016-05-01
+### Updated - Alex Tan
+
+### Fix
+- Change calibrate function name "calibrate" to calibration
+
 ## [1.1.6] - 2016-05-01
 ### Updated - Alex Tan
 
 ### Changes
 - Changes library name uarm4py to pyuarm  
-
-
 
 ## [1.1.6] - 2016-04-30
 ### Updated - Alex Tan
