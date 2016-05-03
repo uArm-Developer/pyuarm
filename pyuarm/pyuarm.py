@@ -6,7 +6,7 @@ from serial.tools import list_ports
 # version
 MAJOR_VERSION = 1
 MINOR_VERSION = 1
-BUGFIX_VERSION = 7
+BUGFIX_VERSION = 8
 VERSION = str(MAJOR_VERSION) + "." + str(MINOR_VERSION) + "." + str(BUGFIX_VERSION)
 
 # Firmata
@@ -44,6 +44,8 @@ PUMP_STATUS                 = 0X1D
 WRITE_STRETCH               = 0X1E
 WRITE_LEFT_RIGHT_ANGLE      = 0X1F
 GRIPPER_STATUS              = 0X20
+READ_SERIAL_NUMBER          = 0x21
+WRITE_SERIAL_NUMBER         = 0x22
 
 CALIBRATION_FLAG                    = 10
 CALIBRATION_LINEAR_FLAG             = 11
@@ -55,6 +57,7 @@ LINEAR_SLOPE_START_ADDRESS          = 50
 OFFSET_START_ADDRESS                = 30
 OFFSET_STRETCH_START_ADDRESS        = 20
 
+SERIAL_NUMBER_ADDRESS = 1024
 
 EEPROM_DATA_TYPE_BYTE               = 1
 EEPROM_DATA_TYPE_FLOAT              = 4
@@ -348,6 +351,35 @@ class uArm(object):
         msg.extend(getValueAsFour7bitBytes(height))
         msg.append(END_SYSEX)
         self.sp.write(msg)
+
+    def writeSerialNumber(self, serial_number):
+        msg = bytearray([START_SYSEX, UARM_CODE, WRITE_SERIAL_NUMBER])
+        for c in serial_number:
+            msg.append(ord(c))
+        msg.append(END_SYSEX)
+        self.sp.write(msg)
+
+    def readSerialNumber(self):
+        msg = bytearray([START_SYSEX, UARM_CODE, READ_SERIAL_NUMBER, END_SYSEX])
+        self.sp.write(msg)
+        while self.sp.readable():
+            readData = ord(self.sp.read(1))
+            received_data = []
+            if (readData == START_SYSEX):
+                readData = ord(self.sp.read(1))
+                if (readData == UARM_CODE):
+                    readData = ord(self.sp.read(1))
+                    if (readData == READ_SERIAL_NUMBER):
+                        readData = ord(self.sp.read(1))
+                        while readData != END_SYSEX:
+                            received_data.append(readData)
+                            readData = ord(self.sp.read(1))
+                        sn_array = []
+                        # print received_data
+                        for r in received_data:
+                            sn_array.append(chr(r))
+                        return ''.join(sn_array)
+
 
 class ConnectError(RuntimeError):
    def __init__(self, arg):

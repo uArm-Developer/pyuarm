@@ -1,3 +1,9 @@
+## [1.1.8] - 2016-05-02
+### Updated - Alex Tan
+
+### Changes
+- Add readSerialNumber and writeSerialNumber Function
+
 ## [1.1.7] - 2016-05-01
 ### Updated - Alex Tan
 
