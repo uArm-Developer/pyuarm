@@ -6,13 +6,13 @@ This is a uArm Library for Python.
 
 - uArmForArduino - [uArmFirmata V1.5][5bd49e15]
 
-  [5bd49e15]: https://github.com/uArm-Developer/UArmForArduino/blob/master/examples/UArmFirmata/UArmFirmata.ino "uArmFirmata V1.5"
+  [5bd49e15]: https://github.com/uArm-Developer/UArmFirmata "uArmFirmata V1.5"
 
 ## Installation
 
 ### Using PYPI *Recommend*
 
-- pip install uarm4py
+- pip install pyuarm
 
 ### Manual Installation
 
@@ -21,7 +21,8 @@ This is a uArm Library for Python.
 
 
 ## Usage
-```
-import uarm
-uarm.list_uarms()
+```Python
+import pyuarm
+pyuarm.list_uarms() #List All available uArm Ports
+uarm = pyuarm.get_uarm() # Get the first uArm Instance
 ```
