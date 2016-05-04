@@ -1,3 +1,9 @@
+## [1.2.0] - 2016-05-03
+### Updated - Alex Tan
+
+### Changes
+- Add uArm Library Version (Firmware Version) and Firmata Version
+
 ## [1.1.9] - 2016-05-03
 ### Updated - Alex Tan
 

@@ -5,13 +5,13 @@ from serial.tools import list_ports
 
 # version
 MAJOR_VERSION = 1
-MINOR_VERSION = 1
-BUGFIX_VERSION = 9
+MINOR_VERSION = 2
+BUGFIX_VERSION = 0
 VERSION = str(MAJOR_VERSION) + "." + str(MINOR_VERSION) + "." + str(BUGFIX_VERSION)
 
 # Firmata
 
-REPORT_VERSION = 0x79
+REPORT_FIRMATA_VERSION = 0x79
 
 # parameters
 SERVO_ROT_NUM           = 0
@@ -46,6 +46,7 @@ WRITE_LEFT_RIGHT_ANGLE      = 0X1F
 GRIPPER_STATUS              = 0X20
 READ_SERIAL_NUMBER          = 0x21
 WRITE_SERIAL_NUMBER         = 0x22
+REPORT_LIBRARY_VERSION      = 0x23
 
 CALIBRATION_FLAG                    = 10
 CALIBRATION_LINEAR_FLAG             = 11
@@ -93,11 +94,20 @@ def get_uarm():
 class uArm(object):
 
     firmware_major_version  = 0
+    firmware_minor_version = 0
+    firmware_bugfix = 0
+
+    frimata_major_version = 0
+    frimata_minor_version = 0
 
     def __init__(self,port):
         self.port = port
-        self.sp = serial.Serial(port,baudrate=57600)
-        self.setFirmwareVersion()
+        self.sp = serial.Serial(port,baudrate=57600, timeout=5)
+        self.setFirmataVersion()
+        print self.get_firmata_version()
+        # time.sleep(5)
+        self.setLibraryVersion()
+        print self.get_firmware_version()
 
     def isConnected(self):
         if self.sp.isOpen() == False:
@@ -111,23 +121,34 @@ class uArm(object):
     def reconnect(self):
         if not self.isConnected():
             self.sp.open()
-            self.setFirmwareVersion()
+            self.setFirmataVersion()
+            print self.get_firmata_version()
+            self.setLibraryVersion()
+            print self.get_firmware_version()
 
-    def setFirmwareVersion(self):
+    def get_firmware_version(self):
+        return str(self.firmware_major_version) + "." + str(self.firmware_minor_version) + "." + str(self.firmware_bugfix)
+
+    def get_firmata_version(self):
+        return str(self.frimata_major_version) + "." + str(self.frimata_minor_version)
+
+    def setFirmataVersion(self):
         try:
-            msg = bytearray([START_SYSEX, REPORT_VERSION, END_SYSEX])
-            self.sp.write(msg)
+            # msg = bytearray([START_SYSEX, REPORT_FIRMATA_VERSION, END_SYSEX])
+            # self.sp.write(msg)
             while self.sp.readable():
-                readData = ord(self.sp.read(1))
-                received_data = []
+                read_byte = self.sp.read(1)
+                # print binascii.hexlify(read_byte)
+                readData = ord(read_byte)
+                if readData == END_SYSEX:
+                    break
                 if readData == START_SYSEX:
                     readData = ord(self.sp.read(1))
-                    if readData == REPORT_VERSION:
-                        self.firmware_major_version = ord(self.sp.read(1))
-                        self.firmware_minor_version = ord(self.sp.read(1))
-                        break
+                    if readData == REPORT_FIRMATA_VERSION:
+                        self.frimata_major_version = ord(self.sp.read(1))
+                        self.frimata_minor_version = ord(self.sp.read(1))
         except Exception as e:
-            print "Serial Exception: ",e.strerror
+            print "Serial Exception: ",e.message
 
     def readServoAngle(self,servo_add,data_offset):
         msg = bytearray([START_SYSEX, UARM_CODE, READ_ANGLE])
@@ -381,6 +402,30 @@ class uArm(object):
                         for r in received_data:
                             sn_array.append(chr(r))
                         return ''.join(sn_array)
+
+    def setLibraryVersion(self):
+        msg = bytearray([START_SYSEX, UARM_CODE, REPORT_LIBRARY_VERSION, END_SYSEX])
+        self.sp.write(msg)
+        # print binascii.hexlify(bytearray(msg))
+        while self.sp.readable():
+            read_byte = self.sp.read(1)
+            # print binascii.hexlify(read_byte)
+            readData = ord(read_byte)
+            received_data = []
+            if (readData == START_SYSEX):
+                readData = ord(self.sp.read(1))
+                if (readData == UARM_CODE):
+                    readData = ord(self.sp.read(1))
+                    if (readData == REPORT_LIBRARY_VERSION):
+                        readData = ord(self.sp.read(1))
+                        while readData != END_SYSEX:
+                            received_data.append(readData)
+                            readData = ord(self.sp.read(1))
+                        self.firmware_major_version = received_data[0]
+                        self.firmware_minor_version = received_data[1]
+                        self.firmware_bugfix = received_data[2]
+                        break
+                        # return self.get_firmware_version()
 
 
 class ConnectError(RuntimeError):
