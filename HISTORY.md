@@ -1,3 +1,10 @@
+## [1.1.9] - 2016-05-03
+### Updated - Alex Tan
+
+### Fix
+- Add Stretch Calibration Flag support stop during Stretch Calibration
+- Add PUMP_PIN, VALVE_PIN Constant Values
+
 ## [1.1.8] - 2016-05-02
 ### Updated - Alex Tan
 

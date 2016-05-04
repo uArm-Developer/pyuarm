@@ -21,6 +21,7 @@ SAMPLING_DEADZONE = 2
 class Calibration(object):
     manual_calibration_trigger = True
     linear_calibration_start_flag = False
+    stretch_calibration_flag = False
 
     linear_offset_template = {"INTERCEPT": 0.00, "SLOPE": 0.00}
     linear_offset = [linear_offset_template, linear_offset_template, linear_offset_template, linear_offset_template]
@@ -29,6 +30,7 @@ class Calibration(object):
     stretch_offset_template = {"LEFT": 0.00, "RIGHT": 0.00}
     temp_manual_offset_arr = [0.00, 0.00, 0.00]
     manual_offset_correct_flag = [False, False, False]
+
 
     def __init__(self, uarm=None, log_function=None):
         if uarm is not None:
@@ -111,8 +113,8 @@ class Calibration(object):
             self.linear_calibration_start_flag = False
         else:
             self.uf_print("Error - 1. Linear Offset not equal to EEPROM, Please retry.")
-            self.uf_print("Error - 1.servo_offset: ", self.temp_manual_offset_arr)
-            self.uf_print("Error - 1.read_linear_offset(): ", self.read_linear_offset())
+            # self.uf_print("Error - 1. manual_offset: " + self.temp_manual_offset_arr)
+            self.uf_print("Error - 1. linear_offset(): " + self.read_linear_offset())
             self.linear_calibration_start_flag = False
         self.uarm.detachAll()
 
@@ -241,6 +243,7 @@ class Calibration(object):
         self.uarm.detachAll()
 
     def stretch_calibration_section(self, callback):
+        self.stretch_calibration_flag = True
         self.uf_print("3.0. Clearing Stretch Completed Flag in EEPROM.")
         self.write_completed_flag(CALIBRATION_STRETCH_FLAG, False)
         self.uf_print("3. Start Calibrate Stretch Offset")
@@ -261,25 +264,29 @@ class Calibration(object):
         self.uarm.writeServoAngle(SERVO_LEFT_NUM, initPosL, 0)
         self.uarm.writeServoAngle(SERVO_RIGHT_NUM, initPosR, 0)
         time.sleep(1)
-        while self.uarm.readAnalog(SERVO_RIGHT_ANALOG_PIN) < (minAngle_R - SAMPLING_DEADZONE):
+        while self.uarm.readAnalog(SERVO_RIGHT_ANALOG_PIN) < (minAngle_R - SAMPLING_DEADZONE) \
+                and self.stretch_calibration_flag:
             initPosR += 1
             self.uarm.writeServoAngle(SERVO_RIGHT_NUM, initPosR, 0)
             print 'initPosR: ', initPosR
             time.sleep(0.05)
 
-        while self.uarm.readAnalog(SERVO_RIGHT_ANALOG_PIN) > (minAngle_R + SAMPLING_DEADZONE):
+        while self.uarm.readAnalog(SERVO_RIGHT_ANALOG_PIN) > (minAngle_R + SAMPLING_DEADZONE) \
+                and self.stretch_calibration_flag:
             initPosR -= 1
             self.uarm.writeServoAngle(SERVO_RIGHT_NUM, initPosR, 0)
             print 'initPosR: ', initPosR
             time.sleep(0.05)
 
-        while self.uarm.readAnalog(SERVO_LEFT_ANALOG_PIN) < (minAngle_L - SAMPLING_DEADZONE):
+        while self.uarm.readAnalog(SERVO_LEFT_ANALOG_PIN) < (minAngle_L - SAMPLING_DEADZONE) \
+                and self.stretch_calibration_flag:
             initPosL += 1
             self.uarm.writeServoAngle(SERVO_LEFT_NUM, initPosL, 0)
             print 'initPosL: ', initPosL
             time.sleep(0.05)
 
-        while self.uarm.readAnalog(SERVO_LEFT_ANALOG_PIN) > (minAngle_L + SAMPLING_DEADZONE):
+        while self.uarm.readAnalog(SERVO_LEFT_ANALOG_PIN) > (minAngle_L + SAMPLING_DEADZONE) \
+                and self.stretch_calibration_flag:
             initPosL -= 1
             self.uarm.writeServoAngle(SERVO_LEFT_NUM, initPosL, 0)
             print 'initPosL: ', initPosL
@@ -306,6 +313,7 @@ class Calibration(object):
         self.write_completed_flag(CALIBRATION_STRETCH_FLAG, True)
         print offsetL, offsetR
         self.uarm.detachAll()
+        self.stretch_calibration_flag = False
 
     def save_linear_offset(self):
         self.uf_print("    1.2 Saving Servo Offset into EEPROM")

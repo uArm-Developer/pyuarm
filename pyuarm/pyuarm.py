@@ -6,7 +6,7 @@ from serial.tools import list_ports
 # version
 MAJOR_VERSION = 1
 MINOR_VERSION = 1
-BUGFIX_VERSION = 8
+BUGFIX_VERSION = 9
 VERSION = str(MAJOR_VERSION) + "." + str(MINOR_VERSION) + "." + str(BUGFIX_VERSION)
 
 # Firmata
@@ -65,6 +65,8 @@ EEPROM_DATA_TYPE_FLOAT              = 4
 BUTTON_D7 = 7
 BUTTON_D4 = 4
 BUTTON_D2 = 2
+PUMP_PIN = 6
+VALVE_PIN = 5
 
 PULL_UP = 1
 INPUT = 0
