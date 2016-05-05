@@ -1,3 +1,10 @@
+## [1.2.1] - 2016-05-03
+### Updated - Alex Tan
+
+### Fix
+- Change all function names as lowercase
+- Use CONFIRM_FLAG 0x80 for Confirmation Flag
+
 ## [1.2.0] - 2016-05-03
 ### Updated - Alex Tan
 

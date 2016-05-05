@@ -48,6 +48,7 @@ READ_SERIAL_NUMBER          = 0x21
 WRITE_SERIAL_NUMBER         = 0x22
 REPORT_LIBRARY_VERSION      = 0x23
 
+CONFIRM_FLAG = 0x80
 CALIBRATION_FLAG                    = 10
 CALIBRATION_LINEAR_FLAG             = 11
 CALIBRATION_SERVO_FLAG              = 12
@@ -61,6 +62,7 @@ OFFSET_STRETCH_START_ADDRESS        = 20
 SERIAL_NUMBER_ADDRESS = 1024
 
 EEPROM_DATA_TYPE_BYTE               = 1
+EEPROM_DATA_TYPE_INTEGER            = 2
 EEPROM_DATA_TYPE_FLOAT              = 4
 
 BUTTON_D7 = 7
@@ -102,11 +104,11 @@ class uArm(object):
 
     def __init__(self,port):
         self.port = port
-        self.sp = serial.Serial(port,baudrate=57600, timeout=5)
-        self.setFirmataVersion()
+        self.sp = serial.Serial(port,baudrate=57600)
+        self.set_firmata_version()
         print self.get_firmata_version()
         # time.sleep(5)
-        self.setLibraryVersion()
+        self.set_frimware_version()
         print self.get_firmware_version()
 
     def isConnected(self):
@@ -121,9 +123,9 @@ class uArm(object):
     def reconnect(self):
         if not self.isConnected():
             self.sp.open()
-            self.setFirmataVersion()
+            self.set_firmata_version()
             print self.get_firmata_version()
-            self.setLibraryVersion()
+            self.set_frimware_version()
             print self.get_firmware_version()
 
     def get_firmware_version(self):
@@ -132,10 +134,9 @@ class uArm(object):
     def get_firmata_version(self):
         return str(self.frimata_major_version) + "." + str(self.frimata_minor_version)
 
-    def setFirmataVersion(self):
-        try:
-            # msg = bytearray([START_SYSEX, REPORT_FIRMATA_VERSION, END_SYSEX])
-            # self.sp.write(msg)
+    def set_firmata_version(self):
+        try:     
+            # self.writeSerialMsg(msg)
             while self.sp.readable():
                 read_byte = self.sp.read(1)
                 # print binascii.hexlify(read_byte)
@@ -150,14 +151,14 @@ class uArm(object):
         except Exception as e:
             print "Serial Exception: ",e.message
 
-    def readServoAngle(self,servo_add,data_offset):
+    def read_servo_angle(self, servo_add, data_offset):
         msg = bytearray([START_SYSEX, UARM_CODE, READ_ANGLE])
         msg.extend(getValueAsOne7bitBytes(servo_add))
         msg.extend(getValueAsOne7bitBytes(data_offset))
         msg.append(END_SYSEX)
         # print binascii.hexlify(bytearray(msg))
 
-        self.sp.write(msg)
+        self.write_serial_msg(msg)
         while self.sp.readable():
             readData = ord(self.sp.read(1))
             received_data = []
@@ -171,37 +172,43 @@ class uArm(object):
                     if received_data[0] == servo_add:
                         return received_data[2]*128+received_data[1]+received_data[3]/100.00
 
-    def readEEPROM(self,data_type, eeprom_add):
-        msg = bytearray([START_SYSEX, UARM_CODE, READ_EEPROM])
-        msg.append(data_type)
-        msg.extend(getValueAsTwo7bitBytes(eeprom_add))
-        msg.append(END_SYSEX)
-        # print binascii.hexlify(bytearray(msg))
+    def read_eeprom(self, data_type, eeprom_add):
+        if self.isConnected():
+            msg = bytearray([START_SYSEX, UARM_CODE, READ_EEPROM])
+            msg.append(data_type)
+            msg.extend(getValueAsTwo7bitBytes(eeprom_add))
+            msg.append(END_SYSEX)
 
-        self.sp.write(msg)
-        while self.sp.readable():
-            readData = ord(self.sp.read(1))
-            received_data = []
-            if (readData == START_SYSEX):
+            self.write_serial_msg(msg)
+            while self.sp.readable():
                 readData = ord(self.sp.read(1))
-                if (readData == UARM_CODE):
+                received_data = []
+                if (readData == START_SYSEX):
                     readData = ord(self.sp.read(1))
-                    if (readData == READ_EEPROM):
+                    if (readData == UARM_CODE):
                         readData = ord(self.sp.read(1))
-                        while readData != END_SYSEX:
-                            received_data.append(readData)
+                        if (readData == READ_EEPROM):
                             readData = ord(self.sp.read(1))
-                        res_eeprom_add = received_data[1]*128 + received_data[0]
-                        # print res_eeprom_add
-                        if res_eeprom_add == eeprom_add:
-                            if data_type == EEPROM_DATA_TYPE_BYTE:
-                                return (received_data[3]<<7)+received_data[2]
-                            if data_type == EEPROM_DATA_TYPE_FLOAT:
-                                val = (received_data[4]<<7)+received_data[3]+float(received_data[5])/100.00
-                                val =  val if received_data[2] == 0 else -val
-                                return val
+                            while readData != END_SYSEX:
+                                received_data.append(readData)
+                                readData = ord(self.sp.read(1))
+                            res_eeprom_add = received_data[1]*128 + received_data[0]
+                            # print res_eeprom_add
+                            if res_eeprom_add == eeprom_add:
+                                if data_type == EEPROM_DATA_TYPE_BYTE:
+                                    return (received_data[3]<<7)+received_data[2]
+                                if data_type == EEPROM_DATA_TYPE_FLOAT:
+                                    val = (received_data[4]<<7)+received_data[3]+float(received_data[5])/100.00
+                                    val =  val if received_data[2] == 0 else -val
+                                    return val
+                                if data_type == EEPROM_DATA_TYPE_INTEGER:
+                                    val = (received_data[4]<<7)+received_data[3]
+                                    val =  val if received_data[2] == 0 else -val
+                                    return val
+        else:
+            print "uArm is not connected"
 
-    def readDigital(self,pin_number, pin_mode):
+    def read_digital(self, pin_number, pin_mode):
         pin_number = int (pin_number)#(sys.argv[2])
         pin_mode = (int(pin_mode) == 1 )and 1 or 0  # 1means pullup 0 means input
         msg = bytearray([START_SYSEX, UARM_CODE, READ_DIGITAL])
@@ -209,7 +216,7 @@ class uArm(object):
         msg.extend(getValueAsOne7bitBytes(pin_mode))
         msg.append(END_SYSEX)
 
-        self.sp.write(msg)
+        self.write_serial_msg(msg)
         while self.sp.readable():
             readData = ord(self.sp.read(1))
             received_data = []
@@ -223,13 +230,13 @@ class uArm(object):
                     if received_data[0] == pin_number:
                         return received_data[1]
 
-    def readAnalog(self,pin_num):
+    def read_analog(self, pin_num):
         msg = bytearray([START_SYSEX, UARM_CODE, READ_ANALOG])
         msg.extend(getValueAsOne7bitBytes(pin_num))
         msg.append(END_SYSEX)
         # print binascii.hexlify(bytearray(msg))
 
-        self.sp.write(msg)
+        self.write_serial_msg(msg)
         while self.sp.readable():
             readData = ord(self.sp.read(1))
             received_data = []
@@ -244,11 +251,11 @@ class uArm(object):
                         return received_data[2]*128+received_data[1]
 
 
-    def readCoords(self,pin_num):
+    def read_coords(self, pin_num):
         msg = bytearray([START_SYSEX, UARM_CODE, READ_COORDS])
         msg.extend(getValueAsOne7bitBytes(pin_num))
         msg.append(END_SYSEX)
-        self.sp.write(msg)
+        self.write_serial_msg(msg)
         while self.sp.readable():
             readData = ord(self.sp.read(1))
             received_data = []
@@ -269,25 +276,27 @@ class uArm(object):
                         coords.append(coords_sign*coords_val)
                     return coords
 
-    def writeEEPROM(self,data_type, eeprom_add, eeprom_val):
+    def write_eeprom(self, data_type, eeprom_add, eeprom_val):
         msg = bytearray([START_SYSEX, UARM_CODE, WRITE_EEPROM, data_type])
         msg.extend(getValueAsTwo7bitBytes(eeprom_add))
         if data_type == EEPROM_DATA_TYPE_BYTE:
             msg.extend(getValueAsTwo7bitBytes(eeprom_val))
         if data_type == EEPROM_DATA_TYPE_FLOAT:
-            msg.extend(getValueAsFour7bitBytes(eeprom_val))
+            msg.extend(getFloatAsFour7bitBytes(eeprom_val))
             # print getValueAsFour7bitBytes(eeprom_val)[0]
+        if data_type == EEPROM_DATA_TYPE_INTEGER:
+            msg.extend(getIntegerAsThree7bitBytes(eeprom_val))
         msg.append(END_SYSEX)
-        self.sp.write(msg)
+        self.write_serial_msg(msg)
 
-    def writeAnalog(self,pin_number,pin_value):
+    def write_analog(self, pin_number, pin_value):
         msg = bytearray([START_SYSEX, UARM_CODE, WRITE_ANALOG])
         msg.extend(getValueAsOne7bitBytes(pin_number))
         msg.extend(getValueAsTwo7bitBytes(pin_value))
         msg.append(END_SYSEX)
-        self.sp.write(msg)
+        self.write_serial_msg(msg)
 
-    def writeDigital(self,pin_number,pin_mode):
+    def write_digtial(self, pin_number, pin_mode):
         pin_number = int (pin_number)
         pin_mode = ((int (pin_mode)) ==1) and 1 or 0
 
@@ -295,96 +304,96 @@ class uArm(object):
         msg.extend(getValueAsOne7bitBytes(pin_number))
         msg.extend(getValueAsOne7bitBytes(pin_mode))
         msg.append(END_SYSEX)
-        self.sp.write(msg)
+        self.write_serial_msg(msg)
 
-    def detachAll(self):
+    def detach_all_servos(self):
         msg = bytearray([START_SYSEX, UARM_CODE, DETACH_SERVO, END_SYSEX])
-        self.sp.write(msg)
+        self.write_serial_msg(msg)
 
-    def writeServoAngle(self,servo_number,servo_angle,writeWithoffset):
+    def write_servo_angle(self, servo_number, servo_angle, writeWithoffset):
         servo_number = int(servo_number)
         servo_angle = float(servo_angle)
         writeWithoffset = int(writeWithoffset)
         msg = bytearray([START_SYSEX, UARM_CODE, WRITE_ANGLE])
         msg.extend(getValueAsOne7bitBytes(servo_number))
-        msg.extend(getValueAsThree7bitBytes(servo_angle))
+        msg.extend(getFloatAsThree7bitBytes(servo_angle))
         msg.extend(getValueAsOne7bitBytes(writeWithoffset))
         msg.append(END_SYSEX)
         # print binascii.hexlify(bytearray(msg))
-        self.sp.write(msg)
+        self.write_serial_msg(msg)
 
-    def writeLeftRightServoAngle(self, servo_left_angle, servo_right_angle, writeWithoffset):
+    def write_left_right_servo_angle(self, servo_left_angle, servo_right_angle, writeWithoffset):
         writeWithoffset = int(writeWithoffset)
         servo_left_angle = float(servo_left_angle)
         servo_right_angle = float(servo_right_angle)
         msg = bytearray([START_SYSEX, UARM_CODE, WRITE_LEFT_RIGHT_ANGLE])
-        msg.extend(getValueAsThree7bitBytes(servo_left_angle))
-        msg.extend(getValueAsThree7bitBytes(servo_right_angle))
+        msg.extend(getFloatAsThree7bitBytes(servo_left_angle))
+        msg.extend(getFloatAsThree7bitBytes(servo_right_angle))
         msg.extend(getValueAsOne7bitBytes(writeWithoffset))
         msg.append(END_SYSEX)
         # print binascii.hexlify(bytearray(msg))
-        self.sp.write(msg)
+        self.write_serial_msg(msg)
 
     def move(self,x,y,z):
         x,y,z = float(x), float(y), float(z)
-        self.moveToOpts(x,y,z,0,1,0,0,0)
+        self.move_to_options(x, y, z, 0, 1, 0, 0, 0)
 
-    def moveTo(self,x,y,z):
+    def move_to(self, x, y, z):
         x,y,z = float(x), float(y), float(z)
-        self.moveToOpts(x,y,z,0,0,0,0,0)
+        self.move_to_options(x, y, z, 0, 0, 0, 0, 0)
 
-    def pumpStatus(self, val):
+    def pump_control(self, val):
         pump_status = 1 if val else 0
         msg = bytearray([START_SYSEX, UARM_CODE, PUMP_STATUS])
         msg.extend(getValueAsOne7bitBytes(pump_status))
         msg.append(END_SYSEX)
-        self.sp.write(msg)
+        self.write_serial_msg(msg)
 
-    def gripperStatus(self, val):
+    def gripper_status(self, val):
         gripper_status = 1 if val else 0
         msg = bytearray([START_SYSEX, UARM_CODE, GRIPPER_STATUS])
         msg.extend(getValueAsOne7bitBytes(gripper_status))
         msg.append(END_SYSEX)
-        self.sp.write(msg)
+        self.write_serial_msg(msg)
 
-    def moveToOpts(self,x,y,z,hand_angle,relative_flags,time_spend,path_type,ease_type):
+    def move_to_options(self, x, y, z, hand_angle, relative_flags, time_spend, path_type, ease_type):
         msg = bytearray([START_SYSEX, UARM_CODE, WRITE_COORDS])
-        msg.extend(getValueAsFour7bitBytes(x))
-        msg.extend(getValueAsFour7bitBytes(y))
-        msg.extend(getValueAsFour7bitBytes(z))
-        msg.extend(getValueAsThree7bitBytes(hand_angle))
+        msg.extend(getFloatAsFour7bitBytes(x))
+        msg.extend(getFloatAsFour7bitBytes(y))
+        msg.extend(getFloatAsFour7bitBytes(z))
+        msg.extend(getFloatAsThree7bitBytes(hand_angle))
         msg.extend(getValueAsOne7bitBytes(relative_flags))
-        msg.extend(getValueAsThree7bitBytes(time_spend))
+        msg.extend(getFloatAsThree7bitBytes(time_spend))
         msg.extend(getValueAsOne7bitBytes(path_type))
         msg.extend(getValueAsOne7bitBytes(ease_type))
         # msg.append(1 if enable_hand else 0)
         msg.append(END_SYSEX)
         time.sleep(0.01)
-        self.sp.write(msg)
+        self.write_serial_msg(msg)
 
-    def moveToSimple(self,x,y,z,hand_angle,relative_flags,time_spend):
-        self.moveToOpts(x,y,z,hand_angle,relative_flags,time_spend,0,0, True)
+    def move_to_simple(self, x, y, z, hand_angle, relative_flags, time_spend):
+        self.move_to_options(x, y, z, hand_angle, relative_flags, time_spend, 0, 0)
 
-    def writeStretch(self,length,height):
+    def write_stretch(self, length, height):
         length = float(length)
         height = float(height)
-
         msg = bytearray([START_SYSEX, UARM_CODE, WRITE_STRETCH])
-        msg.extend(getValueAsFour7bitBytes(length))
-        msg.extend(getValueAsFour7bitBytes(height))
+        msg.extend(getFloatAsFour7bitBytes(length))
+        msg.extend(getFloatAsFour7bitBytes(height))
         msg.append(END_SYSEX)
-        self.sp.write(msg)
+        self.write_serial_msg(msg)
 
-    def writeSerialNumber(self, serial_number):
+
+    def write_serial_number(self, serial_number):
         msg = bytearray([START_SYSEX, UARM_CODE, WRITE_SERIAL_NUMBER])
         for c in serial_number:
             msg.append(ord(c))
         msg.append(END_SYSEX)
-        self.sp.write(msg)
+        self.write_serial_msg(msg)
 
-    def readSerialNumber(self):
+    def read_serial_number(self):
         msg = bytearray([START_SYSEX, UARM_CODE, READ_SERIAL_NUMBER, END_SYSEX])
-        self.sp.write(msg)
+        self.write_serial_msg(msg)
         while self.sp.readable():
             readData = ord(self.sp.read(1))
             received_data = []
@@ -398,35 +407,38 @@ class uArm(object):
                             received_data.append(readData)
                             readData = ord(self.sp.read(1))
                         sn_array = []
-                        # print received_data
                         for r in received_data:
                             sn_array.append(chr(r))
                         return ''.join(sn_array)
 
-    def setLibraryVersion(self):
-        msg = bytearray([START_SYSEX, UARM_CODE, REPORT_LIBRARY_VERSION, END_SYSEX])
-        self.sp.write(msg)
-        # print binascii.hexlify(bytearray(msg))
-        while self.sp.readable():
-            read_byte = self.sp.read(1)
-            # print binascii.hexlify(read_byte)
-            readData = ord(read_byte)
-            received_data = []
-            if (readData == START_SYSEX):
-                readData = ord(self.sp.read(1))
-                if (readData == UARM_CODE):
+    def set_frimware_version(self):
+        if self.isConnected():
+            msg = bytearray([START_SYSEX, UARM_CODE, REPORT_LIBRARY_VERSION, END_SYSEX])
+            self.write_serial_msg(msg)
+            while self.sp.readable():
+                read_byte = self.sp.read(1)
+                readData = ord(read_byte)
+                received_data = []
+                if (readData == START_SYSEX):
                     readData = ord(self.sp.read(1))
-                    if (readData == REPORT_LIBRARY_VERSION):
+                    if (readData == UARM_CODE):
                         readData = ord(self.sp.read(1))
-                        while readData != END_SYSEX:
-                            received_data.append(readData)
+                        if (readData == REPORT_LIBRARY_VERSION):
                             readData = ord(self.sp.read(1))
-                        self.firmware_major_version = received_data[0]
-                        self.firmware_minor_version = received_data[1]
-                        self.firmware_bugfix = received_data[2]
-                        break
-                        # return self.get_firmware_version()
+                            while readData != END_SYSEX:
+                                received_data.append(readData)
+                                readData = ord(self.sp.read(1))
+                            self.firmware_major_version = received_data[0]
+                            self.firmware_minor_version = received_data[1]
+                            self.firmware_bugfix = received_data[2]
+                            break
+        else:
+            print "uArm is not Connected"
 
+    def write_serial_msg(self, msg):
+        if self.debug_mode:
+            print binascii.hexlify(msg)
+        self.sp.write(msg)
 
 class ConnectError(RuntimeError):
    def __init__(self, arg):
@@ -439,13 +451,16 @@ def getValueAsTwo7bitBytes(val):
     int_val = int(val)
     return bytearray([abs(int_val) % 128, abs(int_val) >> 7])
 
-def getValueAsThree7bitBytes(val):
+def getFloatAsThree7bitBytes(val):
     int_val = int(val)
     decimal_val = int(round((val - int_val) * 100))
     # print decimal_val
     return bytearray([abs(int_val) % 128, abs(int_val) >> 7, abs(decimal_val)])
 
-def getValueAsFour7bitBytes(val):
+def getIntegerAsThree7bitBytes(val):
+    return bytearray([0 if val > 0 else 1, abs(val) % 128, abs(val) >> 7])
+
+def getFloatAsFour7bitBytes(val):
     int_val = int(val)
     decimal_val = int(round((val - int_val) * 100))
     # print "decimal_val: ", decimal_val
