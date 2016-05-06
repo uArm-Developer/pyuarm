@@ -6,7 +6,7 @@ from serial.tools import list_ports
 # version
 MAJOR_VERSION = 1
 MINOR_VERSION = 2
-BUGFIX_VERSION = 1
+BUGFIX_VERSION = 2
 VERSION = str(MAJOR_VERSION) + "." + str(MINOR_VERSION) + "." + str(BUGFIX_VERSION)
 
 # Firmata
@@ -59,7 +59,7 @@ LINEAR_SLOPE_START_ADDRESS          = 50
 OFFSET_START_ADDRESS                = 30
 OFFSET_STRETCH_START_ADDRESS        = 20
 
-SERIAL_NUMBER_ADDRESS = 1024
+SERIAL_NUMBER_ADDRESS = 100
 
 EEPROM_DATA_TYPE_BYTE               = 1
 EEPROM_DATA_TYPE_INTEGER            = 2
@@ -102,17 +102,17 @@ class uArm(object):
     frimata_major_version = 0
     frimata_minor_version = 0
 
-    def __init__(self,port):
+    def __init__(self,port,debug_mode=False):
         self.port = port
         self.sp = serial.Serial(port,baudrate=57600)
+        self.debug_mode = debug_mode
         self.set_firmata_version()
         print self.get_firmata_version()
-        # time.sleep(5)
         self.set_frimware_version()
         print self.get_firmware_version()
 
     def isConnected(self):
-        if self.sp.isOpen() == False:
+        if not self.sp.isOpen():
             return False
         else:
             return True
@@ -135,7 +135,7 @@ class uArm(object):
         return str(self.frimata_major_version) + "." + str(self.frimata_minor_version)
 
     def set_firmata_version(self):
-        try:     
+        try:
             # self.writeSerialMsg(msg)
             while self.sp.readable():
                 read_byte = self.sp.read(1)
@@ -383,12 +383,12 @@ class uArm(object):
         msg.append(END_SYSEX)
         self.write_serial_msg(msg)
 
-
     def write_serial_number(self, serial_number):
         msg = bytearray([START_SYSEX, UARM_CODE, WRITE_SERIAL_NUMBER])
         for c in serial_number:
             msg.append(ord(c))
         msg.append(END_SYSEX)
+        # print binascii.hexlify(msg)
         self.write_serial_msg(msg)
 
     def read_serial_number(self):
@@ -408,6 +408,7 @@ class uArm(object):
                             readData = ord(self.sp.read(1))
                         sn_array = []
                         for r in received_data:
+                            # print r
                             sn_array.append(chr(r))
                         return ''.join(sn_array)
 

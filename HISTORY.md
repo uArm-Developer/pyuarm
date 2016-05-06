@@ -1,3 +1,10 @@
+## [1.2.2] - 2016-05-06
+### Updated - Alex Tan
+
+### Fix
+- Callback Function default to None
+- Update SERIAL_NUMBER_ADDRESS to 100
+
 ## [1.2.1] - 2016-05-03
 ### Updated - Alex Tan
 
