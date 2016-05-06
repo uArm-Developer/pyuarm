@@ -1,3 +1,9 @@
+## [1.2.3] - 2016-05-06
+### Updated - Alex Tan
+
+### Fix
+- remove docutils from dependency
+
 ## [1.2.2] - 2016-05-06
 ### Updated - Alex Tan
 
