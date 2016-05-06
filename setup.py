@@ -3,7 +3,6 @@ from setuptools import setup, find_packages
 import pyuarm
 setup(name='pyuarm',
     version=pyuarm.VERSION,
-    py_modules=['pyuarm'],
     author='Joey Song/Alex Tan',
     packages=['pyuarm'],
     author_email='developer@ufactory.cc',

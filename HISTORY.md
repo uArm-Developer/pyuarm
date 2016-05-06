@@ -1,3 +1,9 @@
+## [1.2.4] - 2016-05-06
+### Updated - Alex Tan
+
+### Fix
+- remove py_modules 
+
 ## [1.2.3] - 2016-05-06
 ### Updated - Alex Tan
 
