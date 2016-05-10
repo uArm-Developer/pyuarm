@@ -1,8 +1,14 @@
+## [1.2.5] - 2016-05-10
+### Updated - Alex Tan
+
+### Changes
+- Add BUZZER_ALERT 0x24
+
 ## [1.2.4] - 2016-05-06
 ### Updated - Alex Tan
 
 ### Fix
-- remove py_modules 
+- remove py_modules
 
 ## [1.2.3] - 2016-05-06
 ### Updated - Alex Tan

@@ -6,7 +6,7 @@ from serial.tools import list_ports
 # version
 MAJOR_VERSION = 1
 MINOR_VERSION = 2
-BUGFIX_VERSION = 4
+BUGFIX_VERSION = 5
 VERSION = str(MAJOR_VERSION) + "." + str(MINOR_VERSION) + "." + str(BUGFIX_VERSION)
 
 # Firmata
@@ -47,6 +47,7 @@ GRIPPER_STATUS              = 0X20
 READ_SERIAL_NUMBER          = 0x21
 WRITE_SERIAL_NUMBER         = 0x22
 REPORT_LIBRARY_VERSION      = 0x23
+BUZZER_ALERT                = 0x24
 
 CONFIRM_FLAG = 0x80
 CALIBRATION_FLAG                    = 10
@@ -411,6 +412,11 @@ class uArm(object):
                             # print r
                             sn_array.append(chr(r))
                         return ''.join(sn_array)
+
+    def alert(self, times, run_time, stop_time):
+        if self.isConnected():
+            msg = bytearray([START_SYSEX, UARM_CODE, BUZZER_ALERT, times, run_time, stop_time,END_SYSEX ])
+            self.write_serial_msg(msg)
 
     def set_frimware_version(self):
         if self.isConnected():
