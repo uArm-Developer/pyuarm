@@ -1,3 +1,10 @@
+## [1.2.6] - 2016-05-11
+### Updated - Alex Tan
+
+### Changes
+- alert uarm when start manual calibration
+- Reduce delay during linear calibration
+
 ## [1.2.5] - 2016-05-10
 ### Updated - Alex Tan
 

@@ -151,7 +151,7 @@ class Calibration(object):
                 self.uarm.write_servo_angle(SERVO_HAND_ROT_NUM, angle, 0)
 
             if angle_step == 0:
-                time.sleep(0.5)
+                time.sleep(0.1)
             else:
                 time.sleep(0.1)
 
@@ -162,7 +162,7 @@ class Calibration(object):
             angles.append(angle)
             analogs.append(servo_analog_read)
             angle_step += 1
-            time.sleep(0.2)
+            time.sleep(0.1)
 
         new_ab = basic_linear_regression(analogs, angles)
         linear_offset_template = copy.deepcopy(self.linear_offset_template)
@@ -193,6 +193,7 @@ class Calibration(object):
         servo_2_offset = 0
         servo_3_offset = 0
         self.uf_print("Please move uArm in right position")
+        self.uarm.alert(2,100,100)
         while self.manual_operation_trigger:
 
             servo_1_offset = self.uarm.read_servo_angle(SERVO_ROT_NUM, 0) - 45
