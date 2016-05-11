@@ -193,7 +193,7 @@ class Calibration(object):
         servo_2_offset = 0
         servo_3_offset = 0
         self.uf_print("Please move uArm in right position")
-        self.uarm.alert(2,100,100)
+        self.uarm.alert(3,100,100)
         while self.manual_operation_trigger:
 
             servo_1_offset = self.uarm.read_servo_angle(SERVO_ROT_NUM, 0) - 45
