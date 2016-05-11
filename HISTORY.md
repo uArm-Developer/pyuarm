@@ -1,3 +1,9 @@
+## [1.2.7] - 2016-05-11
+### Updated - Alex Tan
+
+### Fix
+- Changes Alert as 3, 100, 100
+
 ## [1.2.6] - 2016-05-11
 ### Updated - Alex Tan
 
