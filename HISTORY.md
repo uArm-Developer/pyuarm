@@ -1,3 +1,9 @@
+## [1.2.8] - 2016-05-11
+### Updated - Alex Tan
+
+### Fix
+- Add Default Timeout is 5 sec
+
 ## [1.2.7] - 2016-05-11
 ### Updated - Alex Tan
 

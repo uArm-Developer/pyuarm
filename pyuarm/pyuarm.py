@@ -6,7 +6,7 @@ from serial.tools import list_ports
 # version
 MAJOR_VERSION = 1
 MINOR_VERSION = 2
-BUGFIX_VERSION = 7
+BUGFIX_VERSION = 8
 VERSION = str(MAJOR_VERSION) + "." + str(MINOR_VERSION) + "." + str(BUGFIX_VERSION)
 
 # Firmata
@@ -105,7 +105,7 @@ class uArm(object):
 
     def __init__(self,port,debug_mode=False):
         self.port = port
-        self.sp = serial.Serial(port,baudrate=57600)
+        self.sp = serial.Serial(port,baudrate=57600,timeout=5)
         self.debug_mode = debug_mode
         self.set_firmata_version()
         print self.get_firmata_version()
