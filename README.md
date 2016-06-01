@@ -1,4 +1,5 @@
-![Logo](https://ufactory.cc/viewpage/img/logo-whole-png.png =200x70)
+<img src="https://ufactory.cc/viewpage/img/logo-whole-png.png" width="200">
+
 # uArm For Python
 
 This is a uArm Library for Python.
