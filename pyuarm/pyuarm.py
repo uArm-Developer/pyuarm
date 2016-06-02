@@ -6,7 +6,7 @@ from serial.tools import list_ports
 # version
 MAJOR_VERSION = 1
 MINOR_VERSION = 2
-BUGFIX_VERSION = 8
+BUGFIX_VERSION = 9
 VERSION = str(MAJOR_VERSION) + "." + str(MINOR_VERSION) + "." + str(BUGFIX_VERSION)
 
 # Firmata
@@ -99,18 +99,20 @@ class uArm(object):
     firmware_major_version  = 0
     firmware_minor_version = 0
     firmware_bugfix = 0
+    firmware_version = "0.0.0"
 
     frimata_major_version = 0
     frimata_minor_version = 0
+    firmata_version = "0.0"
 
     def __init__(self,port,debug_mode=False):
         self.port = port
         self.sp = serial.Serial(port,baudrate=57600,timeout=5)
         self.debug_mode = debug_mode
         self.set_firmata_version()
-        print self.get_firmata_version()
         self.set_frimware_version()
-        print self.get_firmware_version()
+        print "Firmware Version: " + self.get_firmware_version()
+        # print self.get_firmware_version()
 
     def isConnected(self):
         if not self.sp.isOpen():
@@ -130,10 +132,10 @@ class uArm(object):
             print self.get_firmware_version()
 
     def get_firmware_version(self):
-        return str(self.firmware_major_version) + "." + str(self.firmware_minor_version) + "." + str(self.firmware_bugfix)
+        return self.firmware_version
 
     def get_firmata_version(self):
-        return str(self.frimata_major_version) + "." + str(self.frimata_minor_version)
+        return
 
     def set_firmata_version(self):
         try:
@@ -149,6 +151,7 @@ class uArm(object):
                     if readData == REPORT_FIRMATA_VERSION:
                         self.frimata_major_version = ord(self.sp.read(1))
                         self.frimata_minor_version = ord(self.sp.read(1))
+                        self.firmata_version = str(self.frimata_major_version) + "." + str(self.frimata_minor_version)
         except Exception as e:
             print "Serial Exception: ",e.message
 
@@ -438,6 +441,7 @@ class uArm(object):
                             self.firmware_major_version = received_data[0]
                             self.firmware_minor_version = received_data[1]
                             self.firmware_bugfix = received_data[2]
+                            self.firmware_version = str(self.firmware_major_version) + "." + str(self.firmware_minor_version) + "." + str(self.firmware_bugfix)
                             break
         else:
             print "uArm is not Connected"

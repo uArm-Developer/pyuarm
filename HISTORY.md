@@ -1,3 +1,9 @@
+## [1.2.9] - 2016-05-11
+### Updated - Alex Tan
+
+### Fix
+- Add firmware_version and firmata_version
+
 ## [1.2.8] - 2016-05-11
 ### Updated - Alex Tan
 
