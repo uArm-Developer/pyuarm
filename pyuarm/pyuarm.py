@@ -6,7 +6,7 @@ from serial.tools import list_ports
 # version
 MAJOR_VERSION = 1
 MINOR_VERSION = 2
-BUGFIX_VERSION = 9
+BUGFIX_VERSION = 10
 VERSION = str(MAJOR_VERSION) + "." + str(MINOR_VERSION) + "." + str(BUGFIX_VERSION)
 
 # Firmata
@@ -90,9 +90,9 @@ def list_uarms():
 def get_uarm():
     uarm_ports = list_uarms()
     if len(uarm_ports) > 0:
-        return uArm(uarm_ports[0])
+        return uArm(port=uarm_ports[0])
     else:
-        print "No uArm Port Founds"
+        print "There is no uArm port available"
 
 class uArm(object):
 
@@ -105,14 +105,19 @@ class uArm(object):
     frimata_minor_version = 0
     firmata_version = "0.0"
 
-    def __init__(self,port,debug_mode=False):
+    def __init__(self,port=None,debug_mode=False, timeout=5):
+        uarm_ports = list_uarms()
+        if port is None:
+            if len(uarm_ports) > 0:
+                port = uarm_ports[0]
+            else:
+                raise NoUArmPortException()
         self.port = port
-        self.sp = serial.Serial(port,baudrate=57600,timeout=5)
+        self.sp = serial.Serial(port,baudrate=57600,timeout=timeout)
         self.debug_mode = debug_mode
         self.set_firmata_version()
         self.set_frimware_version()
         print "Firmware Version: " + self.get_firmware_version()
-        # print self.get_firmware_version()
 
     def isConnected(self):
         if not self.sp.isOpen():
@@ -454,6 +459,13 @@ class uArm(object):
 class ConnectError(RuntimeError):
    def __init__(self, arg):
       self.args = arg
+
+class NoUArmPortException(Exception):
+   def __init__(self, message, error):
+       if arg is None:
+           arg = ""
+       Exception.__init__(self,"No uArm Port Founds {0}".format(arg))
+       self.args = arg
 
 def getValueAsOne7bitBytes(val):
     return bytearray([val])

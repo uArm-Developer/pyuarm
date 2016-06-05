@@ -1,4 +1,10 @@
-## [1.2.9] - 2016-05-11
+## [1.2.10] - 2016-06-04
+### Updated - Alex Tan
+
+### Fix
+- uArm() Default use list_uarm()[0]
+
+## [1.2.9] - 2016-06-01
 ### Updated - Alex Tan
 
 ### Fix
