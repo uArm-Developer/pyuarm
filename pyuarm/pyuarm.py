@@ -6,7 +6,7 @@ from serial.tools import list_ports
 # version
 MAJOR_VERSION = 1
 MINOR_VERSION = 2
-BUGFIX_VERSION = 9
+BUGFIX_VERSION = 11
 VERSION = str(MAJOR_VERSION) + "." + str(MINOR_VERSION) + "." + str(BUGFIX_VERSION)
 
 # Firmata
@@ -105,7 +105,13 @@ class uArm(object):
     frimata_minor_version = 0
     firmata_version = "0.0"
 
-    def __init__(self,port,debug_mode=False,timeout=5):
+    def __init__(self,port=None,debug_mode=False, timeout=5):
+        uarm_ports = list_uarms()
+        if port is None:
+            if len(uarm_ports) > 0:
+                port = uarm_ports[0]
+            else:
+                raise NoUArmPortException()
         self.port = port
         self.sp = serial.Serial(port,baudrate=57600,timeout=timeout)
         self.debug_mode = debug_mode
@@ -115,7 +121,6 @@ class uArm(object):
         except Exception as e:
             print ("Serial Exception: {0} ".format())
         print "Firmware Version: " + self.get_firmware_version()
-        # print self.get_firmware_version()
 
     def isConnected(self):
         if not self.sp.isOpen():
