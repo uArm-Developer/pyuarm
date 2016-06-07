@@ -90,9 +90,9 @@ def list_uarms():
 def get_uarm():
     uarm_ports = list_uarms()
     if len(uarm_ports) > 0:
-        return uArm(uarm_ports[0])
+        return uArm(port=uarm_ports[0])
     else:
-        print "No uArm Port Founds"
+        print "There is no uArm port available"
 
 class uArm(object):
 
@@ -105,12 +105,15 @@ class uArm(object):
     frimata_minor_version = 0
     firmata_version = "0.0"
 
-    def __init__(self,port,debug_mode=False):
+    def __init__(self,port,debug_mode=False,timeout=5):
         self.port = port
-        self.sp = serial.Serial(port,baudrate=57600,timeout=5)
+        self.sp = serial.Serial(port,baudrate=57600,timeout=timeout)
         self.debug_mode = debug_mode
-        self.set_firmata_version()
-        self.set_frimware_version()
+        try:
+            self.set_firmata_version()
+            self.set_frimware_version()
+        except Exception as e:
+            print ("Serial Exception: {0} ".format())
         print "Firmware Version: " + self.get_firmware_version()
         # print self.get_firmware_version()
 
@@ -138,22 +141,20 @@ class uArm(object):
         return
 
     def set_firmata_version(self):
-        try:
-            # self.writeSerialMsg(msg)
-            while self.sp.readable():
-                read_byte = self.sp.read(1)
-                # print binascii.hexlify(read_byte)
-                readData = ord(read_byte)
-                if readData == END_SYSEX:
-                    break
-                if readData == START_SYSEX:
-                    readData = ord(self.sp.read(1))
-                    if readData == REPORT_FIRMATA_VERSION:
-                        self.frimata_major_version = ord(self.sp.read(1))
-                        self.frimata_minor_version = ord(self.sp.read(1))
-                        self.firmata_version = str(self.frimata_major_version) + "." + str(self.frimata_minor_version)
-        except Exception as e:
-            print "Serial Exception: ",e.message
+        # self.writeSerialMsg(msg)
+        while self.sp.readable():
+            read_byte = self.sp.read(1)
+            # print binascii.hexlify(read_byte)
+            readData = ord(read_byte)
+            if readData == END_SYSEX:
+                break
+            if readData == START_SYSEX:
+                readData = ord(self.sp.read(1))
+                if readData == REPORT_FIRMATA_VERSION:
+                    self.frimata_major_version = ord(self.sp.read(1))
+                    self.frimata_minor_version = ord(self.sp.read(1))
+                    self.firmata_version = str(self.frimata_major_version) + "." + str(self.frimata_minor_version)
+
 
     def read_servo_angle(self, servo_add, data_offset):
         msg = bytearray([START_SYSEX, UARM_CODE, READ_ANGLE])
@@ -454,6 +455,13 @@ class uArm(object):
 class ConnectError(RuntimeError):
    def __init__(self, arg):
       self.args = arg
+
+class NoUArmPortException(Exception):
+   def __init__(self, message, error):
+       if arg is None:
+           arg = ""
+       Exception.__init__(self,"No uArm Port Founds {0}".format(arg))
+       self.args = arg
 
 def getValueAsOne7bitBytes(val):
     return bytearray([val])
