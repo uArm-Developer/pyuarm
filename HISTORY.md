@@ -1,3 +1,9 @@
+## [1.2.11] - 2016-06-04
+### Updated - Alex Tan
+
+### Fix
+- Add NoUArmPortException, UnkwonFirmwareException
+
 ## [1.2.10] - 2016-06-04
 ### Updated - Alex Tan
 

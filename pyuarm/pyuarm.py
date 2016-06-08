@@ -2,6 +2,7 @@ import serial
 import time
 import binascii
 from serial.tools import list_ports
+from serial import SerialException
 
 # version
 MAJOR_VERSION = 1
@@ -111,15 +112,17 @@ class uArm(object):
             if len(uarm_ports) > 0:
                 port = uarm_ports[0]
             else:
-                raise NoUArmPortException()
+                raise NoUArmPortException("No uArm is connected.")
         self.port = port
         self.sp = serial.Serial(port,baudrate=57600,timeout=timeout)
         self.debug_mode = debug_mode
         try:
             self.set_firmata_version()
             self.set_frimware_version()
-        except Exception as e:
-            print ("Serial Exception: {0} ".format())
+        except SerialException as e:
+            raise UnkwonFirmwareException("Unkwon Firmware Version, Please upgrade your firmware.")
+        except TypeError as e:
+            raise UnkwonFirmwareException("Unkwon Firmware Version, Please upgrade your firmware.")
         print "Firmware Version: " + self.get_firmware_version()
 
     def isConnected(self):
@@ -457,16 +460,19 @@ class uArm(object):
             print binascii.hexlify(msg)
         self.sp.write(msg)
 
-class ConnectError(RuntimeError):
-   def __init__(self, arg):
-      self.args = arg
+class NoUArmPortException(IOError):
+    def __init__(self, error):
+        self.error = error
 
-class NoUArmPortException(Exception):
-   def __init__(self, message, error):
-       if arg is None:
-           arg = ""
-       Exception.__init__(self,"No uArm Port Founds {0}".format(arg))
-       self.args = arg
+    def __str__(self):
+        return repr(self.error)
+
+class UnkwonFirmwareException(Exception):
+    def __init__(self, error):
+        self.error = error
+
+    def __str__(self):
+        return repr(self.error)
 
 def getValueAsOne7bitBytes(val):
     return bytearray([val])
