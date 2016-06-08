@@ -2,7 +2,7 @@
 ### Updated - Alex Tan
 
 ### Fix
-- fix setup.py package_data avrdude folder
+- fix setup.py package_data avrdude folder, MANIFEST.in
 
 ## [1.3.2] - 2016-06-08
 ### Updated - Alex Tan
