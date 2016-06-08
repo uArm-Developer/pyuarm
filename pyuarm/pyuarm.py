@@ -2,13 +2,14 @@ import serial
 import time
 import binascii
 from serial.tools import list_ports
-from serial import SerialException
 
 # version
 MAJOR_VERSION = 1
-MINOR_VERSION = 2
-BUGFIX_VERSION = 11
+MINOR_VERSION = 3
+BUGFIX_VERSION = 1
 VERSION = str(MAJOR_VERSION) + "." + str(MINOR_VERSION) + "." + str(BUGFIX_VERSION)
+version = VERSION
+__version__ = version
 
 # Firmata
 
@@ -119,7 +120,7 @@ class uArm(object):
         try:
             self.set_firmata_version()
             self.set_frimware_version()
-        except SerialException as e:
+        except serial.SerialException as e:
             raise UnkwonFirmwareException("Unkwon Firmware Version, Please upgrade your firmware.")
         except TypeError as e:
             raise UnkwonFirmwareException("Unkwon Firmware Version, Please upgrade your firmware.")

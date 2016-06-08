@@ -1,3 +1,9 @@
+## [1.3.0] - 2016-06-08
+### Updated - Alex Tan
+
+### Changes
+- Add moudle pyuarm.tools, integrate with firmware_helper, list_uarms
+
 ## [1.2.11] - 2016-06-04
 ### Updated - Alex Tan
 
