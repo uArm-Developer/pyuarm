@@ -1,10 +1,10 @@
-
 from setuptools import setup, find_packages
 import pyuarm
 setup(name='pyuarm',
     version=pyuarm.VERSION,
     author='Joey Song/Alex Tan',
     packages=['pyuarm', 'pyuarm.tools'],
+    package_data={'pyuarm.tools': ['avrdude/*'] },
     author_email='developer@ufactory.cc',
     description='A python library for uArm',
     url="https://github.com/uarm-developer/pyuarm",

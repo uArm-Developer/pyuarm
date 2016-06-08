@@ -1,3 +1,9 @@
+## [1.3.3] - 2016-06-08
+### Updated - Alex Tan
+
+### Fix
+- fix setup.py package_data avrdude folder
+
 ## [1.3.2] - 2016-06-08
 ### Updated - Alex Tan
 
