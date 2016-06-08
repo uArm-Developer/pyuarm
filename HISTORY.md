@@ -1,4 +1,10 @@
-## [1.3.1] - 2016-06-08
+## [1.3.2] - 2016-06-08
+### Updated - Alex Tan
+
+### Fix
+- fix setup.py 'pycurl>=7.43.0', 'certifi>=2016.02.28', 'tqdm>=4.7.2', 'requests>=2.10.0'
+
+## [1.3.2] - 2016-06-08
 ### Updated - Alex Tan
 
 ### Fix
