@@ -14,6 +14,8 @@ firmware_defaul_filename = 'firmware.hex'
 application_path = ""
 firmware_path = ""
 uarm_port = ""
+firmware_url = ""
+firmware_size = ""
 
 def update_firmware_path(path):
     global firmware_path
@@ -23,13 +25,21 @@ def update_uarm_port(port):
     global uarm_port
     uarm_port = port
 
+def update_firmware_url(url):
+    global firmware_url
+    firmware_url = url
+
+def update_firmware_size(size):
+    global firmware_size
+    firmware_size = size
+
 def init():
     global application_path
     if getattr(sys, 'frozen', False):
         application_path = os.path.dirname(sys.executable)
     elif __file__:
         application_path = os.path.dirname(__file__)
-    update_firmware_path(os.path.join(application_path, firmware_defaul_filename))
+    update_firmware_path(os.path.join(os.getcwd(), firmware_defaul_filename))
     get_uarm_port()
 
 def get_uarm_port():
@@ -73,15 +83,17 @@ def get_download_url():
     c.perform()
     dict = json.loads(data.getvalue())
     firmware_url = dict['assets'][0]['browser_download_url']
+    firmware_size = dict['assets'][0]['size']
+    update_firmware_url(firmware_url)
+    update_firmware_size(firmware_size)
     print firmware_url
-    return firmware_url
 
 def download_firmware():
     print ("Downloading firmware.hex...")
-    url = get_download_url()
-    response = requests.get(url, stream=True)
+    get_download_url()
+    response = requests.get(firmware_url, stream=True)
     with open(firmware_path, "wb") as handle:
-        for data in tqdm(response.iter_content()):
+        for data in tqdm(response.iter_content(), total=firmware_size):
             handle.write(data)
 
 def get_latest_version():

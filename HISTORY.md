@@ -1,3 +1,9 @@
+## [1.3.1] - 2016-06-08
+### Updated - Alex Tan
+
+### Fix
+- firmware_helper, improve download progress bar
+
 ## [1.3.0] - 2016-06-08
 ### Updated - Alex Tan
 
