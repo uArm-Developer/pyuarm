@@ -1,11 +1,33 @@
 #!/usr/bin/env python
+#
+# This is a module that help user to manage the uArm firmware.
+# Please use -h to list all parameters of this script
+
+# This file is part of pyuarm. https://github.com/uArm-Developer/pyuarm
+# (C) 2016 UFACTORY <developer@ufactory.cc>
+
+#usage: firmware_helper.py [-h] [-d] [-f [FLASH]] [-c [CHECK]]
+
+#optional arguments:
+#  -h, --help            show this help message and exit
+#  -d, --download        download firmware into firmware.hex
+#  -f [FLASH], --flash [FLASH]
+#                        without firmware path, flash default firmware.hex, if
+#                        not existed, download automatically, with firmware
+#                        path, flash the firmware, eg. -f Blink.ino.hex
+#  -c [CHECK], --check [CHECK]
+#                        remote - lateset firmware release version, local -
+#                        read uArm firmware version
+
+import pyuarm
+from list_uarms import uarm_ports
 import pycurl, certifi
 import json
 from io import BytesIO
 from tqdm import tqdm
 import requests
 import os, zipfile, sys, platform,subprocess
-from pyuarm import *
+
 from distutils.version import LooseVersion, StrictVersion
 import argparse
 
@@ -43,7 +65,7 @@ def init():
     get_uarm_port()
 
 def get_uarm_port():
-    uarm_list = list_uarms()
+    uarm_list = uarm_ports()
     if len(uarm_list) > 0:
         update_uarm_port(uarm_list[0])
         return True
@@ -91,10 +113,13 @@ def get_download_url():
 def download_firmware():
     print ("Downloading firmware.hex...")
     get_download_url()
-    response = requests.get(firmware_url, stream=True)
-    with open(firmware_path, "wb") as handle:
-        for data in tqdm(response.iter_content(), total=firmware_size):
-            handle.write(data)
+    try:
+        response = requests.get(firmware_url, stream=True)
+        with open(firmware_path, "wb") as handle:
+            for data in tqdm(response.iter_content(), total=firmware_size):
+                handle.write(data)
+    except requests.exceptions.ConnectionError:
+        raise NetworkError("NetWork Error, Please retry...")
 
 def get_latest_version():
     global web_firmware_version
@@ -113,10 +138,10 @@ def get_uarm_version():
     global uarm_firmware_version
     print "Reading Firmware version from uArm..."
     try:
-        uarm = uArm(port=uarm_port)
+        uarm = pyuarm.uArm(port=uarm_port)
         uarm_firmware_version = uarm.firmware_version
         uarm.disconnect()
-    except:
+    except pyuarm.UnkwonFirmwareException:
         print "Unknown Firmware version."
 
 def comapre_version():
@@ -183,6 +208,13 @@ def main():
             flash_firmware()
         else:
             print "exit"
+
+class NetworkError(Exception):
+    def __init__(self, error):
+        self.error = error
+
+    def __str__(self):
+        return repr(self.error)
 
 if __name__ == '__main__':
     main()

@@ -1,3 +1,12 @@
+## [1.3.4] - 2016-06-10
+### Updated - Alex Tan
+
+### Changes
+- move pyuarm.calibrate to pyuarm.tools.calibrate
+- move pyuarm.list_uarms function to pyuarm.tools.list_uarms
+- pyuarm.py replace serial_read_byte() with sp.read(1), support debug read message
+- firmware_helper.py add NetworkError
+
 ## [1.3.3] - 2016-06-08
 ### Updated - Alex Tan
 

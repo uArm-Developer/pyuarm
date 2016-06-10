@@ -1,4 +1,5 @@
 from pyuarm import *
+from list_uarms import uarm_ports
 import copy
 
 
@@ -35,10 +36,10 @@ class Calibration(object):
     def __init__(self, uarm=None, log_function=None):
         if uarm is not None:
             self.uarm = uarm
-        elif len(list_uarms()) > 0:
+        elif len(uarm_ports()) > 0:
             self.uarm = get_uarm()
         else:
-            raise ValueError('No available uArm Founds')
+            raise NoUArmPortException('No available uArm Founds')
 
         if log_function is not None:
             self.log_function = log_function
@@ -89,7 +90,7 @@ class Calibration(object):
         self.write_completed_flag(CALIBRATION_LINEAR_FLAG, False)
         self.uf_print("1. Start Calibrate Linear Offset")
         for i in range(4):
-            self.uf_print("    1.1." + str(i) + " Linear Offset - Servo " + str(i))
+            self.uf_print("    1.1. {0} Linear Offset - Servo {1}".format(str(i),str(i)))
             temp_linear_offset = self.calibrate_linear_servo_offset(i)
             linear_is_correct = False
             if check_linear_is_correct(temp_linear_offset):
@@ -105,16 +106,10 @@ class Calibration(object):
         if self.read_linear_offset() == self.linear_offset:
             self.uf_print("    1.3 Mark Completed Flag in EEPROM")
             self.write_completed_flag(CALIBRATION_LINEAR_FLAG, True)
-            # self.uf_print("    1.4 Disconnecting uArm to load offset")
-            # self.uarm.disconnect()  # reconnect to load offset
-            # time.sleep(1)
-            # self.uf_print("    1.5 Reconnecting, Please wait...")
-            # self.uarm.reconnect()
             self.linear_calibration_start_flag = False
         else:
             self.uf_print("Error - 1. Linear Offset not equal to EEPROM, Please retry.")
-            # self.uf_print("Error - 1. manual_offset: " + self.temp_manual_offset_arr)
-            self.uf_print("Error - 1. linear_offset(): " + self.read_linear_offset())
+            self.uf_print("Error - 1. linear_offset(): {0}".format(self.read_linear_offset()))
             self.linear_calibration_start_flag = False
         self.uarm.detach_all_servos()
 
@@ -169,11 +164,6 @@ class Calibration(object):
         linear_offset_template['SLOPE'] = round(new_ab[0], 2)
         linear_offset_template['INTERCEPT'] = round(new_ab[1], 2)
         return linear_offset_template
-        # print new_ab[0]
-        # print new_ab[1]
-        # self.ab_values_a.append(new_ab[0])
-        # self.ab_values_b.append(new_ab[1])
-        # self.complete_display(number,'linear')
 
     def manual_calibration_section(self, callback=None):
         self.uf_print("2.0. Clearing Servo Completed Flag in EEPROM.")
@@ -228,7 +218,6 @@ class Calibration(object):
                 callback(self.temp_manual_offset_arr, self.manual_offset_correct_flag)
             time.sleep(0.1)
 
-        # if self.manual_offset_correct_flag[0] & self.manual_offset_correct_flag[1] & self.manual_offset_correct_flag[2]:
         self.temp_manual_offset_arr[0] = round(servo_1_offset, 2)
         self.temp_manual_offset_arr[1] = round(servo_2_offset, 2)
         self.temp_manual_offset_arr[2] = round(servo_3_offset, 2)
@@ -239,8 +228,8 @@ class Calibration(object):
         else:
             self.write_completed_flag(CALIBRATION_SERVO_FLAG, False)
             self.uf_print("Error - 2, Manual Calibration Servo offset not equal to EEPROM")
-            self.uf_print("Error - 2, manual Servo Offset: ", self.temp_manual_offset_arr)
-            self.uf_print("Error - 2, read_manual_offset: ", self.read_manual_offset())
+            self.uf_print("Error - 2, manual Servo Offset: {0}".format(self.temp_manual_offset_arr))
+            self.uf_print("Error - 2, read_manual_offset: {0}".format(self.read_manual_offset()))
         self.uarm.detach_all_servos()
 
     def stretch_calibration_section(self, callback=None):
@@ -259,8 +248,8 @@ class Calibration(object):
         initPosR = INIT_POS_R - 12
         minAngle_L = self.uarm.read_analog(SERVO_LEFT_ANALOG_PIN) - 16;
         minAngle_R = self.uarm.read_analog(SERVO_RIGHT_ANALOG_PIN) - 16;
-        print 'minAngle_L: ', minAngle_L
-        print 'minAngle_R: ', minAngle_R
+        print ('minAngle_L: {0}'.format(minAngle_L))
+        print ('minAngle_R: {0}'.format(minAngle_R))
 
         self.uarm.write_servo_angle(SERVO_LEFT_NUM, initPosL, 0)
         self.uarm.write_servo_angle(SERVO_RIGHT_NUM, initPosR, 0)
@@ -269,28 +258,28 @@ class Calibration(object):
                 and self.stretch_calibration_flag:
             initPosR += 1
             self.uarm.write_servo_angle(SERVO_RIGHT_NUM, initPosR, 0)
-            print 'initPosR: ', initPosR
+            print ('initPosR: {0}'.format(initPosR))
             time.sleep(0.05)
 
         while self.uarm.read_analog(SERVO_RIGHT_ANALOG_PIN) > (minAngle_R + SAMPLING_DEADZONE) \
                 and self.stretch_calibration_flag:
             initPosR -= 1
             self.uarm.write_servo_angle(SERVO_RIGHT_NUM, initPosR, 0)
-            print 'initPosR: ', initPosR
+            print ('initPosR: {0}'.format(initPosR))
             time.sleep(0.05)
 
         while self.uarm.read_analog(SERVO_LEFT_ANALOG_PIN) < (minAngle_L - SAMPLING_DEADZONE) \
                 and self.stretch_calibration_flag:
             initPosL += 1
             self.uarm.write_servo_angle(SERVO_LEFT_NUM, initPosL, 0)
-            print 'initPosL: ', initPosL
+            print ('initPosL: {0}'.format(initPosL))
             time.sleep(0.05)
 
         while self.uarm.read_analog(SERVO_LEFT_ANALOG_PIN) > (minAngle_L + SAMPLING_DEADZONE) \
                 and self.stretch_calibration_flag:
             initPosL -= 1
             self.uarm.write_servo_angle(SERVO_LEFT_NUM, initPosL, 0)
-            print 'initPosL: ', initPosL
+            print ('initPosL: {0}'.format(initPosL))
             time.sleep(0.05)
 
         offsetL = initPosL - INIT_POS_L + 3
@@ -435,7 +424,7 @@ def check_linear_is_correct(linear_offset):
 
 
 def main():
-    calibration = Calibration(get_uarm())
+    calibration = Calibration()
     calibration.calibrate_all()
 
 if __name__ == '__main__':
