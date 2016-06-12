@@ -1,6 +1,6 @@
-======
+===============================
 pyuarm
-======
+===============================
 
 Overview
 ========
@@ -13,8 +13,6 @@ Other pages (online)
 - `Download Page`_ with releases
 - This page, when viewed online is at https://pyuarm.readthedocs.io/en/latest/.
 
-.. _`project page on GitHub`: https://github.com/uArm-Developer/pyuarm
-.. _`Download Page`: http://pypi.python.org/pypi/pyuarm
 
 Features
 ========
@@ -31,7 +29,7 @@ Installation
 
 pyuarm
 ------
-This installas a package that can be used from Python (``import pyuarm``).
+This install a package that can be used from Python (``import pyuarm``).
 
 To install for all users on the system, administrator rights (root) may be required.
 
@@ -48,3 +46,5 @@ Unpack the archive, enter the ``pyuarm-x.y`` directory and run::
 
     python setup.py install
 
+.. _`project page on GitHub`: https://github.com/uArm-Developer/pyuarm
+.. _`Download Page`: http://pypi.python.org/pypi/pyuarm

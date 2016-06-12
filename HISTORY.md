@@ -2,6 +2,7 @@
 ### Updated - Alex Tan
 - Update Version 1.3.5
 - Update Documentation
+- Update README.md to README.rst
 
 ### Changes
 
