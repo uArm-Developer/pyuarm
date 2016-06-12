@@ -6,19 +6,6 @@
 # This file is part of pyuarm. https://github.com/uArm-Developer/pyuarm
 # (C) 2016 UFACTORY <developer@ufactory.cc>
 
-#usage: firmware_helper.py [-h] [-d] [-f [FLASH]] [-c [CHECK]]
-
-#optional arguments:
-#  -h, --help            show this help message and exit
-#  -d, --download        download firmware into firmware.hex
-#  -f [FLASH], --flash [FLASH]
-#                        without firmware path, flash default firmware.hex, if
-#                        not existed, download automatically, with firmware
-#                        path, flash the firmware, eg. -f Blink.ino.hex
-#  -c [CHECK], --check [CHECK]
-#                        remote - lateset firmware release version, local -
-#                        read uArm firmware version
-
 import pyuarm
 from list_uarms import uarm_ports
 import pycurl, certifi
@@ -30,6 +17,7 @@ import os, zipfile, sys, platform,subprocess
 
 from distutils.version import LooseVersion, StrictVersion
 import argparse
+
 
 github_release_url = "https://api.github.com/repos/uArm-Developer/FirmwareHelper/releases/latest"
 firmware_defaul_filename = 'firmware.hex'
@@ -150,7 +138,28 @@ def comapre_version():
     if LooseVersion(web_firmware_version) > LooseVersion(uarm_firmware_version):
         return True
 
+
 def main():
+    """
+
+
+    ::
+
+        $ python -m pyuarm.tools.firmware_helper -h
+
+        usage: firmware_helper.py [-h] [-d] [-f [FLASH]] [-c [CHECK]]
+
+        optional arguments:
+          -h, --help            show this help message and exit
+          -d, --download        download firmware into firmware.hex
+          -f [FLASH], --flash [FLASH]
+                                without firmware path, flash default firmware.hex, if
+                                not existed, download automatically, with firmware
+                                path, flash the firmware, eg. -f Blink.ino.hex
+          -c [CHECK], --check [CHECK]
+                                remote - lateset firmware release version, local -
+                                read uArm firmware version
+    """
     init()
     parser = argparse.ArgumentParser()
     parser.add_argument("-d", "--download" , help="download firmware into firmware.hex", action="store_true")
@@ -208,6 +217,7 @@ def main():
             flash_firmware()
         else:
             print "exit"
+
 
 class NetworkError(Exception):
     def __init__(self, error):

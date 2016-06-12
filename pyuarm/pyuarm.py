@@ -7,7 +7,7 @@ from util import *
 # version
 MAJOR_VERSION = 1
 MINOR_VERSION = 3
-BUGFIX_VERSION = 4
+BUGFIX_VERSION = 5
 VERSION = str(MAJOR_VERSION) + "." + str(MINOR_VERSION) + "." + str(BUGFIX_VERSION)
 version = VERSION
 __version__ = version
@@ -240,6 +240,7 @@ class uArm(object):
         Read Analog from PIN
 
         Please reference Arduino AnalogRead_.
+
         .. _AnalogRead: https://www.arduino.cc/en/Reference/AnalogRead
 
         :param pin_num: Integer 1 to 13
@@ -338,9 +339,11 @@ class uArm(object):
     def write_digital(self, pin_number, pin_mode):
         """
         Write Digital to PIN
-        ====================
+
         Please reference Arduino DigitalWrite_.
+
         :: _DigitalWrite: https://www.arduino.cc/en/Reference/DigitalWrite
+        
         :param pin_number: PIN Number - Integer 0~13
         :param pin_mode: Digital Value - HIGH, LOW
 
@@ -354,7 +357,7 @@ class uArm(object):
     def detach_all_servos(self):
         """
         Detach All Servos
-        =================
+
         Unlock the servo after detach.
         """
         msg = bytearray([START_SYSEX, UARM_CODE, DETACH_SERVO, END_SYSEX])

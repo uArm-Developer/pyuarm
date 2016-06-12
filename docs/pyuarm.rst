@@ -1,37 +1,50 @@
-pyuarm package
-==============
+======
+pyuarm
+======
 
-Subpackages
------------
+Overview
+========
 
-.. toctree::
+This module encapsulates the operations for uArm. It provides basic Movement on Python.
+Also provides Firmware_helper and Calibration. The module named "pyuarm" makes the API more pythonic.
 
-    pyuarm.tools
+Other pages (online)
+- `project page on Github`_
+- `Download Page`_ with releases
+- This page, when viewed online is at https://pyuarm.readthedocs.io/en/latest/.
 
-Submodules
-----------
+.. _`project page on GitHub`: https://github.com/uArm-Developer/pyuarm
+.. _`Download Page`: http://pypi.python.org/pypi/pyuarm
 
-pyuarm.pyuarm module
---------------------
+Features
+========
+- Auto uArm Port detection
+- Provide firmware_helper, firmware upgrade online
+- Provide Auto Calibration tool
 
-.. automodule:: pyuarm.pyuarm
-    :members:
-    :undoc-members:
-    :show-inheritance:
+Requirements
+============
+- Python 2.7x (Python3.x not supported yet)
 
-pyuarm.util module
-------------------
+Installation
+============
 
-.. automodule:: pyuarm.util
-    :members:
-    :undoc-members:
-    :show-inheritance:
+pyuarm
+------
+This installas a package that can be used from Python (``import pyuarm``).
 
+To install for all users on the system, administrator rights (root) may be required.
 
-Module contents
----------------
+From PyPI
+~~~~~~~~~
+pyuarm can be installed from PyPI, either manually downloading the files and installing as described below or using::
 
-.. automodule:: pyuarm
-    :members:
-    :undoc-members:
-    :show-inheritance:
+    pip install pyuarm
+
+From source (tar.gz or checkout)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Download the archive from http://pypi.python.org/pypi/pyuarm.
+Unpack the archive, enter the ``pyuarm-x.y`` directory and run::
+
+    python setup.py install
+

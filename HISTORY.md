@@ -1,3 +1,10 @@
+## [1.3.5] - 2016-06-13
+### Updated - Alex Tan
+- Update Version 1.3.5
+- Update Documentation
+
+### Changes
+
 ## [1.3.4] - 2016-06-10
 ### Updated - Alex Tan
 

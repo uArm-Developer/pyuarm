@@ -7,19 +7,9 @@ INIT_POS_L = 139
 INIT_POS_R = 26
 SAMPLING_DEADZONE = 2
 
-# uArm Calibration library
-# 1. Linear Calibration section
-#  1.1 Write 20 times Angle to each Servo, in the meanwhile read the 20 times Servo Analog
-#  1.2 Using basic_linear_regression(analogs, angles) to generate the intercept & slope
-#      (In arduino library, angle = analog * INTERCEPT + SLOPE)
-#  1.3 Save each servo linear offset in EEPROM (LINEAR_INTERCEPT_START_ADDRESS, LINEAR_SLOPE_START_ADDRESS)
-#  1.4 Mark Linear Calibration in EEPROM (CALIBRATION_LINEAR_FLAG)
-# 2. Manual Calibration section
-#  2.1
-# 3. Stretch Calibration section
-
 
 class Calibration(object):
+
     manual_calibration_trigger = True
     linear_calibration_start_flag = False
     stretch_calibration_flag = False
@@ -31,7 +21,6 @@ class Calibration(object):
     stretch_offset_template = {"LEFT": 0.00, "RIGHT": 0.00}
     temp_manual_offset_arr = [0.00, 0.00, 0.00]
     manual_offset_correct_flag = [False, False, False]
-
 
     def __init__(self, uarm=None, log_function=None):
         if uarm is not None:
@@ -51,7 +40,8 @@ class Calibration(object):
         self.is_manual_calibrated = False
         self.is_stretch_calibrated = False
 
-    def default_log(self, msg):
+    @staticmethod
+    def default_log(msg):
         print msg
 
     def uf_print(self, msg):
@@ -424,6 +414,20 @@ def check_linear_is_correct(linear_offset):
 
 
 def main():
+    """
+    uArm Calibration Library
+        1. Linear Calibration section
+          1.1 Write 20 times Angle to each Servo, in the meanwhile read the 20 times Servo Analog
+          1.2 Using basic_linear_regression(analogs, angles) to generate the intercept & slope
+              ``(In arduino library, angle = analog * INTERCEPT + SLOPE)``
+          1.3 Save each servo linear offset in EEPROM (LINEAR_INTERCEPT_START_ADDRESS, LINEAR_SLOPE_START_ADDRESS)
+          1.4 Mark Linear Calibration in EEPROM (CALIBRATION_LINEAR_FLAG)
+         2. Manual Calibration section
+          2.1 Set uArm at standard Angles. Left Angle - 130, Right Angle 30, Bottom Angle, 45.
+          2.2 Put uArm into the calibration position.
+          2.3 Confirm the Position.
+         3. Stretch Calibration section
+    """
     calibration = Calibration()
     calibration.calibrate_all()
 
