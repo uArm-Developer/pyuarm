@@ -70,6 +70,18 @@ INPUT = 0
 HIGH = 1
 LOW  = 0
 
+ABSOLUTE = 0
+RELATIVE = 1
+PATH_LINEAR = 0   # path based on linear interpolation
+PATH_ANGLES = 1   # path based on interpolation of servo angles
+
+# interpolation types
+INTERP_EASE_INOUT_CUBIC = 0  # original cubic ease in/out
+INTERP_LINEAR           = 1
+INTERP_EASE_INOUT       = 2  # quadratic easing methods
+INTERP_EASE_IN          = 3
+INTERP_EASE_OUT         = 4
+
 def get_uarm():
     """
     ===============================

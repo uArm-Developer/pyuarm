@@ -34,8 +34,6 @@ class uArm(object):
     :raise NoUArmPortException: No uArm available
     :raise UnkwonFirmwareException: Not unrecognized firmware version
     """
-    firmware_version = "0.0.0"
-    firmata_version = "0.0"
 
     def __init__(self, port=None, debug=False, timeout=5):
 
@@ -50,8 +48,8 @@ class uArm(object):
         print("Initialize uArm, port is {0}...".format(self.port))
         self.sp = serial.Serial(port, baudrate=57600, timeout=timeout)
         try:
-            self.set_firmata_version()
-            self.set_frimware_version()
+            self.get_firmata_version()
+            self.get_firmware_version()
         except serial.SerialException as e:
             raise UnkwonFirmwareException(
                 "Unkwon Firmware Version, Please use 'pyuarm.tools.firmware_helper' upgrade your firmware")
@@ -83,20 +81,20 @@ class uArm(object):
         """
         if not self.is_connected():
             self.sp.open()
-            self.set_firmata_version()
-            self.set_frimware_version()
+            self.get_firmata_version()
+            self.get_firmware_version()
 
-    def set_firmata_version(self):
+    def get_firmata_version(self):
         """
         Read frimata version after initialize the uArm.
         """
         while self.sp.readable():
-            readData = self.serial_read_byte()
-            if readData == END_SYSEX:
+            read_byte = self.serial_read_byte()
+            if read_byte == END_SYSEX:
                 break
-            if readData == START_SYSEX:
-                readData = self.serial_read_byte()
-                if readData == REPORT_FIRMATA_VERSION:
+            if read_byte == START_SYSEX:
+                read_byte = self.serial_read_byte()
+                if read_byte == REPORT_FIRMATA_VERSION:
                     frimata_major_version = self.serial_read_byte()
                     frimata_minor_version = self.serial_read_byte()
                     self.firmata_version = str(frimata_major_version) + "." + str(frimata_minor_version)
@@ -154,7 +152,7 @@ class uArm(object):
     def read_eeprom(self, data_type, eeprom_address):
         """
         Read data from EEPROM
-        =====================
+
         Byte: 1 Byte
 
         Integer: 2 Bytes
@@ -208,8 +206,9 @@ class uArm(object):
     def read_digital(self, pin_num, pin_mode):
         """
         Read Digital from PIN
-        =====================
+
         Please reference Arduino DigitalPINs_.
+
         .. _DigitalPINs: https://www.arduino.cc/en/Tutorial/DigitalPins
 
         :param pin_num: Integer 1 to 13
@@ -239,7 +238,7 @@ class uArm(object):
     def read_analog(self, pin_num):
         """
         Read Analog from PIN
-        ====================
+
         Please reference Arduino AnalogRead_.
         .. _AnalogRead: https://www.arduino.cc/en/Reference/AnalogRead
 
@@ -298,9 +297,11 @@ class uArm(object):
     def write_eeprom(self, data_type, eeprom_add, eeprom_val):
         """
         Write Data to EEPROM
-        ====================
+
         Please reference Arduino EEPROMPut_.
+
         :: _EEPROMPut: https://www.arduino.cc/en/Reference/EEPROMPut
+
         :param data_type: EEPROM_TYPE_BYTE, EEPROM_TYPE_INTEGER, EEPROM_TYPE_FLOAT
         :param eeprom_add: EEPROM address Integer
         :param eeprom_val: EEPROM Value - Byte, Integer, Float
@@ -320,8 +321,9 @@ class uArm(object):
     def write_analog(self, pin_number, pin_value):
         """
         Write Analog to PIN
-        ====================
+
         Please reference Arduino AnalogWrite_.
+
         :: _AnalogWrite: https://www.arduino.cc/en/Reference/AnalogWrite
         :param pin_number: PIN Number Integer 0 - 13
         :param pin_value: Analog Value
@@ -361,10 +363,9 @@ class uArm(object):
     def write_servo_angle(self, servo_number, servo_angle, with_offset):
         """
         Write Servo Angle
-        =================
 
         :param servo_number: SERVO_BUTTON_NUM, SERVO_LEFT_NUM, SERVO_RIGHT_NUM, SERVO_HAND_NUM
-        :param servo_angle: float type - 0.00 ~ 180.00
+        :param servo_angle: float type between 0.00 ~ 180.00
         :param with_offset: True, False
 
         """
@@ -396,32 +397,42 @@ class uArm(object):
         msg.append(END_SYSEX)
         self.serial_write(msg)
 
-    def move(self, x, y, z):
+    def move_to(self, x, y, z, hand_angle=0, relative_flags=ABSOLUTE, time_spend=2, path_type=PATH_LINEAR, ease_type=INTERP_EASE_INOUT_CUBIC):
         """
+        Move uArm to a `coordinate(x,y,z)` or `Angles(bottom,left,right,hand)`.
 
-        :param x:
-        :param y:
-        :param z:
+        Default parameters `move_to(x,y,z,0, ABSOLUTE, 2, PATH_LINEAR, INTERP_EASE_INOUT_CUBIC)`
+
+        Move uArm to a `coordinate(x,y,z)` in 2 seconds.
+
+        :param x: Float type, X Axis.
+        :param y: Float type, Y Axis.
+        :param z: Float type, Z Axis.
+        :param hand_angle: Float Type, Hand Angle.
+        :param relative_flags: ABSOLUTE, RELATIVE, default is ABSOLUTE
+        :param time_spend: Float type, time_spend, default is 2
+        :param path_type: Path Type, PATH_LINEAR, PATH_ANGLES, default is PATH_LINEAR
+        :param ease_type: Ease Type, INTERP_EASE_INOUT_CUBIC, INTERP_LINEAR, INTERP_EASE_INOUT, INTERP_EASE_IN, INTERP_EASE_OUT
 
         """
         x, y, z = float(x), float(y), float(z)
-        self.move_to_options(x, y, z, 0, 1, 0, 0, 0)
-
-    def move_to(self, x, y, z):
-        """
-
-        :param x:
-        :param y:
-        :param z:
-
-        """
-        x, y, z = float(x), float(y), float(z)
-        self.move_to_options(x, y, z, 0, 0, 0, 0, 0)
+        msg = bytearray([START_SYSEX, UARM_CODE, WRITE_COORDS])
+        msg.extend(getFloatAsFour7bitBytes(x))
+        msg.extend(getFloatAsFour7bitBytes(y))
+        msg.extend(getFloatAsFour7bitBytes(z))
+        msg.extend(getFloatAsThree7bitBytes(hand_angle))
+        msg.extend(getValueAsOne7bitBytes(relative_flags))
+        msg.extend(getFloatAsThree7bitBytes(time_spend))
+        msg.extend(getValueAsOne7bitBytes(path_type))
+        msg.extend(getValueAsOne7bitBytes(ease_type))
+        msg.append(END_SYSEX)
+        time.sleep(0.01)
+        self.serial_write(msg)
 
     def pump_control(self, val):
         """
-
-        :param val:
+        Control Pump On or Off
+        :param val: True is On, False is Off.
 
         """
         pump_status = 1 if val else 0
@@ -432,8 +443,8 @@ class uArm(object):
 
     def gripper_control(self, val):
         """
-
-        :param val:
+        Control Gripper On or Off
+        :param val: True is On, False is Off.
 
         """
         gripper_status = 1 if val else 0
@@ -442,51 +453,15 @@ class uArm(object):
         msg.append(END_SYSEX)
         self.serial_write(msg)
 
-    def move_to_options(self, x, y, z, hand_angle, relative_flags, time_spend, path_type, ease_type):
-        """
-
-        :param x:
-        :param y:
-        :param z:
-        :param hand_angle:
-        :param relative_flags:
-        :param time_spend:
-        :param path_type:
-        :param ease_type:
-
-        """
-        msg = bytearray([START_SYSEX, UARM_CODE, WRITE_COORDS])
-        msg.extend(getFloatAsFour7bitBytes(x))
-        msg.extend(getFloatAsFour7bitBytes(y))
-        msg.extend(getFloatAsFour7bitBytes(z))
-        msg.extend(getFloatAsThree7bitBytes(hand_angle))
-        msg.extend(getValueAsOne7bitBytes(relative_flags))
-        msg.extend(getFloatAsThree7bitBytes(time_spend))
-        msg.extend(getValueAsOne7bitBytes(path_type))
-        msg.extend(getValueAsOne7bitBytes(ease_type))
-        # msg.append(1 if enable_hand else 0)
-        msg.append(END_SYSEX)
-        time.sleep(0.01)
-        self.serial_write(msg)
-
-    def move_to_simple(self, x, y, z, hand_angle, relative_flags, time_spend):
-        """
-
-        :param x:
-        :param y:
-        :param z:
-        :param hand_angle:
-        :param relative_flags:
-        :param time_spend:
-
-        """
-        self.move_to_options(x, y, z, hand_angle, relative_flags, time_spend, 0, 0)
-
     def write_stretch(self, length, height):
         """
+        Write Stretch is another control method for uArm.
 
-        :param length:
-        :param height:
+        Length means uArm Y Axis. between (0, 195)
+        Height means uArm Z Axis. between (-150, 130)
+
+        :param length: Float Type, between (0, 195)
+        :param height: Float Type, between (-150, 130)
 
         """
         length = float(length)
@@ -499,7 +474,9 @@ class uArm(object):
 
     def write_serial_number(self, serial_number):
         """
-
+        Write Serial Number to uArm.
+        Serial Number is 15 digital number
+        eg. UARM030715011B
         :param serial_number:
 
         """
@@ -510,54 +487,77 @@ class uArm(object):
         self.serial_write(msg)
 
     def read_serial_number(self):
-        """ """
+        """
+        Read Serial Number from uArm.
+        Serial Number is 15 digital number
+        eg. UARM030715011B
+        """
         msg = bytearray([START_SYSEX, UARM_CODE, READ_SERIAL_NUMBER, END_SYSEX])
         self.serial_write(msg)
         while self.sp.readable():
-            readData = self.serial_read_byte()
+            read_byte = self.serial_read_byte()
             received_data = []
-            if (readData == START_SYSEX):
-                readData = self.serial_read_byte()
-                if (readData == UARM_CODE):
-                    readData = self.serial_read_byte()
-                    if (readData == READ_SERIAL_NUMBER):
-                        readData = self.serial_read_byte()
-                        while readData != END_SYSEX:
-                            received_data.append(readData)
-                            readData = self.serial_read_byte()
+            if read_byte == START_SYSEX:
+                read_byte = self.serial_read_byte()
+                if read_byte == UARM_CODE:
+                    read_byte = self.serial_read_byte()
+                    if read_byte == READ_SERIAL_NUMBER:
+                        read_byte = self.serial_read_byte()
+                        while read_byte != END_SYSEX:
+                            received_data.append(read_byte)
+                            read_byte = self.serial_read_byte()
                         sn_array = []
                         for r in received_data:
                             sn_array.append(chr(r))
                         return ''.join(sn_array)
 
-    def alert(self, times, run_time, stop_time):
+    def alarm(self, times, run_time, stop_time):
         """
+        Alarm the Buzzer.
+        eg.
 
-        :param times:
-        :param run_time:
-        :param stop_time:
+        ::
+
+            >>> import pyuarm
+            >>> uarm = pyuarm.uArm(debug=True)
+            Initialize uArm, port is /dev/cu.usbserial-A600CVS9...
+            f925Serial Read: f079135504107206d04606907206d06107406102e06906e06f0f7
+            Serial Write:f0aa23f7
+            Serial Read: f0aa2315bf7
+            Firmware Version: 1.5.11
+            >>> uarm.alarm(1, 100, 100)
+            Serial Write:f0aa24016464f7
+            >>> uarm.alarm(3, 100, 100)
+            Serial Write:f0aa24036464f7
+
+
+        :param times: Alarm times
+        :param run_time: Alarm Run Times.
+        :param stop_time: Alarm Stop Times.
 
         """
         msg = bytearray([START_SYSEX, UARM_CODE, BUZZER_ALERT, times, run_time, stop_time, END_SYSEX])
         self.serial_write(msg)
 
-    def set_frimware_version(self):
-        """ """
+    def get_firmware_version(self):
+        """
+        Read Firmware Vresion from uArm.
+        """
         if self.is_connected():
             msg = bytearray([START_SYSEX, UARM_CODE, REPORT_LIBRARY_VERSION, END_SYSEX])
             self.serial_write(msg)
             while self.sp.readable():
-                readData = self.serial_read_byte()
+                read_byte = self.serial_read_byte()
                 received_data = []
-                if (readData == START_SYSEX):
-                    readData = self.serial_read_byte()
-                    if (readData == UARM_CODE):
-                        readData = self.serial_read_byte()
-                        if (readData == REPORT_LIBRARY_VERSION):
-                            readData = self.serial_read_byte()
-                            while readData != END_SYSEX:
-                                received_data.append(readData)
-                                readData = self.serial_read_byte()
+                if read_byte == START_SYSEX:
+                    read_byte = self.serial_read_byte()
+                    if read_byte == UARM_CODE:
+                        read_byte = self.serial_read_byte()
+                        if read_byte == REPORT_LIBRARY_VERSION:
+                            read_byte = self.serial_read_byte()
+                            while read_byte != END_SYSEX:
+                                received_data.append(read_byte)
+                                read_byte = self.serial_read_byte()
                             firmware_major_version = received_data[0]
                             firmware_minor_version = received_data[1]
                             firmware_bugfix = received_data[2]
@@ -569,8 +569,10 @@ class uArm(object):
 
     def serial_write(self, msg):
         """
+        Write message to Serial Port.
+        If debug is True, will display all Serial Write message.
 
-        :param msg:
+        :param msg: Serial Message, bytearray.
 
         """
         if self.debug:
@@ -578,7 +580,9 @@ class uArm(object):
         self.sp.write(msg)
 
     def serial_read_byte(self):
-        """ """
+        """
+        Read one byte from Serial Port. If Debug is True, will display all Serial Read message.
+        """
         read_byte = ord(self.sp.read(1))
         if self.debug:
             if read_byte == START_SYSEX:

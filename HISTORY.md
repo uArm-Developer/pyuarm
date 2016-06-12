@@ -8,6 +8,9 @@
 - firmware_helper.py add NetworkError
 - Docstring
 - move Exception get_uarm to pyuarm.util
+- pyuarm.py set_firmware_version, set_firmata_version to get_firmware_version, get_firmata_version.
+- pyuarm.py move_to_opts, move_to_simple, move integrate with one Function move_to
+- pyuarm.py changes alert() function to alarm()
 
 ## [1.3.3] - 2016-06-08
 ### Updated - Alex Tan
