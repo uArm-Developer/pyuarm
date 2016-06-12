@@ -9,6 +9,7 @@ This module encapsulates the operations for uArm. It provides basic Movement on 
 Also provides Firmware_helper and Calibration. The module named "pyuarm" makes the API more pythonic.
 
 Other pages (online)
+
 - `project page on Github`_
 - `Download Page`_ with releases
 - This page, when viewed online is at https://pyuarm.readthedocs.io/en/latest/.
