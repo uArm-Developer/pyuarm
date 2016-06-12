@@ -124,26 +124,26 @@ class Calibration(object):
         self.ab_values = []
         while angle_step < ((ServoRangeFin - ServoRangeIni) / moveTimes + 1):
             angle = angle_step * moveTimes + ServoRangeIni
-            if number == SERVO_ROT_NUM:
-                analog_read_pin = SERVO_ROT_ANALOG_PIN
-                self.uarm.write_servo_angle(SERVO_ROT_NUM, angle, 0)
+            if number == SERVO_BOTTOM:
+                analog_read_pin = SERVO_BOTTOM_ANALOG_PIN
+                self.uarm.write_servo_angle(SERVO_BOTTOM, angle, 0)
                 self.uarm.write_left_right_servo_angle(60, 30, 0)
 
-            if number == SERVO_LEFT_NUM:
+            if number == SERVO_LEFT:
                 analog_read_pin = SERVO_LEFT_ANALOG_PIN
-                self.uarm.write_servo_angle(SERVO_ROT_NUM, 90, 0)
+                self.uarm.write_servo_angle(SERVO_BOTTOM, 90, 0)
                 self.uarm.write_left_right_servo_angle(angle, 30, 0)
 
-            if number == SERVO_RIGHT_NUM:
+            if number == SERVO_RIGHT:
                 analog_read_pin = SERVO_RIGHT_ANALOG_PIN
-                self.uarm.write_servo_angle(SERVO_ROT_NUM, 90, 0)
+                self.uarm.write_servo_angle(SERVO_BOTTOM, 90, 0)
                 self.uarm.write_left_right_servo_angle(30, angle, 0)
 
-            if number == SERVO_HAND_ROT_NUM:
-                analog_read_pin = SERVO_HAND_ROT_ANALOG_PIN
-                self.uarm.write_servo_angle(SERVO_ROT_NUM, 90, 0)
+            if number == SERVO_HAND:
+                analog_read_pin = SERVO_HAND_ANALOG_PIN
+                self.uarm.write_servo_angle(SERVO_BOTTOM, 90, 0)
                 self.uarm.write_left_right_servo_angle(30, 60, 0)
-                self.uarm.write_servo_angle(SERVO_HAND_ROT_NUM, angle, 0)
+                self.uarm.write_servo_angle(SERVO_HAND, angle, 0)
 
             if angle_step == 0:
                 time.sleep(0.1)
@@ -170,7 +170,7 @@ class Calibration(object):
         self.write_completed_flag(CALIBRATION_SERVO_FLAG, False)
         self.uf_print("2. Start Calibrate Servo Offset")
         self.manual_operation_trigger = True
-        self.uarm.write_servo_angle(SERVO_ROT_NUM, 45, 0)
+        self.uarm.write_servo_angle(SERVO_BOTTOM, 45, 0)
         time.sleep(1)
         self.uarm.write_left_right_servo_angle(130, 20, 0)
         time.sleep(1)
@@ -186,9 +186,9 @@ class Calibration(object):
         self.uarm.alert(3,100,100)
         while self.manual_operation_trigger:
 
-            servo_1_offset = self.uarm.read_servo_angle(SERVO_ROT_NUM, 0) - 45
-            servo_2_offset = self.uarm.read_servo_angle(SERVO_LEFT_NUM, 0) - 130
-            servo_3_offset = self.uarm.read_servo_angle(SERVO_RIGHT_NUM, 0) - 20
+            servo_1_offset = self.uarm.read_servo_angle(SERVO_BOTTOM, 0) - 45
+            servo_2_offset = self.uarm.read_servo_angle(SERVO_LEFT, 0) - 130
+            servo_3_offset = self.uarm.read_servo_angle(SERVO_RIGHT, 0) - 20
 
             if abs(servo_1_offset) < 5.5:
                 self.manual_offset_correct_flag[0] = True
@@ -239,7 +239,7 @@ class Calibration(object):
         self.uf_print("3. Start Calibrate Stretch Offset")
 
         self.uf_print("3.0 Moving uArm to Correct Place")
-        self.uarm.write_servo_angle(SERVO_ROT_NUM, 45, 0)
+        self.uarm.write_servo_angle(SERVO_BOTTOM, 45, 0)
         time.sleep(1)
         self.uarm.write_left_right_servo_angle(130, 20, 0)
         time.sleep(1)
@@ -251,34 +251,34 @@ class Calibration(object):
         print ('minAngle_L: {0}'.format(minAngle_L))
         print ('minAngle_R: {0}'.format(minAngle_R))
 
-        self.uarm.write_servo_angle(SERVO_LEFT_NUM, initPosL, 0)
-        self.uarm.write_servo_angle(SERVO_RIGHT_NUM, initPosR, 0)
+        self.uarm.write_servo_angle(SERVO_LEFT, initPosL, 0)
+        self.uarm.write_servo_angle(SERVO_RIGHT, initPosR, 0)
         time.sleep(1)
         while self.uarm.read_analog(SERVO_RIGHT_ANALOG_PIN) < (minAngle_R - SAMPLING_DEADZONE) \
                 and self.stretch_calibration_flag:
             initPosR += 1
-            self.uarm.write_servo_angle(SERVO_RIGHT_NUM, initPosR, 0)
+            self.uarm.write_servo_angle(SERVO_RIGHT, initPosR, 0)
             print ('initPosR: {0}'.format(initPosR))
             time.sleep(0.05)
 
         while self.uarm.read_analog(SERVO_RIGHT_ANALOG_PIN) > (minAngle_R + SAMPLING_DEADZONE) \
                 and self.stretch_calibration_flag:
             initPosR -= 1
-            self.uarm.write_servo_angle(SERVO_RIGHT_NUM, initPosR, 0)
+            self.uarm.write_servo_angle(SERVO_RIGHT, initPosR, 0)
             print ('initPosR: {0}'.format(initPosR))
             time.sleep(0.05)
 
         while self.uarm.read_analog(SERVO_LEFT_ANALOG_PIN) < (minAngle_L - SAMPLING_DEADZONE) \
                 and self.stretch_calibration_flag:
             initPosL += 1
-            self.uarm.write_servo_angle(SERVO_LEFT_NUM, initPosL, 0)
+            self.uarm.write_servo_angle(SERVO_LEFT, initPosL, 0)
             print ('initPosL: {0}'.format(initPosL))
             time.sleep(0.05)
 
         while self.uarm.read_analog(SERVO_LEFT_ANALOG_PIN) > (minAngle_L + SAMPLING_DEADZONE) \
                 and self.stretch_calibration_flag:
             initPosL -= 1
-            self.uarm.write_servo_angle(SERVO_LEFT_NUM, initPosL, 0)
+            self.uarm.write_servo_angle(SERVO_LEFT, initPosL, 0)
             print ('initPosL: {0}'.format(initPosL))
             time.sleep(0.05)
 

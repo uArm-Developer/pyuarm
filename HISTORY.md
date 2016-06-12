@@ -6,6 +6,8 @@
 - move pyuarm.list_uarms function to pyuarm.tools.list_uarms
 - pyuarm.py replace serial_read_byte() with sp.read(1), support debug read message
 - firmware_helper.py add NetworkError
+- Docstring
+- move Exception get_uarm to pyuarm.util
 
 ## [1.3.3] - 2016-06-08
 ### Updated - Alex Tan
