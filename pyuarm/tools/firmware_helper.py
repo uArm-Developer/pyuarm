@@ -7,15 +7,15 @@
 # (C) 2016 UFACTORY <developer@ufactory.cc>
 
 import pyuarm
-from list_uarms import uarm_ports
+from pyuarm.tools.list_uarms import uarm_ports
 import pycurl, certifi
 import json
 from io import BytesIO
 from tqdm import tqdm
 import requests
-import os, zipfile, sys, platform,subprocess
+import os, sys, platform,subprocess
 
-from distutils.version import LooseVersion, StrictVersion
+from distutils.version import LooseVersion
 import argparse
 
 
@@ -160,12 +160,13 @@ def main():
                                 remote - lateset firmware release version, local -
                                 read uArm firmware version
     """
-    init()
+
     parser = argparse.ArgumentParser()
     parser.add_argument("-d", "--download" , help="download firmware into firmware.hex", action="store_true")
     parser.add_argument("-f", "--flash", nargs='?', const='download',help="without firmware path, flash default firmware.hex, if not existed, download automatically, with firmware path, flash the firmware, eg. -f Blink.ino.hex")
     parser.add_argument("-c", "--check", nargs='?', const='local', help="remote - lateset firmware release version, local - read uArm firmware version")
     args = parser.parse_args()
+    init()
     #download
     if args.download:
         download_firmware()
@@ -178,7 +179,7 @@ def main():
         get_uarm_port()
         flash_firmware()
         sys.exit(0)
-    elif args.flash is not None and args.flash !="" :
+    elif args.flash is not None and args.flash !="":
         if not os.path.exists(args.flash):
             print args.flash + " not existed."
         else:

@@ -1,0 +1,5 @@
+pyserial>=3.0
+pycurl>=7.43.0
+certifi>=2016.02.28
+tqdm>=4.7.2
+requests>=2.10.0

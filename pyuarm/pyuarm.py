@@ -7,7 +7,7 @@ from util import *
 # version
 MAJOR_VERSION = 1
 MINOR_VERSION = 3
-BUGFIX_VERSION = 6
+BUGFIX_VERSION = 7
 VERSION = str(MAJOR_VERSION) + "." + str(MINOR_VERSION) + "." + str(BUGFIX_VERSION)
 version = VERSION
 __version__ = version
@@ -334,7 +334,7 @@ class uArm(object):
         Please reference Arduino DigitalWrite_.
 
         :: _DigitalWrite: https://www.arduino.cc/en/Reference/DigitalWrite
-        
+
         :param pin_number: PIN Number - Integer 0~13
         :param pin_mode: Digital Value - HIGH, LOW
 

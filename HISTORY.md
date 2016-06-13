@@ -1,3 +1,16 @@
+## [1.3.7] - 2016-06-13
+### Updated - Alex Tan
+
+### Changes
+- Add requirements.txt
+
+## [1.3.7] - 2016-06-13
+### Updated - Alex Tan
+
+### Changes
+- Update read_coordinate()
+- Update util.py function name getOne7BitBytesFloatArray, getThree7BitBytesFloatArray
+
 ## [1.3.6] - 2016-06-13
 ### Updated - Alex Tan
 
