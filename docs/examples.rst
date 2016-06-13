@@ -27,6 +27,7 @@ if no uArm connected, will return `None` and display "There is no uArm Port avai
     There is no uArm port available
     >>> print uarm
     None
+
 - Use uArm()
 
 ::
@@ -98,3 +99,4 @@ Others
     >>> import pyuarm
     >>> pyuarm.list_uarms() #List All available uArm Ports
     [u'/dev/cu.usbserial-A600CVS1']
+
