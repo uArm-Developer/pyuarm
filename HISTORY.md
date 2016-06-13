@@ -1,10 +1,17 @@
+## [1.3.6] - 2016-06-13
+### Updated - Alex Tan
+
+### Changes
+- Update read_coordinate()
+- Update util.py function name getOne7BitBytesFloatArray, getThree7BitBytesFloatArray
+
 ## [1.3.5] - 2016-06-13
 ### Updated - Alex Tan
+
+### Changes
 - Update Version 1.3.5
 - Update Documentation
 - Update README.md to README.rst
-
-### Changes
 
 ## [1.3.4] - 2016-06-10
 ### Updated - Alex Tan

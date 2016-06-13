@@ -38,7 +38,7 @@ WRITE_LEFT_RIGHT_ANGLE = 0X1F
 GRIPPER_STATUS = 0X20
 READ_SERIAL_NUMBER = 0x21
 WRITE_SERIAL_NUMBER = 0x22
-REPORT_LIBRARY_VERSION = 0x23
+REPORT_FIRMWARE_VERSION = 0x23
 BUZZER_ALERT = 0x24
 
 CONFIRM_FLAG = 0x80
@@ -105,16 +105,16 @@ def get_uarm():
     else:
         print("There is no uArm port available")
 
-def getValueAsOne7bitBytes(val):
-    """
 
+def getOne7BitBytesFloatArray(val):
+    """
     :param val:
 
     """
     return bytearray([val])
 
 
-def getValueAsTwo7bitBytes(val):
+def getTwo7BitBytesIntegerArray(val):
     """
 
     :param val:
@@ -124,7 +124,7 @@ def getValueAsTwo7bitBytes(val):
     return bytearray([abs(int_val) % 128, abs(int_val) >> 7])
 
 
-def getFloatAsThree7bitBytes(val):
+def getThree7BitBytesFloatArray(val):
     """
 
     :param val:
@@ -135,7 +135,7 @@ def getFloatAsThree7bitBytes(val):
     return bytearray([abs(int_val) % 128, abs(int_val) >> 7, abs(decimal_val)])
 
 
-def getIntegerAsThree7bitBytes(val):
+def getThree7BitBytesIntegerArray(val):
     """
 
     :param val:
@@ -144,15 +144,26 @@ def getIntegerAsThree7bitBytes(val):
     return bytearray([0 if val > 0 else 1, abs(val) % 128, abs(val) >> 7])
 
 
-def getFloatAsFour7bitBytes(val):
+def getFour7BitBytesFloatArray(val):
     """
 
-    :param val:
-
+    :param val: Float Type
+    :return: 7BitBytes Array, length = 4
     """
     int_val = int(val)
     decimal_val = int(round((val - int_val) * 100))
     return bytearray([0 if val > 0 else 1, abs(int_val) % 128, abs(int_val) >> 7, abs(decimal_val)])
+
+
+def getFloatFromFour7BitBytes(array):
+    """
+
+    :param array: 4 bytes array
+    :return: Float Type
+    """
+    negative = -1 if ord(array[0]) == 1 else 1
+    val = negative * (ord(array[1]) + ord(array[2]) * 128 + ord(array[3]) / 100.00)
+    return val
 
 class NoUArmPortException(IOError):
     """
