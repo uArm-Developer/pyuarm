@@ -1,7 +1,15 @@
-from setuptools import setup, find_packages
-import pyuarm
+from setuptools import setup
+
+from distutils.util import convert_path
+
+main_ns = {}
+ver_path = convert_path('pyuarm/version.py')
+with open(ver_path) as ver_file:
+    exec(ver_file.read(), main_ns)
+
+
 setup(name='pyuarm',
-    version=pyuarm.VERSION,
+    version=main_ns['__version__'],
     author='Joey Song/Alex Tan',
     packages=['pyuarm', 'pyuarm.tools'],
     scripts=['pyuarm/tools/firmware_helper.py', 'pyuarm/tools/calibrate.py', 'pyuarm/tools/list_uarms.py'],
@@ -10,5 +18,4 @@ setup(name='pyuarm',
     description='A python library for uArm',
     url="https://github.com/uarm-developer/pyuarm",
     keywords="pyuarm uarm4py uarmForPython uarm ufactory",
-    platform="any",
 )
