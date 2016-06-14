@@ -7,6 +7,8 @@ ver_path = convert_path('pyuarm/version.py')
 with open(ver_path) as ver_file:
     exec(ver_file.read(), main_ns)
 
+with open('requirements.txt') as f:
+    requirements = f.read().splitlines()
 
 setup(name='pyuarm',
     version=main_ns['__version__'],
@@ -18,4 +20,5 @@ setup(name='pyuarm',
     description='A python library for uArm',
     url="https://github.com/uarm-developer/pyuarm",
     keywords="pyuarm uarm4py uarmForPython uarm ufactory",
+    install_requires=requirements,
 )
