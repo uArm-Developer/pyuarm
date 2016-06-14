@@ -206,6 +206,10 @@ class Calibration(object):
                 self.uf_print(str(self.servo_calibrate_timeout - time_counts) + ", Please Confirm the positions")
             if callback is not None:
                 callback(self.temp_manual_offset_arr, self.manual_offset_correct_flag)
+            else:
+                confirm = raw_input("Please Enter 'Y' confirm the positions: ")
+                if confirm == "Y":
+                    self.manual_operation_trigger = False
             time.sleep(0.1)
 
         self.temp_manual_offset_arr[0] = round(servo_1_offset, 2)

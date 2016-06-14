@@ -11,7 +11,7 @@ from pyuarm.tools.list_uarms import uarm_ports
 import pycurl, certifi
 import json
 from io import BytesIO
-from tqdm import tqdm
+# from tqdm import tqdm
 import requests
 import os, sys, platform,subprocess
 
@@ -104,7 +104,8 @@ def download_firmware():
     try:
         response = requests.get(firmware_url, stream=True)
         with open(firmware_path, "wb") as handle:
-            for data in tqdm(response.iter_content(), total=firmware_size):
+            # for data in tqdm(response.iter_content(), total=firmware_size):
+            for data in response.iter_content():
                 handle.write(data)
     except requests.exceptions.ConnectionError:
         raise NetworkError("NetWork Error, Please retry...")
