@@ -65,3 +65,5 @@ target/
 .pypirc
 .DS_Store
 .idea
+upx391w/
+*.hex

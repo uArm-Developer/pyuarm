@@ -1,3 +1,11 @@
+## [1.3.8] - 2016-06-14
+### Updated - Alex Tan
+
+### Changes
+- Replace progressbar with tqdm 
+- Rewrite firmware_helper into class
+- calibrate.py confirm manual trigger in raw_input: y
+
 ## [1.3.7] - 2016-06-13
 ### Updated - Alex Tan
 
