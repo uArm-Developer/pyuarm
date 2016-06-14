@@ -1,3 +1,15 @@
+## [1.3.11] - 2016-06-14
+### Updated - Alex Tan
+
+### Changes
+- include requirements, README.rst
+
+## [1.3.10] - 2016-06-14
+### Updated - Alex Tan
+
+### Changes
+- include requirements, README.rst
+
 ## [1.3.9] - 2016-06-14
 ### Updated - Alex Tan
 

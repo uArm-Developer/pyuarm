@@ -30,22 +30,6 @@ class FirmwareHelper():
     uarm_firmware_version = ""
     uarm_port = ""
 
-    # def update_firmware_path(path):
-    #     global firmware_path
-    #     firmware_path = path
-    #
-    # def update_uarm_port(port):
-    #     global uarm_port
-    #     uarm_port = port
-    #
-    # def update_firmware_url(url):
-    #     global firmware_url
-    #     firmware_url = url
-    #
-    # def update_firmware_size(size):
-    #     global firmware_size
-    #     firmware_size = size
-
     def __init__(self):
         self.web_firmware_version = "0.0.0"
         if getattr(sys, 'frozen', False):
@@ -63,28 +47,32 @@ class FirmwareHelper():
             print "No uArm is connected."
 
     def flash_firmware(self, firmware_path='firmware.hex'):
-        global conf_name, avrdude_path, description
+        global avrdude_path, error_description, cmd
+        port = '-P' + self.uarm_port
         if platform.system() == 'Darwin':
             avrdude_path = 'avrdude'
-            conf_name = 'avrdude.conf'
-            description = "avrdude is required, Please try `brew install avrdude`"
+            # conf_name = 'avrdude.conf'
+            cmd = [avrdude_path, '-v', '-patmega328p', '-carduino', port, '-b115200', '-D',
+               '-Uflash:w:{0}:i'.format(firmware_path)]
+            error_description = "avrdude is required, Please try `brew install avrdude`"
         elif platform.system() == 'Windows':
             avrdude_path = os.path.join(self.application_path, 'avrdude', 'avrdude.exe')
-            conf_name = 'avrdude_win.conf'
+            conf_name = 'avrdude.conf'
+            avrdude_conf = os.path.join(self.application_path, 'avrdude', conf_name)
+            cmd = [avrdude_path,'-C'+avrdude_conf, '-v', '-patmega328p', '-carduino', port, '-b115200', '-D',
+               '-Uflash:w:{0}:i'.format(firmware_path)]
         elif platform.system() == 'Linux':
             avrdude_path = 'avrdude'
-            conf_name = 'avrdude.conf'
-            description = "avrdude is required, Please try `apt-get install avrdude`"
-
-        avrdude_conf = os.path.join(self.application_path, 'avrdude', conf_name)
-        port = '-P' + self.uarm_port
-        cmd = [avrdude_path, '-C' + avrdude_conf, '-v', '-patmega328p', '-carduino', port, '-b115200', '-D',
+            # conf_name = 'avrdude.conf'
+            cmd = [avrdude_path, '-v', '-patmega328p', '-carduino', port, '-b115200', '-D',
                '-Uflash:w:{0}:i'.format(firmware_path)]
-        print ' '.join(cmd)
+            error_description = "avrdude is required, Please try `apt-get install avrdude`"
+
+        print (' '.join(cmd))
         try:
             subprocess.call(cmd)
-        except OSError as e:
-            print description
+        except OSError:
+            print error_description
 
     def get_download_url(self, release_url=github_release_url):
         url = release_url
@@ -183,7 +171,7 @@ def main():
     if args.download:
         helper.download_firmware()
         sys.exit(0)
-    # flash
+    # force
     if args.force == "download":
         if not os.path.exists(helper.firmware_path):
             print "firmware not existed, Downloading..."
@@ -195,7 +183,7 @@ def main():
             print args.force + " not existed."
         else:
             helper.flash_firmware(firmware_path=args.force)
-            sys.exit(0)
+            exit_fun()
     # check
     if args.check == "local":
         if helper.uarm_port is None or helper.uarm_port == "":
@@ -210,12 +198,13 @@ def main():
         sys.exit(0)
 
     if helper.uarm_port is None or helper.uarm_port == "":
-        sys.exit(0)
+        exit_fun()
+
     # No Argument#####
     try:
         version_compare = helper.comapre_version()
         print "Latest Firmware version: {0}".format(helper.web_firmware_version)
-        print "Your uArm Firmware version: {0}".format(helper.uarm_firmware_version)
+        # print "Your uArm Firmware version: {0}".format(helper.uarm_firmware_version)
         if version_compare:
             print ("Would you want to upgrade your uArm with {0}{1}".format(helper.web_firmware_version, "?"))
             user_choice = raw_input("Please Enter Y if yes. ")
@@ -223,7 +212,10 @@ def main():
                 helper.download_firmware()
                 helper.flash_firmware()
             else:
-                print "exit"
+                exit_fun()
+        else:
+            print("You already have the latest version of Firmware installed in uArm!!!")
+            exit_fun()
     except Exception:
         print "Latest Firmware version: {0} ".format(helper.web_firmware_version)
         print ("Unknown uArm Firmware version, Would you want to upgrade your uArm with {0}{1}".format(helper.web_firmware_version, "?"))
@@ -232,7 +224,12 @@ def main():
             helper.download_firmware()
             helper.flash_firmware()
         else:
-            print "exit"
+            sys.exit(0)
+
+
+def exit_fun():
+    raw_input("Press Enter to Exit...")
+    sys.exit(0)
 
 
 class NetworkError(Exception):
@@ -244,4 +241,7 @@ class NetworkError(Exception):
 
 
 if __name__ == '__main__':
-    main()
+    try:
+        main()
+    except SystemExit:
+        print("Exit")

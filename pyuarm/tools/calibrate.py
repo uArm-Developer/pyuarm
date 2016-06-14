@@ -104,6 +104,7 @@ class Calibration(object):
         self.uarm.detach_all_servos()
 
     def calibrate_linear_servo_offset(self, number):
+        global analog_read_pin, servo_analog_read
         moveTimes = 5
         ServoRangeIni = 20
         ServoRangeFin = 100
