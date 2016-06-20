@@ -2,14 +2,12 @@ from pyuarm import *
 from list_uarms import uarm_ports
 import copy
 
-
 INIT_POS_L = 139
 INIT_POS_R = 26
 SAMPLING_DEADZONE = 2
 
 
 class Calibration(object):
-
     manual_calibration_trigger = True
     linear_calibration_start_flag = False
     stretch_calibration_flag = False
@@ -80,7 +78,7 @@ class Calibration(object):
         self.write_completed_flag(CALIBRATION_LINEAR_FLAG, False)
         self.uf_print("1. Start Calibrate Linear Offset")
         for i in range(4):
-            self.uf_print("    1.1. {0} Linear Offset - Servo {1}".format(str(i),str(i)))
+            self.uf_print("    1.1. {0} Linear Offset - Servo {1}".format(str(i), str(i)))
             temp_linear_offset = self.calibrate_linear_servo_offset(i)
             linear_is_correct = False
             if check_linear_is_correct(temp_linear_offset):
@@ -185,17 +183,17 @@ class Calibration(object):
                 self.manual_offset_correct_flag[0] = True
             else:
                 self.manual_offset_correct_flag[0] = False
-                self.uf_print("Please try move the Servo 1")
+                # self.uf_print("Please try move the Servo 1")
             if abs(servo_2_offset) < 5.5:
                 self.manual_offset_correct_flag[1] = True
             else:
                 self.manual_offset_correct_flag[1] = False
-                self.uf_print("Please try move the Servo 2")
+                # self.uf_print("Please try move the Servo 2")
             if abs(servo_3_offset) < 5.5:
                 self.manual_offset_correct_flag[2] = True
             else:
                 self.manual_offset_correct_flag[2] = False
-                self.uf_print("Please try move the Servo 3")
+                # self.uf_print("Please try move the Servo 3")
 
             if time_counts > self.servo_calibrate_timeout:
                 self.manual_operation_trigger = False
@@ -203,13 +201,15 @@ class Calibration(object):
             self.temp_manual_offset_arr[0] = servo_1_offset
             self.temp_manual_offset_arr[1] = servo_2_offset
             self.temp_manual_offset_arr[2] = servo_3_offset
-            if self.manual_offset_correct_flag[0] & self.manual_offset_correct_flag[1] & self.manual_offset_correct_flag[2]:
+            if self.manual_offset_correct_flag[0] & self.manual_offset_correct_flag[1] & \
+                    self.manual_offset_correct_flag[2]:
                 self.uf_print(str(self.servo_calibrate_timeout - time_counts) + ", Please Confirm the positions")
             if callback is not None:
                 callback(self.temp_manual_offset_arr, self.manual_offset_correct_flag)
             else:
-                confirm = raw_input("Please Enter 'Y' confirm the positions: ")
-                if confirm == "Y":
+                confirm = raw_input(
+                    "servo offset, bottom: {0}, left: {1}, right: {2},\nConfirm Please Press Y: ".format(servo_1_offset,servo_2_offset,servo_3_offset))
+                if confirm == "Y" or confirm == "y":
                     self.manual_operation_trigger = False
             time.sleep(0.1)
 
@@ -305,8 +305,8 @@ class Calibration(object):
         intercept_address = LINEAR_INTERCEPT_START_ADDRESS
         slope_address = LINEAR_SLOPE_START_ADDRESS
         for i in range(4):
-            print intercept_address, self.linear_offset[i]['INTERCEPT']
-            print slope_address, self.linear_offset[i]['SLOPE']
+            print ("Intercept Address:{0}, Offset Value:{1}.".format(intercept_address, self.linear_offset[i]['INTERCEPT']))
+            print ("Slope Address:{0}, Offset Value:{1}.".format(slope_address, self.linear_offset[i]['SLOPE']))
             self.uarm.write_eeprom(EEPROM_DATA_TYPE_FLOAT, intercept_address, self.linear_offset[i]['INTERCEPT'])
             time.sleep(0.5)
             self.uarm.write_eeprom(EEPROM_DATA_TYPE_FLOAT, slope_address, self.linear_offset[i]['SLOPE'])
@@ -335,7 +335,8 @@ class Calibration(object):
         linear_offset_data = []
         for i in range(4):
             linear_offset_template = copy.deepcopy(self.linear_offset_template)
-            linear_offset_template['INTERCEPT'] = round(self.uarm.read_eeprom(EEPROM_DATA_TYPE_FLOAT, intercept_address), 2)
+            linear_offset_template['INTERCEPT'] = round(
+                self.uarm.read_eeprom(EEPROM_DATA_TYPE_FLOAT, intercept_address), 2)
             linear_offset_template['SLOPE'] = round(self.uarm.read_eeprom(EEPROM_DATA_TYPE_FLOAT, slope_address), 2)
             linear_offset_data.append(linear_offset_template)
             intercept_address += 4
@@ -435,6 +436,7 @@ def main():
     """
     calibration = Calibration()
     calibration.calibrate_all()
+
 
 if __name__ == '__main__':
     main()

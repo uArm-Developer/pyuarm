@@ -40,16 +40,19 @@ class uArm(object):
         self.debug = debug
         print("Initialize uArm, port is {0}...".format(self.port))
         self.sp = serial.Serial(port, baudrate=57600, timeout=timeout)
-        try:
-            self.get_firmata_version()
-            self.get_firmware_version()
-        except serial.SerialException as e:
-            raise UnkwonFirmwareException(
-                "Unkwon Firmware Version, Please use 'pyuarm.tools.firmware_helper' upgrade your firmware")
-        except TypeError as e:
-            raise UnkwonFirmwareException(
-                "Unkwon Firmware Version, Please use 'pyuarm.tools.firmware_helper' upgrade your firmware")
+        time.sleep(3)
+        self.get_firmware_version()
         print("Firmware Version: {0}".format(self.firmware_version))
+        # try:
+        #     # self.get_firmata_version()
+        #     self.get_firmware_version()
+        # except serial.SerialException as e:
+        #     raise UnkwonFirmwareException(
+        #         "Unkwon Firmware Version, Please use 'pyuarm.tools.firmware_helper' upgrade your firmware")
+        # except TypeError as e:
+        #     raise UnkwonFirmwareException(
+        #         "Unkwon Firmware Version, Please use 'pyuarm.tools.firmware_helper' upgrade your firmware")
+        # print("Firmware Version: {0}".format(self.firmware_version))
 
     def is_connected(self):
         """
@@ -92,9 +95,10 @@ class uArm(object):
                     frimata_minor_version = self.serial_read()
                     self.firmata_version = str(frimata_major_version) + "." + str(frimata_minor_version)
 
-    def read_servo_angle(self, servo_number, with_offset=True):
+    def read_servo_angle(self, servo_number=None, with_offset=True):
         """
-        Read Servo Angle
+        Read Servo Angle from servo_number,
+        if servo_number is None, will return all servo angles (SERVO_BOTTOM, SERVO_LEFT, SERVO_RIGHT, SERVO_HAND).
 
         eg.
 
@@ -115,6 +119,16 @@ class uArm(object):
             Serial Write:f0aa100000f7
             Serial Read: f0aa058015f7
             88.21
+            >>> uarm.read_servo_angle()
+            Serial Write: f0aa100001f7
+            Serial Read: f0aa00270016f7
+            Serial Write: f0aa100101f7
+            Serial Read: f0aa016a0037f7
+            Serial Write: f0aa100201f7
+            Serial Read: f0aa02140000f7
+            Serial Write: f0aa100301f7
+            Serial Read: f0aa0306004bf7
+            [39.22, 106.55, 20.0, 6.75]
 
         :param servo_number:    SERVO_BOTTOM
                                 SERVO_LEFT
@@ -123,24 +137,33 @@ class uArm(object):
         :param with_offset: default - True
 
         """
-        msg = bytearray([START_SYSEX, UARM_CODE, READ_ANGLE])
-        msg.extend(getOne7BitBytesFloatArray(servo_number))
+        if servo_number is not None:
 
-        msg.extend(getOne7BitBytesFloatArray(1 if with_offset else 0))
-        msg.append(END_SYSEX)
-        self.serial_write(msg)
-        while self.sp.readable():
-            read_byte = self.serial_read()
-            received_data = []
-            if read_byte == START_SYSEX:
+            msg = bytearray([START_SYSEX, UARM_CODE, READ_ANGLE])
+            msg.extend(getOne7BitBytesFloatArray(servo_number))
+
+            msg.extend(getOne7BitBytesFloatArray(1 if with_offset else 0))
+            msg.append(END_SYSEX)
+            self.serial_write(msg)
+            while self.sp.readable():
                 read_byte = self.serial_read()
-                if read_byte == UARM_CODE:
+                received_data = []
+                if read_byte == START_SYSEX:
                     read_byte = self.serial_read()
-                    while read_byte != END_SYSEX:
-                        received_data.append(read_byte)
+                    if read_byte == UARM_CODE:
                         read_byte = self.serial_read()
-                    if received_data[0] == servo_number:
-                        return received_data[2] * 128 + received_data[1] + received_data[3] / 100.00
+                        while read_byte != END_SYSEX:
+                            received_data.append(read_byte)
+                            read_byte = self.serial_read()
+                        if received_data[0] == servo_number:
+                            return received_data[2] * 128 + received_data[1] + received_data[3] / 100.00
+        else:
+            servo_angles = [self.read_servo_angle(SERVO_BOTTOM, with_offset),
+                            self.read_servo_angle(SERVO_LEFT, with_offset),
+                            self.read_servo_angle(SERVO_RIGHT, with_offset),
+                            self.read_servo_angle(SERVO_HAND, with_offset)]
+            return servo_angles
+
 
     def read_eeprom(self, data_type, eeprom_address):
         """
