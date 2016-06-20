@@ -19,7 +19,7 @@ from itertools import izip
 from distutils.version import LooseVersion
 import argparse
 
-github_release_url = "https://api.github.com/repos/uArm-Developer/FirmwareHelper/releases/latest"
+github_release_url = "https://api.github.com/repos/uArm-Developer/UArmForArduino/releases/latest"
 
 
 class FirmwareHelper():

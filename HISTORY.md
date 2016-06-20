@@ -5,9 +5,10 @@
 - Compatible with Firmware 1.6.0
 - Time.sleep(3) when init Serial Port
 - read_servo_angle() when servo_number is none, if servo_number is None, will return all servo angles (SERVO_BOTTOM, SERVO_LEFT, SERVO_RIGHT, SERVO_HAND).
+- Update Firmware Release URL
 
 ### Fix
-- Fix pyuarm.tools.calibrate print format & raw_input 
+- Fix pyuarm.tools.calibrate print format & raw_input
 
 ## [1.3.11] - 2016-06-14
 ### Updated - Alex Tan
