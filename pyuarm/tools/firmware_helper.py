@@ -169,13 +169,19 @@ def main():
     helper = FirmwareHelper()
     # download
     if args.download:
-        helper.download_firmware()
+        try:
+            helper.download_firmware()
+        except NetworkError as e:
+            print (e.error)
         sys.exit(0)
     # force
     if args.force == "download":
         if not os.path.exists(helper.firmware_path):
             print "firmware not existed, Downloading..."
-            helper.download_firmware()
+            try:
+                helper.download_firmware()
+            except NetworkError as e:
+                print (e.error)
         helper.flash_firmware()
         sys.exit(0)
     elif args.force is not None and args.force != "":
@@ -209,7 +215,10 @@ def main():
             print ("Would you want to upgrade your uArm with {0}{1}".format(helper.web_firmware_version, "?"))
             user_choice = raw_input("Please Enter Y if yes. ")
             if user_choice == "Y" or user_choice == "y":
-                helper.download_firmware()
+                try:
+                    helper.download_firmware()
+                except NetworkError as e:
+                    print (e.error)
                 helper.flash_firmware()
             else:
                 exit_fun()
@@ -221,7 +230,10 @@ def main():
         print ("Unknown uArm Firmware version, Would you want to upgrade your uArm with {0}{1}".format(helper.web_firmware_version, "?"))
         user_choice = raw_input("Please Enter Y if yes. ")
         if user_choice == "Y" or user_choice == "y":
-            helper.download_firmware()
+            try:
+                helper.download_firmware()
+            except NetworkError as e:
+                print (e.error)
             helper.flash_firmware()
         else:
             sys.exit(0)

@@ -1,3 +1,9 @@
+## [1.3.13] - 2016-06-14
+### Updated - Alex Tan
+
+### Changes
+- Try NetworkError in firmware_helper
+
 ## [1.3.12] - 2016-06-14
 ### Updated - Alex Tan
 
