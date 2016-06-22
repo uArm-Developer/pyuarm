@@ -165,8 +165,8 @@ def main():
 
     parser = argparse.ArgumentParser()
     parser.add_argument("-d", "--download", help="download firmware into firmware.hex", action="store_true")
-    parser.add_argument("-f", "--force", nargs='?', const='download',
-                        help="without firmware path, flash default firmware.hex, if not existed, download automatically, with firmware path, flash the firmware, eg. -f Blink.ino.hex")
+    parser.add_argument("-f", "--force", nargs='?', const='force',
+                        help="without firmware path, flash default firmware.hex, with firmware path, flash the firmware, eg. -f Blink.ino.hex")
     parser.add_argument("-c", "--check", nargs='?', const='local',
                         help="remote - lateset firmware release version, local - read uArm firmware version")
     args = parser.parse_args()
@@ -181,16 +181,11 @@ def main():
             print (e.error)
         sys.exit(0)
     # force
-    if args.force == "download":
+    if args.force == "force":
         if not os.path.exists(helper.firmware_path):
-            print "firmware not existed, Downloading..."
-            try:
-                helper.download_firmware()
-            except NetworkError as e:
-                print (e.error)
-            except APIError as e:
-                print (e.error)
-        helper.flash_firmware()
+            print "firmware.hex not existed"
+        else:
+            helper.flash_firmware()
         sys.exit(0)
     elif args.force is not None and args.force != "":
         if not os.path.exists(args.force):

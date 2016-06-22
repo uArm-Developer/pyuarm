@@ -1,3 +1,9 @@
+## [1.3.18] - 2016-06-22
+### Updated - Alex Tan
+
+### Fix
+- firmware_helper -f won't download the firmware.hex use firmware_helper -d instead
+
 ## [1.3.17] - 2016-06-22
 ### Updated - Alex Tan
 
