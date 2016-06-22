@@ -1,3 +1,12 @@
+## [1.3.17] - 2016-06-22
+### Updated - Alex Tan
+
+### Fix
+- firmware_helper remove access token
+
+### To-Do
+- Setup Firmware_checker at UFactory Server
+
 ## [1.3.16] - 2016-06-22
 ### Updated - Alex Tan
 
