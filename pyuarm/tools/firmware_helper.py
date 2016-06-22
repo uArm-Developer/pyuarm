@@ -19,7 +19,7 @@ from itertools import izip
 from distutils.version import LooseVersion
 import argparse
 
-github_release_url = "https://api.github.com/repos/uArm-Developer/UArmForArduino/releases/latest"
+github_release_url = "https://api.github.com/repos/uArm-Developer/UArmForArduino/releases/latest?access_token=22dbee41aa2c13fc30b7d5c2497d74faaa78abdc"
 
 
 class FirmwareHelper():
@@ -83,12 +83,16 @@ class FirmwareHelper():
         c.setopt(c.WRITEFUNCTION, data.write)
         c.perform()
         dict = json.loads(data.getvalue())
-        firmware_url = dict['assets'][0]['browser_download_url']
-        firmware_size = dict['assets'][0]['size']
-        self.firmware_url = firmware_url
-        self.firmware_size = firmware_size
-        print ("Firmware URL: {0}".format(firmware_url))
-        print ("Firmware Size: {0}".format(firmware_size))
+        try:
+            firmware_url = dict['assets'][0]['browser_download_url']
+            firmware_size = dict['assets'][0]['size']
+            self.firmware_url = firmware_url
+            self.firmware_size = firmware_size
+            print ("Firmware URL: {0}".format(firmware_url))
+            print ("Firmware Size: {0}".format(firmware_size))
+        except KeyError as e:
+            raise APIError("APIError: {0}\n{1}".format(e.message,dict))
+            exit_fun()
 
     def download_firmware(self):
         print ("Downloading firmware.hex...")
@@ -173,6 +177,8 @@ def main():
             helper.download_firmware()
         except NetworkError as e:
             print (e.error)
+        except APIError as e:
+            print (e.error)
         sys.exit(0)
     # force
     if args.force == "download":
@@ -181,6 +187,8 @@ def main():
             try:
                 helper.download_firmware()
             except NetworkError as e:
+                print (e.error)
+            except APIError as e:
                 print (e.error)
         helper.flash_firmware()
         sys.exit(0)
@@ -219,6 +227,8 @@ def main():
                     helper.download_firmware()
                 except NetworkError as e:
                     print (e.error)
+                except APIError as e:
+                    print (e.error)
                 helper.flash_firmware()
             else:
                 exit_fun()
@@ -234,6 +244,8 @@ def main():
                 helper.download_firmware()
             except NetworkError as e:
                 print (e.error)
+            except APIError as e:
+                print (e.error)
             helper.flash_firmware()
         else:
             sys.exit(0)
@@ -245,6 +257,14 @@ def exit_fun():
 
 
 class NetworkError(Exception):
+    def __init__(self, error):
+        self.error = error
+
+    def __str__(self):
+        return repr(self.error)
+
+
+class APIError(Exception):
     def __init__(self, error):
         self.error = error
 
