@@ -1,3 +1,9 @@
+## [1.3.14] - 2016-06-22
+### Updated - Alex Tan
+
+### Fix
+- Raise UnkwonFirmwareException when init uArm.
+
 ## [1.3.13] - 2016-06-14
 ### Updated - Alex Tan
 

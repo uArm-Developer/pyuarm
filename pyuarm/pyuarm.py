@@ -41,8 +41,12 @@ class uArm(object):
         print("Initialize uArm, port is {0}...".format(self.port))
         self.sp = serial.Serial(port, baudrate=57600, timeout=timeout)
         time.sleep(3)
-        self.get_firmware_version()
-        print("Firmware Version: {0}".format(self.firmware_version))
+        try:
+            self.get_firmware_version()
+            print("Firmware Version: {0}".format(self.firmware_version))
+        except TypeError as e:
+            raise UnkwonFirmwareException(
+                "Unkwon Firmware Version, Please use 'pyuarm.tools.firmware_helper' upgrade your firmware")
         # try:
         #     # self.get_firmata_version()
         #     self.get_firmware_version()
