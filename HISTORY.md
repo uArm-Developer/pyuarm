@@ -1,3 +1,9 @@
+## [1.3.15] - 2016-06-22
+### Updated - Alex Tan
+
+### Fix
+- Add enable_hand support Firmware 1.6.1
+
 ## [1.3.14] - 2016-06-22
 ### Updated - Alex Tan
 

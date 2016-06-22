@@ -411,7 +411,7 @@ class uArm(object):
         msg.append(END_SYSEX)
         self.serial_write(msg)
 
-    def move_to(self, x, y, z, hand_angle=0, relative_flags=ABSOLUTE, time_spend=2, path_type=PATH_LINEAR, ease_type=INTERP_EASE_INOUT_CUBIC):
+    def move_to(self, x, y, z, hand_angle=None, relative_flags=ABSOLUTE, time_spend=2, path_type=PATH_LINEAR, ease_type=INTERP_EASE_INOUT_CUBIC):
         """
         Move uArm to a `coordinate(x,y,z)` or `Angles(bottom,left,right,hand)`.
 
@@ -429,16 +429,18 @@ class uArm(object):
         :param ease_type: Ease Type, INTERP_EASE_INOUT_CUBIC, INTERP_LINEAR, INTERP_EASE_INOUT, INTERP_EASE_IN, INTERP_EASE_OUT
 
         """
+        enable_hand = 1 if hand_angle is not None else 0
         x, y, z = float(x), float(y), float(z)
         msg = bytearray([START_SYSEX, UARM_CODE, WRITE_COORDS])
         msg.extend(getFour7BitBytesFloatArray(x))
         msg.extend(getFour7BitBytesFloatArray(y))
         msg.extend(getFour7BitBytesFloatArray(z))
-        msg.extend(getThree7BitBytesFloatArray(hand_angle))
+        msg.extend(getThree7BitBytesFloatArray(hand_angle if hand_angle is not None else 0))
         msg.extend(getOne7BitBytesFloatArray(relative_flags))
         msg.extend(getThree7BitBytesFloatArray(time_spend))
         msg.extend(getOne7BitBytesFloatArray(path_type))
         msg.extend(getOne7BitBytesFloatArray(ease_type))
+        msg.extend(getOne7BitBytesFloatArray(enable_hand))
         msg.append(END_SYSEX)
         time.sleep(0.01)
         self.serial_write(msg)
