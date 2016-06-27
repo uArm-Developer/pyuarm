@@ -1,3 +1,9 @@
+## [1.3.19] - 2016-06-27
+### Updated - Alex Tan
+
+### Fix
+- Increase More delay on calibrate. rewrite Linear Offset points.
+
 ## [1.3.18] - 2016-06-22
 ### Updated - Alex Tan
 

@@ -48,6 +48,7 @@ class Calibration(object):
     def calibrate_all(self, linear_callback=None, manual_callback=None, stretch_callback=None):
         self.uf_print("0. Clearing Completed Flag in EEPROM.")
         self.write_completed_flag(CALIBRATION_FLAG, False)
+        time.sleep(1)
 
         if linear_callback is None:  # If not provide callback function use default
             self.linear_calibration_section(None)
@@ -59,14 +60,14 @@ class Calibration(object):
                 self.manual_calibration_section(None)
             else:
                 manual_callback()
-            time.sleep(0.5)
+            time.sleep(1)
 
         if self.read_completed_flag(CALIBRATION_SERVO_FLAG):
             if stretch_callback is None:  # If not provide callback function use default
                 self.stretch_calibration_section(None)
             else:
                 stretch_callback()
-            time.sleep(0.5)
+            time.sleep(1)
 
         if self.read_completed_flag(CALIBRATION_STRETCH_FLAG):
             self.write_completed_flag(CALIBRATION_FLAG, True)
@@ -103,52 +104,62 @@ class Calibration(object):
 
     def calibrate_linear_servo_offset(self, number):
         global analog_read_pin, servo_analog_read
-        moveTimes = 5
-        ServoRangeIni = 20
-        ServoRangeFin = 100
-        angle_step = 0
-
         angles = []
         analogs = []
         self.ab_values = []
-        while angle_step < ((ServoRangeFin - ServoRangeIni) / moveTimes + 1):
-            angle = angle_step * moveTimes + ServoRangeIni
-            if number == SERVO_BOTTOM:
-                analog_read_pin = SERVO_BOTTOM_ANALOG_PIN
-                self.uarm.write_servo_angle(SERVO_BOTTOM, angle, 0)
-                self.uarm.write_left_right_servo_angle(60, 30, 0)
 
-            if number == SERVO_LEFT:
-                analog_read_pin = SERVO_LEFT_ANALOG_PIN
-                self.uarm.write_servo_angle(SERVO_BOTTOM, 90, 0)
-                self.uarm.write_left_right_servo_angle(angle, 30, 0)
+        if number == SERVO_BOTTOM:
+            max_steps = 180
+            min_steps = 0
+            angle_step = min_steps
+            analog_pin = SERVO_BOTTOM_ANALOG_PIN
+            self.uarm.write_servo_angle(SERVO_BOTTOM, angle_step, False)
+            self.uarm.write_servo_angle(SERVO_LEFT, 90, False)
+            self.uarm.write_servo_angle(SERVO_RIGHT, 60, False)
+        if number == SERVO_LEFT:
+            max_steps = 110
+            min_steps = 0
+            angle_step = min_steps
+            analog_pin = SERVO_LEFT_ANALOG_PIN
+            self.uarm.write_servo_angle(SERVO_BOTTOM, 90, False)
+            self.uarm.write_servo_angle(SERVO_LEFT, angle_step, False)
+            self.uarm.write_servo_angle(SERVO_RIGHT, 55, False)
+        if number == SERVO_RIGHT:
+            max_steps = 130
+            min_steps = 20
+            angle_step = min_steps
+            analog_pin = SERVO_RIGHT_ANALOG_PIN
+            self.uarm.write_servo_angle(SERVO_BOTTOM, 90, False)
+            self.uarm.write_servo_angle(SERVO_LEFT, 25, False)
+            self.uarm.write_servo_angle(SERVO_RIGHT, angle_step, False)
+        if number == SERVO_HAND:
+            max_steps = 180
+            min_steps = 20
+            angle_step = min_steps
+            analog_pin = SERVO_HAND_ANALOG_PIN
+            self.uarm.write_servo_angle(SERVO_BOTTOM, 90, False)
+            self.uarm.write_servo_angle(SERVO_LEFT, 90, False)
+            self.uarm.write_servo_angle(SERVO_RIGHT, 60, False)
+            self.uarm.write_servo_angle(SERVO_HAND, angle_step, False)
+        time.sleep(2)
+        while angle_step < max_steps:
 
-            if number == SERVO_RIGHT:
-                analog_read_pin = SERVO_RIGHT_ANALOG_PIN
-                self.uarm.write_servo_angle(SERVO_BOTTOM, 90, 0)
-                self.uarm.write_left_right_servo_angle(30, angle, 0)
+            self.uarm.write_servo_angle(number,angle_step, False)
 
-            if number == SERVO_HAND:
-                analog_read_pin = SERVO_HAND_ANALOG_PIN
-                self.uarm.write_servo_angle(SERVO_BOTTOM, 90, 0)
-                self.uarm.write_left_right_servo_angle(30, 60, 0)
-                self.uarm.write_servo_angle(SERVO_HAND, angle, 0)
+            servo_analog_read = 0
+            for i in range(5):
+                servo_analog_read += self.uarm.read_analog(analog_pin)
+                time.sleep(0.05)
 
-            if angle_step == 0:
-                time.sleep(0.1)
-            else:
-                time.sleep(0.1)
-
-            for i in range(2):
-                servo_analog_read = self.uarm.read_analog(analog_read_pin)
-                time.sleep(0.1)
-
-            angles.append(angle)
+            servo_analog_read /= 5
+            angles.append(angle_step)
             analogs.append(servo_analog_read)
+            print ("Angle: {0}, Analog: {1}".format(angle_step,servo_analog_read))
             angle_step += 1
             time.sleep(0.1)
 
         new_ab = basic_linear_regression(analogs, angles)
+
         linear_offset_template = copy.deepcopy(self.linear_offset_template)
         linear_offset_template['SLOPE'] = round(new_ab[0], 2)
         linear_offset_template['INTERCEPT'] = round(new_ab[1], 2)
@@ -435,6 +446,8 @@ def main():
          3. Stretch Calibration section
     """
     calibration = Calibration()
+    # calibration.uarm.debug = True
+    time.sleep(2)
     calibration.calibrate_all()
 
 
