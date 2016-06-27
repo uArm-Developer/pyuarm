@@ -3,3 +3,4 @@ pyserial>=3.0
 certifi>=2016.02.28
 requests>=2.10.0
 mock>=2.0
+sphinx_bootstrap_theme>=1.0

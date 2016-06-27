@@ -3,6 +3,7 @@
 
 ### Fix
 - Increase More delay on calibrate. rewrite Linear Offset points.
+- Update requirements.txt
 
 ## [1.3.18] - 2016-06-22
 ### Updated - Alex Tan
