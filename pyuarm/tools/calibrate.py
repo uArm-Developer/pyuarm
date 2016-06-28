@@ -100,7 +100,6 @@ class Calibration(object):
             self.uf_print("Error - 1. Linear Offset not equal to EEPROM, Please retry.")
             self.uf_print("Error - 1. linear_offset(): {0}".format(self.read_linear_offset()))
             self.linear_calibration_start_flag = False
-        self.uarm.detach_all_servos()
 
     def calibrate_linear_servo_offset(self, number):
         global analog_read_pin, servo_analog_read
@@ -236,7 +235,7 @@ class Calibration(object):
             self.uf_print("Error - 2, Manual Calibration Servo offset not equal to EEPROM")
             self.uf_print("Error - 2, manual Servo Offset: {0}".format(self.temp_manual_offset_arr))
             self.uf_print("Error - 2, read_manual_offset: {0}".format(self.read_manual_offset()))
-        self.uarm.detach_all_servos()
+        self.uarm.attach_all_servos()
 
     def stretch_calibration_section(self, callback=None):
         self.stretch_calibration_flag = True

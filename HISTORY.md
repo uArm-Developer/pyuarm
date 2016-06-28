@@ -1,3 +1,14 @@
+## [1.3.20] - 2016-06-28
+### Updated - Alex Tan
+
+### Compatible
+- Firmware 1.7.1
+
+### Fix
+- Increase More delay on calibrate. rewrite Linear Offset points.
+- Update requirements.txt
+
+
 ## [1.3.19] - 2016-06-27
 ### Updated - Alex Tan
 

@@ -371,14 +371,39 @@ class uArm(object):
 
         Unlock the servo after detach.
         """
-        msg = bytearray([START_SYSEX, UARM_CODE, DETACH_SERVO, END_SYSEX])
+        self.set_servo_status(SERVO_BOTTOM, False)
+        self.set_servo_status(SERVO_LEFT, False)
+        self.set_servo_status(SERVO_RIGHT, False)
+        self.set_servo_status(SERVO_HAND, False)
+
+    def attach_all_servos(self):
+        """
+        Attach All Servos
+
+        Lock the servo.
+        """
+        self.set_servo_status(SERVO_BOTTOM, True)
+        self.set_servo_status(SERVO_LEFT, True)
+        self.set_servo_status(SERVO_RIGHT, True)
+        self.set_servo_status(SERVO_HAND, True)
+
+    def set_servo_status(self, servo_number, status):
+        """
+        Set Servo Status
+        :param servo_number: SERVO_BOTTOM_NUM, SERVO_LEFT, SERVO_RIGHT, SERVO_HAND
+        :param status: True - Attach, False - Detach
+        """
+        msg = bytearray([START_SYSEX, UARM_CODE, SERVO_STATUS])
+        msg.extend(getOne7BitBytesFloatArray(servo_number))
+        msg.extend(getOne7BitBytesFloatArray(1 if status else 0))
+        msg.append(END_SYSEX)
         self.serial_write(msg)
 
     def write_servo_angle(self, servo_number, servo_angle, with_offset):
         """
         Write Servo Angle
 
-        :param servo_number: SERVO_BUTTON_NUM, SERVO_LEFT_NUM, SERVO_RIGHT_NUM, SERVO_HAND_NUM
+        :param servo_number: SERVO_BOTTOM_NUM, SERVO_LEFT, SERVO_RIGHT, SERVO_HAND
         :param servo_angle: float type between 0.00 ~ 180.00
         :param with_offset: True, False
 

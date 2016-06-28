@@ -24,7 +24,7 @@ Features
 Requirements
 ============
 - Python 2.7x (Python3.x not supported yet)
-- uArm Firmata (Please use ``python -m pyuarm.tools.firmware_helper`` to upgrade your firmware)
+- uArmProtocol Firmware (Please use ``python -m pyuarm.tools.firmware_helper`` to upgrade your firmware)
 
 Installation
 ============
