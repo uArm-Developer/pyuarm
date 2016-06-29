@@ -1,3 +1,12 @@
+## [1.3.21] - 2016-06-28
+### Updated - Alex Tan
+
+### Compatible
+- Firmware 1.7.1
+
+### Fix
+- rewrite Firmware helper. remove pycurl
+
 ## [1.3.20] - 2016-06-28
 ### Updated - Alex Tan
 

@@ -8,30 +8,29 @@
 
 import pyuarm
 from pyuarm.tools.list_uarms import uarm_ports
-import pycurl, certifi
-import json
-from io import BytesIO
 from progressbar import ProgressBar, Percentage, FileTransferSpeed, Bar, ETA
 import requests
 import os, sys, platform, subprocess
 from itertools import izip
+import ConfigParser, StringIO
 
 from distutils.version import LooseVersion
 import argparse
 
-github_release_url = "https://api.github.com/repos/uArm-Developer/UArmForArduino/releases/latest"
+firmware_download_url = "http://download.ufactory.cc/firmware.hex"
+remote_version_url = "http://download.ufactory.cc/version"
 
 
 class FirmwareHelper():
     firmware_defaul_filename = 'firmware.hex'
     application_path = ""
     firmware_path = ""
-    web_firmware_version = ""
+    remote_firmware_version = ""
     uarm_firmware_version = ""
     uarm_port = ""
 
     def __init__(self):
-        self.web_firmware_version = "0.0.0"
+        self.remote_firmware_version = "0.0.0"
         if getattr(sys, 'frozen', False):
             self.application_path = os.path.dirname(sys.executable)
         elif __file__:
@@ -74,57 +73,39 @@ class FirmwareHelper():
         except OSError:
             print error_description
 
-    def get_download_url(self, release_url=github_release_url):
-        url = release_url
-        c = pycurl.Curl()
-        data = BytesIO()
-        c.setopt(pycurl.CAINFO, certifi.where())
-        c.setopt(c.URL, url)
-        c.setopt(c.WRITEFUNCTION, data.write)
-        c.perform()
-        dict = json.loads(data.getvalue())
-        try:
-            firmware_url = dict['assets'][0]['browser_download_url']
-            firmware_size = dict['assets'][0]['size']
-            self.firmware_url = firmware_url
-            self.firmware_size = firmware_size
-            print ("Firmware URL: {0}".format(firmware_url))
-            print ("Firmware Size: {0}".format(firmware_size))
-        except KeyError as e:
-            raise APIError("APIError: {0}\n{1}".format(e.message,dict))
-            exit_fun()
-
-    def download_firmware(self):
+    def download_firmware(self, firmware_url=firmware_download_url):
         print ("Downloading firmware.hex...")
-        self.get_download_url()
         try:
-            response = requests.get(self.firmware_url, stream=True)
+            response = requests.get(firmware_url, stream=True)
+            firmware_size = int(response.headers['content-length'])
             with open(self.firmware_path, "wb") as handle:
                 widgets = ['Downloading: ', Percentage(), ' ',
                            Bar(marker='#', left='[', right=']'),
                            ' ', ETA(), ' ', FileTransferSpeed()]
-                pbar = ProgressBar(widgets=widgets, maxval=self.firmware_size)
+                pbar = ProgressBar(widgets=widgets, maxval=firmware_size)
                 pbar.start()
-                for i, data in izip(range(self.firmware_size), response.iter_content()):
+                for i, data in izip(range(firmware_size), response.iter_content()):
                     handle.write(data)
                     pbar.update(i)
                 pbar.finish()
         except requests.exceptions.ConnectionError:
             raise NetworkError("NetWork Error, Please retry...")
 
-    def get_latest_version(self, release_url=github_release_url):
-        c = pycurl.Curl()
-        data = BytesIO()
-        c.setopt(pycurl.CAINFO, certifi.where())
-        c.setopt(c.URL, release_url)
-        c.setopt(c.WRITEFUNCTION, data.write)
-        c.perform()
-        dict = json.loads(data.getvalue())
-        self.web_firmware_version = dict['tag_name']
+    def get_latest_version(self, release_url=remote_version_url):
+        try:
+            r = requests.get(release_url)
+            s_config = r.text
+            buf = StringIO.StringIO(s_config)
+            config = ConfigParser.ConfigParser()
+            config.readfp(buf)
+            self.remote_firmware_version = config.get('firmware', 'version')
+            # print("Remote Version: {0}".format(self.remote_firmware_version))
+        except requests.exceptions.ConnectionError:
+            raise NetworkError("NetWork Error, Please retry...")
 
     def get_uarm_version(self):
         if self.uarm_port is not None or self.uarm_port != "":
-            print "Reading Firmware version from uArm..."
+            print ("Reading Firmware version from uArm...")
             try:
                 uarm = pyuarm.uArm(port=self.uarm_port)
                 self.uarm_firmware_version = uarm.firmware_version
@@ -137,7 +118,7 @@ class FirmwareHelper():
     def comapre_version(self):
         self.get_latest_version()
         self.get_uarm_version()
-        if LooseVersion(self.web_firmware_version) > LooseVersion(self.uarm_firmware_version):
+        if LooseVersion(self.remote_firmware_version) > LooseVersion(self.uarm_firmware_version):
             return True
 
 
@@ -201,9 +182,8 @@ def main():
         sys.exit(0)
     elif args.check == "remote":
         print "Fetching the remote version..."
-        helper.get_download_url()
         helper.get_latest_version()
-        print "Latest firmware release version is: {0}".format(helper.web_firmware_version)
+        print "Latest firmware release version is: {0}".format(helper.remote_firmware_version)
         sys.exit(0)
 
     if helper.uarm_port is None or helper.uarm_port == "":
@@ -212,10 +192,10 @@ def main():
     # No Argument#####
     try:
         version_compare = helper.comapre_version()
-        print "Latest Firmware version: {0}".format(helper.web_firmware_version)
+        print "Latest Firmware version: {0}".format(helper.remote_firmware_version)
         # print "Your uArm Firmware version: {0}".format(helper.uarm_firmware_version)
         if version_compare:
-            print ("Would you want to upgrade your uArm with {0}{1}".format(helper.web_firmware_version, "?"))
+            print ("Would you want to upgrade your uArm with {0}{1}".format(helper.remote_firmware_version, "?"))
             user_choice = raw_input("Please Enter Y if yes. ")
             if user_choice == "Y" or user_choice == "y":
                 try:
@@ -231,8 +211,8 @@ def main():
             print("You already have the latest version of Firmware installed in uArm!!!")
             exit_fun()
     except Exception:
-        print "Latest Firmware version: {0} ".format(helper.web_firmware_version)
-        print ("Unknown uArm Firmware version, Would you want to upgrade your uArm with {0}{1}".format(helper.web_firmware_version, "?"))
+        print "Latest Firmware version: {0} ".format(helper.remote_firmware_version)
+        print ("Unknown uArm Firmware version, Would you want to upgrade your uArm with {0}{1}".format(helper.remote_firmware_version, "?"))
         user_choice = raw_input("Please Enter Y if yes. ")
         if user_choice == "Y" or user_choice == "y":
             try:
