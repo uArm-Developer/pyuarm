@@ -25,7 +25,7 @@ class uArm(object):
     :param timeout: Serial Timeout parameter, Default is **5** Seconds.
 
     :raise NoUArmPortException: No uArm available
-    :raise UnkwonFirmwareException: Not unrecognized firmware version
+    :raise UnknownFirmwareException: Not unrecognized firmware version
     """
 
     def __init__(self, port=None, debug=False, timeout=5):
@@ -45,17 +45,17 @@ class uArm(object):
             self.get_firmware_version()
             print("Firmware Version: {0}".format(self.firmware_version))
         except TypeError as e:
-            raise UnkwonFirmwareException(
-                "Unkwon Firmware Version, Please use 'pyuarm.tools.firmware_helper' upgrade your firmware")
+            raise UnknownFirmwareException(
+                "Unknown Firmware Version, Please use 'pyuarm.tools.firmware_helper' upgrade your firmware")
         # try:
         #     # self.get_firmata_version()
         #     self.get_firmware_version()
         # except serial.SerialException as e:
-        #     raise UnkwonFirmwareException(
-        #         "Unkwon Firmware Version, Please use 'pyuarm.tools.firmware_helper' upgrade your firmware")
+        #     raise UnknownFirmwareException(
+        #         "Unknown Firmware Version, Please use 'pyuarm.tools.firmware_helper' upgrade your firmware")
         # except TypeError as e:
-        #     raise UnkwonFirmwareException(
-        #         "Unkwon Firmware Version, Please use 'pyuarm.tools.firmware_helper' upgrade your firmware")
+        #     raise UnknownFirmwareException(
+        #         "Unknown Firmware Version, Please use 'pyuarm.tools.firmware_helper' upgrade your firmware")
         # print("Firmware Version: {0}".format(self.firmware_version))
 
     def is_connected(self):
