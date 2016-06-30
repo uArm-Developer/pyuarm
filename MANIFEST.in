@@ -3,6 +3,6 @@ include pyuarm/tools/avrdude/*.*
 include requirements.txt
 include README.rst
 include HISTORY.md
-
+include pyuarm/version.json
 
 global-exclude .DS_Store

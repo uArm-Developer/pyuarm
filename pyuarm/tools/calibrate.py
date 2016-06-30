@@ -1,6 +1,8 @@
 from pyuarm import *
-from list_uarms import uarm_ports
+from pyuarm.tools.list_uarms import uarm_ports
 import copy
+import argparse
+import sys
 
 INIT_POS_L = 139
 INIT_POS_R = 26
@@ -63,10 +65,10 @@ class Calibration(object):
             time.sleep(1)
 
         if self.read_completed_flag(CALIBRATION_SERVO_FLAG):
-            if stretch_callback is None:  # If not provide callback function use default
-                self.stretch_calibration_section(None)
-            else:
-                stretch_callback()
+            # if stretch_callback is None:  # If not provide callback function use default
+            self.stretch_calibration_section()
+            # else:
+            #     stretch_callback()
             time.sleep(1)
 
         if self.read_completed_flag(CALIBRATION_STRETCH_FLAG):
@@ -101,49 +103,49 @@ class Calibration(object):
             self.uf_print("Error - 1. linear_offset(): {0}".format(self.read_linear_offset()))
             self.linear_calibration_start_flag = False
 
-    def calibrate_linear_servo_offset(self, number):
+    def calibrate_linear_servo_offset(self, servo_number):
         global analog_read_pin, servo_analog_read
         angles = []
         analogs = []
         self.ab_values = []
 
-        if number == SERVO_BOTTOM:
-            max_steps = 180
-            min_steps = 0
-            angle_step = min_steps
+        if servo_number == SERVO_BOTTOM:
+            max_angle = 150
+            min_angle = 30
+            angle_step = min_angle
             analog_pin = SERVO_BOTTOM_ANALOG_PIN
             self.uarm.write_servo_angle(SERVO_BOTTOM, angle_step, False)
             self.uarm.write_servo_angle(SERVO_LEFT, 90, False)
             self.uarm.write_servo_angle(SERVO_RIGHT, 60, False)
-        if number == SERVO_LEFT:
-            max_steps = 110
-            min_steps = 0
-            angle_step = min_steps
+        if servo_number == SERVO_LEFT:
+            max_angle = 120
+            min_angle = 35
+            angle_step = min_angle
             analog_pin = SERVO_LEFT_ANALOG_PIN
             self.uarm.write_servo_angle(SERVO_BOTTOM, 90, False)
             self.uarm.write_servo_angle(SERVO_LEFT, angle_step, False)
-            self.uarm.write_servo_angle(SERVO_RIGHT, 55, False)
-        if number == SERVO_RIGHT:
-            max_steps = 130
-            min_steps = 20
-            angle_step = min_steps
+            self.uarm.write_servo_angle(SERVO_RIGHT, 65, False)
+        if servo_number == SERVO_RIGHT:
+            max_angle = 120
+            min_angle = 15
+            angle_step = min_angle
             analog_pin = SERVO_RIGHT_ANALOG_PIN
             self.uarm.write_servo_angle(SERVO_BOTTOM, 90, False)
-            self.uarm.write_servo_angle(SERVO_LEFT, 25, False)
+            self.uarm.write_servo_angle(SERVO_LEFT, 65, False)
             self.uarm.write_servo_angle(SERVO_RIGHT, angle_step, False)
-        if number == SERVO_HAND:
-            max_steps = 180
-            min_steps = 20
-            angle_step = min_steps
+        if servo_number == SERVO_HAND:
+            max_angle = 160
+            min_angle = 20
+            angle_step = min_angle
             analog_pin = SERVO_HAND_ANALOG_PIN
             self.uarm.write_servo_angle(SERVO_BOTTOM, 90, False)
             self.uarm.write_servo_angle(SERVO_LEFT, 90, False)
             self.uarm.write_servo_angle(SERVO_RIGHT, 60, False)
             self.uarm.write_servo_angle(SERVO_HAND, angle_step, False)
         time.sleep(2)
-        while angle_step < max_steps:
+        while angle_step < max_angle:
 
-            self.uarm.write_servo_angle(number,angle_step, False)
+            self.uarm.write_servo_angle(servo_number, angle_step, False)
 
             servo_analog_read = 0
             for i in range(5):
@@ -153,7 +155,7 @@ class Calibration(object):
             servo_analog_read /= 5
             angles.append(angle_step)
             analogs.append(servo_analog_read)
-            print ("Angle: {0}, Analog: {1}".format(angle_step,servo_analog_read))
+            print ("Servo Number: {0}, Angle: {1}, Analog: {2}".format(servo_number, angle_step, servo_analog_read))
             angle_step += 1
             time.sleep(0.1)
 
@@ -237,76 +239,76 @@ class Calibration(object):
             self.uf_print("Error - 2, read_manual_offset: {0}".format(self.read_manual_offset()))
         self.uarm.attach_all_servos()
 
-    def stretch_calibration_section(self, callback=None):
+    def stretch_calibration_section(self):
         self.stretch_calibration_flag = True
         self.uf_print("3.0. Clearing Stretch Completed Flag in EEPROM.")
         self.write_completed_flag(CALIBRATION_STRETCH_FLAG, False)
-        self.uf_print("3. Start Calibrate Stretch Offset")
-
-        self.uf_print("3.0 Moving uArm to Correct Place")
-        self.uarm.write_servo_angle(SERVO_BOTTOM, 45, 0)
-        time.sleep(1)
-        self.uarm.write_left_right_servo_angle(130, 20, 0)
-        time.sleep(1)
-
-        initPosL = INIT_POS_L - 12
-        initPosR = INIT_POS_R - 12
-        minAngle_L = self.uarm.read_analog(SERVO_LEFT_ANALOG_PIN) - 16;
-        minAngle_R = self.uarm.read_analog(SERVO_RIGHT_ANALOG_PIN) - 16;
-        print ('minAngle_L: {0}'.format(minAngle_L))
-        print ('minAngle_R: {0}'.format(minAngle_R))
-
-        self.uarm.write_servo_angle(SERVO_LEFT, initPosL, 0)
-        self.uarm.write_servo_angle(SERVO_RIGHT, initPosR, 0)
-        time.sleep(1)
-        while self.uarm.read_analog(SERVO_RIGHT_ANALOG_PIN) < (minAngle_R - SAMPLING_DEADZONE) \
-                and self.stretch_calibration_flag:
-            initPosR += 1
-            self.uarm.write_servo_angle(SERVO_RIGHT, initPosR, 0)
-            print ('initPosR: {0}'.format(initPosR))
-            time.sleep(0.05)
-
-        while self.uarm.read_analog(SERVO_RIGHT_ANALOG_PIN) > (minAngle_R + SAMPLING_DEADZONE) \
-                and self.stretch_calibration_flag:
-            initPosR -= 1
-            self.uarm.write_servo_angle(SERVO_RIGHT, initPosR, 0)
-            print ('initPosR: {0}'.format(initPosR))
-            time.sleep(0.05)
-
-        while self.uarm.read_analog(SERVO_LEFT_ANALOG_PIN) < (minAngle_L - SAMPLING_DEADZONE) \
-                and self.stretch_calibration_flag:
-            initPosL += 1
-            self.uarm.write_servo_angle(SERVO_LEFT, initPosL, 0)
-            print ('initPosL: {0}'.format(initPosL))
-            time.sleep(0.05)
-
-        while self.uarm.read_analog(SERVO_LEFT_ANALOG_PIN) > (minAngle_L + SAMPLING_DEADZONE) \
-                and self.stretch_calibration_flag:
-            initPosL -= 1
-            self.uarm.write_servo_angle(SERVO_LEFT, initPosL, 0)
-            print ('initPosL: {0}'.format(initPosL))
-            time.sleep(0.05)
-
-        offsetL = initPosL - INIT_POS_L + 3
-        offsetR = initPosR - INIT_POS_R + 3
-        offset_correct_flag = [False, False]
-        if abs(offsetL) < 20:
-            offset_correct_flag[0] = True
-        if abs(offsetR) < 20:
-            offset_correct_flag[1] = True
-
-        stretch_offset = copy.deepcopy(self.stretch_offset_template)
-        stretch_offset['LEFT'] = offsetL
-        stretch_offset['RIGHT'] = offsetR
-        if callback is not None:
-            callback(stretch_offset, offset_correct_flag)
+        # self.uf_print("3. Start Calibrate Stretch Offset")
+        #
+        # self.uf_print("3.0 Moving uArm to Correct Place")
+        # self.uarm.write_servo_angle(SERVO_BOTTOM, 45, 0)
+        # time.sleep(1)
+        # self.uarm.write_left_right_servo_angle(130, 20, 0)
+        # time.sleep(1)
+        #
+        # initPosL = INIT_POS_L - 12
+        # initPosR = INIT_POS_R - 12
+        # minAngle_L = self.uarm.read_analog(SERVO_LEFT_ANALOG_PIN) - 16;
+        # minAngle_R = self.uarm.read_analog(SERVO_RIGHT_ANALOG_PIN) - 16;
+        # print ('minAngle_L: {0}'.format(minAngle_L))
+        # print ('minAngle_R: {0}'.format(minAngle_R))
+        #
+        # self.uarm.write_servo_angle(SERVO_LEFT, initPosL, 0)
+        # self.uarm.write_servo_angle(SERVO_RIGHT, initPosR, 0)
+        # time.sleep(1)
+        # while self.uarm.read_analog(SERVO_RIGHT_ANALOG_PIN) < (minAngle_R - SAMPLING_DEADZONE) \
+        #         and self.stretch_calibration_flag:
+        #     initPosR += 1
+        #     self.uarm.write_servo_angle(SERVO_RIGHT, initPosR, 0)
+        #     print ('initPosR: {0}'.format(initPosR))
+        #     time.sleep(0.05)
+        #
+        # while self.uarm.read_analog(SERVO_RIGHT_ANALOG_PIN) > (minAngle_R + SAMPLING_DEADZONE) \
+        #         and self.stretch_calibration_flag:
+        #     initPosR -= 1
+        #     self.uarm.write_servo_angle(SERVO_RIGHT, initPosR, 0)
+        #     print ('initPosR: {0}'.format(initPosR))
+        #     time.sleep(0.05)
+        #
+        # while self.uarm.read_analog(SERVO_LEFT_ANALOG_PIN) < (minAngle_L - SAMPLING_DEADZONE) \
+        #         and self.stretch_calibration_flag:
+        #     initPosL += 1
+        #     self.uarm.write_servo_angle(SERVO_LEFT, initPosL, 0)
+        #     print ('initPosL: {0}'.format(initPosL))
+        #     time.sleep(0.05)
+        #
+        # while self.uarm.read_analog(SERVO_LEFT_ANALOG_PIN) > (minAngle_L + SAMPLING_DEADZONE) \
+        #         and self.stretch_calibration_flag:
+        #     initPosL -= 1
+        #     self.uarm.write_servo_angle(SERVO_LEFT, initPosL, 0)
+        #     print ('initPosL: {0}'.format(initPosL))
+        #     time.sleep(0.05)
+        #
+        # offsetL = initPosL - INIT_POS_L + 3
+        # offsetR = initPosR - INIT_POS_R + 3
+        # offset_correct_flag = [False, False]
+        # if abs(offsetL) < 20:
+        #     offset_correct_flag[0] = True
+        # if abs(offsetR) < 20:
+        #     offset_correct_flag[1] = True
+        #
+        # stretch_offset = copy.deepcopy(self.stretch_offset_template)
+        # stretch_offset['LEFT'] = offsetL
+        # stretch_offset['RIGHT'] = offsetR
+        # if callback is not None:
+        #     callback(stretch_offset, offset_correct_flag)
 
         self.uf_print("    3.1 Saving Stretch Offset into EEPROM")
-        self.uarm.write_eeprom(EEPROM_DATA_TYPE_FLOAT, OFFSET_STRETCH_START_ADDRESS, offsetL)
-        self.uarm.write_eeprom(EEPROM_DATA_TYPE_FLOAT, OFFSET_STRETCH_START_ADDRESS + 4, offsetR)
+        self.uarm.write_eeprom(EEPROM_DATA_TYPE_FLOAT, OFFSET_STRETCH_START_ADDRESS, -10)
+        self.uarm.write_eeprom(EEPROM_DATA_TYPE_FLOAT, OFFSET_STRETCH_START_ADDRESS + 4, -10)
         self.uf_print("    3.2 Mark Completed Flag in EEPROM")
         self.write_completed_flag(CALIBRATION_STRETCH_FLAG, True)
-        print offsetL, offsetR
+        # print offsetL, offsetR
         self.uarm.detach_all_servos()
         self.stretch_calibration_flag = False
 
@@ -444,10 +446,83 @@ def main():
           2.3 Confirm the Position.
          3. Stretch Calibration section
     """
+    parser = argparse.ArgumentParser()
+    # parser.add_argument("-d", "--download", help="download firmware into firmware.hex", action="store_true")
+    parser.add_argument("-f", "--force", help="Force calibrate uArm, `all` , `linear`, `manual`")
+    parser.add_argument("-c", "--check", help="Check If Calibration is completed? if completed, display the offset value", action="store_true")
+    # parser.add_argument("-f", "--force", help="Will Force calibrate uArm", action="store_true")
+    args = parser.parse_args()
     calibration = Calibration()
-    # calibration.uarm.debug = True
     time.sleep(2)
-    calibration.calibrate_all()
+    # check
+    if args.check:
+        print ("\n");
+        print ("-------------------------------------------------")
+        print ("Checking Calibration information....")
+        print ("-------------------------------------------------")
+        is_linear_calibrated = calibration.read_completed_flag(CALIBRATION_LINEAR_FLAG)
+        is_manual_calibrated = calibration.read_completed_flag(CALIBRATION_SERVO_FLAG)
+        is_all_calibrated = calibration.read_completed_flag(CALIBRATION_FLAG)
+        if is_linear_calibrated and is_manual_calibrated and is_all_calibrated:
+            print ("Calibration All Completed !!!")
+            linear_offset = calibration.read_linear_offset()
+            print("Linear Offset:\n")
+            print ("Bottom Servo, INTERCEPT: {0}, SLOPE: {1}".format(linear_offset[0]['INTERCEPT'],linear_offset[0]['SLOPE']))
+            print ("Left Servo, INTERCEPT: {0}, SLOPE: {1}".format(linear_offset[1]['INTERCEPT'],linear_offset[1]['SLOPE']))
+            print ("Right Servo, INTERCEPT: {0}, SLOPE: {1}".format(linear_offset[2]['INTERCEPT'],linear_offset[2]['SLOPE']))
+            print ("Hand Servo, INTERCEPT: {0}, SLOPE: {1}".format(linear_offset[3]['INTERCEPT'],linear_offset[3]['SLOPE']))
+            manual_offset = calibration.read_manual_offset()
+            print("Manual Offset:\n")
+            print ("Bottom Servo Offset: {0}".format(manual_offset[0]))
+            print ("Left Servo Offset: {0}".format(manual_offset[1]))
+            print ("Right Servo Offset: {0}".format(manual_offset[2]))
+        elif is_linear_calibrated and is_manual_calibrated and not is_all_calibrated:
+            print ("Calibration All Completed !!!")
+        elif not is_linear_calibrated and is_manual_calibrated:
+            print ("Linear Calibration not Completed !!!")
+        elif is_linear_calibrated and not is_manual_calibrated:
+            print ("Manual Calibration not Completed !!!")
+        elif not is_linear_calibrated and not is_manual_calibrated:
+            print ("Linear Calibration not Completed !!!")
+            print ("Manual Calibration not Completed !!!")
+        exit_fun()
+    if args.force:
+        print ("\n");
+        print ("-------------------------------------------------")
+        print ("Force Calibrating....")
+        print ("-------------------------------------------------")
+        if args.force == "all":
+            calibration.calibrate_all()
+        elif args.force == "linear":
+            calibration.linear_calibration_section()
+        elif args.force == "manual":
+            if calibration.read_completed_flag(CALIBRATION_LINEAR_FLAG):
+                calibration.manual_calibration_section()
+            else:
+                print ("Please Complete Linear Calibration First! You could use -f linear")
+        else:
+            print ("unrecognized command: {0}".format(args.force))
+        exit_fun()
+
+    # No Argument
+    is_linear_calibrated = calibration.read_completed_flag(CALIBRATION_LINEAR_FLAG)
+    is_manual_calibrated = calibration.read_completed_flag(CALIBRATION_SERVO_FLAG)
+    is_all_calibrated = calibration.read_completed_flag(CALIBRATION_FLAG)
+    if is_linear_calibrated and is_manual_calibrated and is_all_calibrated:
+        print ("uArm has been calibrated already, Are you sure want to Calibrate it again?")
+        confirm = raw_input("Press Y if you want to calibrate anyway...\n")
+        if confirm == "Y" or confirm=="y":
+            calibration.calibrate_all()
+        else:
+            exit_fun()
+    else:
+        calibration.calibrate_all()
+    exit_fun()
+
+
+def exit_fun():
+    raw_input("\nPress Enter to Exit...")
+    sys.exit(0)
 
 
 if __name__ == '__main__':

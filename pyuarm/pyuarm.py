@@ -2,7 +2,9 @@ from __future__ import print_function
 import serial
 import time
 import binascii
+
 from util import *
+from distutils.version import LooseVersion
 
 
 class uArm(object):
@@ -47,16 +49,13 @@ class uArm(object):
         except TypeError as e:
             raise UnkwonFirmwareException(
                 "Unkwon Firmware Version, Please use 'pyuarm.tools.firmware_helper' upgrade your firmware")
-        # try:
-        #     # self.get_firmata_version()
-        #     self.get_firmware_version()
-        # except serial.SerialException as e:
-        #     raise UnkwonFirmwareException(
-        #         "Unkwon Firmware Version, Please use 'pyuarm.tools.firmware_helper' upgrade your firmware")
-        # except TypeError as e:
-        #     raise UnkwonFirmwareException(
-        #         "Unkwon Firmware Version, Please use 'pyuarm.tools.firmware_helper' upgrade your firmware")
-        # print("Firmware Version: {0}".format(self.firmware_version))
+
+        for v in pyuarm.support_versions:
+            # print (v)
+            if LooseVersion(v) == LooseVersion(str(self.firmware_major_version) + "." + str(self.firmware_minor_version)):
+                return
+            #     print ("Yes")
+        raise UnSupportedFirmwareVersionException('Unsupported firmware version: {0}, Please flash the support version {1}'.format(self.firmware_version, pyuarm.support_versions))
 
     def is_connected(self):
         """
@@ -599,11 +598,11 @@ class uArm(object):
                             while read_byte != END_SYSEX:
                                 received_data.append(read_byte)
                                 read_byte = self.serial_read()
-                            firmware_major_version = received_data[0]
-                            firmware_minor_version = received_data[1]
-                            firmware_bugfix = received_data[2]
-                            self.firmware_version = str(firmware_major_version) + "." + str(
-                                firmware_minor_version) + "." + str(firmware_bugfix)
+                            self.firmware_major_version = received_data[0]
+                            self.firmware_minor_version = received_data[1]
+                            self.firmware_bugfix = received_data[2]
+                            self.firmware_version = str(self.firmware_major_version) + "." + str(
+                                self.firmware_minor_version) + "." + str(self.firmware_bugfix)
                             break
         else:
             print("uArm is not Connected")

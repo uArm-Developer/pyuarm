@@ -227,7 +227,7 @@ def main():
 
 
 def exit_fun():
-    raw_input("Press Enter to Exit...")
+    raw_input("\nPress Enter to Exit...")
     sys.exit(0)
 
 

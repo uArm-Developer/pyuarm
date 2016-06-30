@@ -1,3 +1,16 @@
+## [1.3.22] - 2016-06-30
+### Updated - Alex Tan
+
+### Compatible
+- Firmware 1.7
+
+### Fix
+- Use version.json replace version.py
+- Add Support firmware version in version.json, if not Compatible will raise UnsupportFirmwareVersionException
+- Add argument for calibrate.py
+- Disable Stretch Calibration
+- Change Linear Calibration, Increasing moving points 
+
 ## [1.3.21] - 2016-06-28
 ### Updated - Alex Tan
 
