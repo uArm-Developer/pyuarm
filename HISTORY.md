@@ -9,7 +9,8 @@
 - Add Support firmware version in version.json, if not Compatible will raise UnsupportFirmwareVersionException
 - Add argument for calibrate.py
 - Disable Stretch Calibration
-- Change Linear Calibration, Increasing moving points 
+- Change Linear Calibration, Increasing moving points
+- Merge [frankyjuang](https://github.com/frankyjuang), fix typo 
 
 ## [1.3.21] - 2016-06-28
 ### Updated - Alex Tan

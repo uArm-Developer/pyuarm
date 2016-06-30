@@ -182,6 +182,7 @@ def getFloatFromFour7BitBytes(array):
     val = negative * (ord(array[1]) + ord(array[2]) * 128 + ord(array[3]) / 100.00)
     return val
 
+
 class NoUArmPortException(IOError):
     """
     .. _NoUArmPortException:
@@ -193,9 +194,9 @@ class NoUArmPortException(IOError):
         return repr(self.error)
 
 
-class UnkwonFirmwareException(Exception):
+class UnknownFirmwareException(Exception):
     """
-    .. _UnkwonFirmwareException:
+    .. UnknownFirmwareException:
     """
     def __init__(self, error):
         self.error = error
