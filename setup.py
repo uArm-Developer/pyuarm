@@ -1,21 +1,33 @@
+from distutils.util import convert_path
 from setuptools import setup, find_packages
-import os
-import json
 
+main_ns = {}
+ver_path = convert_path('pyuarm/version.py')
+with open(ver_path) as ver_file:
+        exec(ver_file.read(), main_ns)
+
+version = main_ns['__version__']
+# print main_ns['__version__']
+#
+#
+#
+# import os
+# import json
+#
 long_description = open('README.rst').read()
-
-module_dir = os.path.dirname(os.path.abspath(__file__))
-version_file = os.path.join(module_dir, 'pyuarm','version.json')
-with open(version_file,'r') as v:
-    data = json.load(v)
-    v.close()
-
-# pyuarm version
-version = data['module_version']
-__version__ = VERSION = version
-
-# support version
-support_versions = data['support_versions']
+#
+# module_dir = os.path.dirname(os.path.abspath(__file__))
+# version_file = os.path.join(module_dir, 'pyuarm','version.json')
+# with open(version_file,'r') as v:
+#     data = json.load(v)
+#     v.close()
+#
+# # pyuarm version
+# version = data['module_version']
+# __version__ = VERSION = version
+#
+# # support version
+# support_versions = data['support_versions']
 
 with open('requirements.txt') as f:
     requirements = f.read().splitlines()

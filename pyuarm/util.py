@@ -3,21 +3,6 @@ import pyuarm
 import os
 import json
 
-
-#version
-module_dir = os.path.dirname(os.path.abspath(__file__))
-version_file = os.path.join(module_dir, 'version.json')
-with open(version_file,'r') as v:
-    data = json.load(v)
-    v.close()
-
-# pyuarm version
-version = data['module_version']
-__version__ = VERSION = version
-
-# support version
-support_versions = data['support_versions']
-
 # Firmata
 
 REPORT_FIRMATA_VERSION = 0x79

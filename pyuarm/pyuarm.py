@@ -5,6 +5,7 @@ import binascii
 
 from util import *
 from distutils.version import LooseVersion
+from version import support_versions
 
 
 class uArm(object):
@@ -50,10 +51,10 @@ class uArm(object):
             raise UnknownFirmwareException(
                 "Unknown Firmware Version, Please use 'python -m pyuarm.tools.firmware_helper' upgrade your firmware")
 
-        for v in pyuarm.support_versions:
+        for v in support_versions:
             if LooseVersion(v) == LooseVersion(str(self.firmware_major_version) + "." + str(self.firmware_minor_version)):
                 return
-        raise UnSupportedFirmwareVersionException('Unsupported firmware version: {0}, Please flash the support version {1}'.format(self.firmware_version, pyuarm.support_versions))
+        raise UnSupportedFirmwareVersionException('Unsupported firmware version: {0}, Please flash the support version {1}'.format(self.firmware_version, support_versions))
 
     def is_connected(self):
         """

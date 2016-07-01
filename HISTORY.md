@@ -1,4 +1,13 @@
-## [1.3.22] - 2016-06-30
+## [1.3.25] - 2016-07-01
+### Updated - Alex Tan
+
+### Compatible
+- Firmware 1.7
+
+### Fix
+- Move Back to use version.py due to pyinstaller encounter error
+
+## [1.3.24] - 2016-06-30
 ### Updated - Alex Tan
 
 ### Compatible
@@ -10,7 +19,7 @@
 - Add argument for calibrate.py
 - Disable Stretch Calibration
 - Change Linear Calibration, Increasing moving points
-- Merge [frankyjuang](https://github.com/frankyjuang), fix typo 
+- Merge [frankyjuang](https://github.com/frankyjuang), fix typo
 
 ## [1.3.21] - 2016-06-28
 ### Updated - Alex Tan
