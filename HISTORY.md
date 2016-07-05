@@ -1,3 +1,14 @@
+## [1.3.26] - 2016-07-05
+### Updated - Alex Tan
+
+### Compatible
+- Firmware 1.7
+
+### Fix
+- Firmware helper support port argument.
+- improve firmware helper in mac os x if not install avrdude.
+- add console-script: uarm-firmware, uarm-calibrate, uarm-list.
+
 ## [1.3.25] - 2016-07-01
 ### Updated - Alex Tan
 

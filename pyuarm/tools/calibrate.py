@@ -529,4 +529,4 @@ if __name__ == '__main__':
     try:
         main()
     except SystemExit:
-        print("Exit")
+        exit_fun()

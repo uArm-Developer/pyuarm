@@ -17,7 +17,12 @@ setup(name='pyuarm',
     version=version,
     author='Joey Song/Alex Tan',
     packages=find_packages(),
-    scripts=['pyuarm/tools/firmware_helper.py', 'pyuarm/tools/calibrate.py', 'pyuarm/tools/list_uarms.py'],
+    entry_points={
+            'console_scripts': [
+                'uarm-firmware = pyuarm.tools.firmware_helper:main',
+                'uarm-calibrate = pyuarm.tools.calibrate:main',
+                'uarm-listport = pyuarm.tools.list_uarms:main']
+    },
     package_data={'pyuarm.tools': ['avrdude/*']},
     include_package_data=True,
     author_email='developer@ufactory.cc',
