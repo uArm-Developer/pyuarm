@@ -44,7 +44,7 @@ class Calibration(object):
     def default_log(msg):
         print msg
 
-    def uf_print(self, msg):
+    def uf_print(self, msg=None):
         self.log_function(msg)
 
     def calibrate_all(self, linear_callback=None, manual_callback=None, stretch_callback=None):
@@ -155,7 +155,7 @@ class Calibration(object):
             servo_analog_read /= 5
             angles.append(angle_step)
             analogs.append(servo_analog_read)
-            print ("Servo Number: {0}, Angle: {1}, Analog: {2}".format(servo_number, angle_step, servo_analog_read))
+            self.uf_print ("Servo Number: {0}, Angle: {1}, Analog: {2}".format(servo_number, angle_step, servo_analog_read))
             angle_step += 1
             time.sleep(0.1)
 
@@ -218,6 +218,7 @@ class Calibration(object):
                 self.uf_print(str(self.servo_calibrate_timeout - time_counts) + ", Please Confirm the positions")
             if callback is not None:
                 callback(self.temp_manual_offset_arr, self.manual_offset_correct_flag)
+                self.uf_print()
             else:
                 confirm = raw_input(
                     "servo offset, bottom: {0}, left: {1}, right: {2},\nConfirm Please Press Y: ".format(servo_1_offset,servo_2_offset,servo_3_offset))

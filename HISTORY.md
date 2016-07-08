@@ -1,3 +1,12 @@
+## [1.3.27] - 2016-07-08
+### Updated - Alex Tan
+
+### Compatible
+- Firmware 1.7
+
+### Fix
+- Fix calibrate issue when use GUI.
+
 ## [1.3.26] - 2016-07-05
 ### Updated - Alex Tan
 

@@ -61,6 +61,7 @@ class FirmwareHelper():
                 avrdude_conf = os.path.join(self.application_path, 'avrdude', conf_name)
                 cmd = [avrdude_path, '-C' + avrdude_conf, '-v', '-patmega328p', '-carduino', port_conf, '-b115200', '-D',
                    '-Uflash:w:{0}:i'.format(firmware_path)]
+                error_description = "avrdude is required, Please try install avrdude."
 
             elif platform.system() == 'Linux':
                 cmd = ['avrdude', '-v', '-patmega328p', '-carduino', port_conf, '-b115200', '-D',
