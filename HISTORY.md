@@ -7,6 +7,18 @@
 ### Changes
 - Brand new Protocol
 
+### detail -2016-07-13
+- Fix timeout issue when new Serial port
+- remove time.sleep(3) after new Serial port, use is_ready() function instead
+- Add UArmConnectException
+- add disconnect() function
+- flushInput before read anything
+- use readline() replace old read logic
+- add validate_coordinate()
+- update move_to,pump_on, pump_off, set_buzzer, is_moving, get_servo_angle, get_tip_sensor
+- add write_servos_angle
+- update firmware_helper.py with new Protocol
+
 ## [1.3.27] - 2016-07-08
 ### Updated - Alex Tan
 

@@ -125,10 +125,10 @@ class FirmwareHelper():
         if self.uarm_port is not None or self.uarm_port != "":
             print ("Reading Firmware version from uArm...")
             try:
-                uarm = pyuarm.uArm(port=self.uarm_port)
+                uarm = pyuarm.UArm(port=self.uarm_port)
                 self.uarm_firmware_version = uarm.firmware_version
                 uarm.disconnect()
-            except pyuarm.UnkwonFirmwareException:
+            except pyuarm.UnknownFirmwareException:
                 print "Unknown Firmware version."
             except pyuarm.NoUArmPortException:
                 print "No uArm is connected."

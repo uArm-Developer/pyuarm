@@ -1,8 +1,7 @@
 from __future__ import print_function
-from util import NoUArmPortException,UnknownFirmwareException, UnSupportedFirmwareVersionException
+from util import NoUArmPortException,UnknownFirmwareException, UnSupportedFirmwareVersionException, UArmConnectException
 from tools.list_uarms import uarm_ports
 import serial
-import time
 from version import is_a_version,is_supported_version
 
 
@@ -23,25 +22,25 @@ class UArm(object):
         self.debug = debug
         self.log("Initialize uArm, port is {0}...".format(port))
         try:
-            self.sp = serial.Serial(port=port,
-                                parity=serial.PARITY_NONE,
-                                stopbits=serial.STOPBITS_ONE,
-                                bytesize=serial.EIGHTBITS,
-                                timeout=.1)
+            self.sp = serial.Serial(port=port,baudrate=115200)
         except serial.SerialException as e:
-            self.log("UArm connect to the port: {}, error: {}".format(port,e.message))
-        time.sleep(3)
+            raise UArmConnectException("Unable to connect to the port: {}, error: {}".format(port,e.strerror))
         self.responseLog = []
         try:
-            self.firmware_version = self.read_firmware_version()
-            if is_a_version(self.firmware_version):
-                self.log("Firmware Version: {0}".format(self.firmware_version))
-                if not is_supported_version(self.firmware_version):
-                    raise UnSupportedFirmwareVersionException("Error: unsupported uArm Firmware version")
-            else:
-                raise UnknownFirmwareException("Error: unknown Firmware Version")
+            if self.is_ready():
+                self.firmware_version = self.read_firmware_version()
+            # print (self.read_firmware_version())
+                if is_a_version(self.firmware_version):
+                    self.log("Firmware Version: {0}".format(self.firmware_version))
+                    if not is_supported_version(self.firmware_version):
+                        raise UnSupportedFirmwareVersionException("Error: unsupported uArm Firmware version")
+                else:
+                    raise UnknownFirmwareException("Error: unknown Firmware Version")
         except TypeError:
             raise UnknownFirmwareException("Error: unknown Firmware Version")
+
+    def disconnect(self):
+        self.sp.close()
 
     def is_connected(self):
         if not self.sp.isOpen():
@@ -49,14 +48,24 @@ class UArm(object):
         else:
             return True
 
+    def is_ready(self):
+        if self.sp.readline().strip() == "start":
+            self.log("connected...")
+            return True
+        else:
+            return False
+
     def send_cmd(self, cmnd):
         # This command will send a command and recieve the robots response. There must always be a response!
         if not self.is_connected():
             return None
 
         # Prepare and send the command to the robot
-        cmndString = bytes("[" + cmnd + "]>", encoding='ascii')
+        cmndString = "[" + cmnd + "]"
+        if self.debug:
+            self.log ("Send Command: {0}".format(cmndString))
         try:
+            self.sp.flushInput()
             self.sp.write(cmndString)
         except serial.serialutil.SerialException as e:
             self.log("UArm.send_cmd(): ERROR {0} while sending command {1}. Disconnecting Serial!".format(e,cmnd))
@@ -64,20 +73,13 @@ class UArm(object):
             return False
 
         # Read the response from the robot (THERE MUST ALWAYS BE A RESPONSE!)
-        response = ""
-        while True:
+        try:
+            response = self.sp.readline().strip()
 
-            try:
-                response += str(self.sp.read(), 'ascii')
-            except serial.serialutil.SerialException as e:
-                self.log("UArm.send_cmd(): ERROR {0}while sending command {1}. Disconnecting Serial!".format(e, cmnd))
-                self.isConnected = False
-                return False
-
-            if "\n" in response:
-                response = response[:-1]
-                break
-
+        except serial.serialutil.SerialException as e:
+            self.log("UArm.send_cmd(): ERROR {0}while sending command {1}. Disconnecting Serial!".format(e, cmnd))
+            self.isConnected = False
+            return False
         # Save the response to a log variable, in case it's needed for debugging
         self.responseLog.append((cmnd, response))
 
@@ -95,10 +97,10 @@ class UArm(object):
             self.log("Uarm.read(): ERROR: Recieved error from robot: {0}".format(response))
 
         if self.debug:
-            print("response: {0}".format(response))
+            self.log("response: {0}".format(response))
         return response
 
-    def read_cmd(self, message, command, arguments):
+    def parse_cmd(self, message, command, arguments):
         response_dict = {n: 0 for n in arguments}  # Fill the dictionary with zero's
 
         # Do error checking, in case communication didn't work
@@ -128,26 +130,56 @@ class UArm(object):
 
     def read_firmware_version(self):
         cmd = "gVer"
-        return self.send_cmd(cmd)
+        return self.send_cmd(cmd).replace('ver ', '')
+
+    def validate_coordinate(self, x, y, z):
+        x = str(round(x, 2))
+        y = str(round(y, 2))
+        z = str(round(z, 2))
+        cmd = "gSimuX{0}Y{1}Z{2}".format(x,y,z)
+        response = self.send_cmd(cmd)
+        print (response)
 
     def move_to(self, x, y, z, speed=5):
         x = str(round(x, 2))
         y = str(round(y, 2))
         z = str(round(z, 2))
         s = str(round(speed, 2))
-        command = "moveX{0}Y{1}Z{2}S{3}".format(x,y,z,s)
-        return self.send_cmd(command)
+        command = "sMoveX{0}Y{1}Z{2}S{3}".format(x,y,z,s)
+        response = self.send_cmd(command)
+        if response == "r1":
+            return True
+        elif response == "r2":
+            self.log("move_to: failed in ({}, {}, {})".format(x,y,z))
+            return False
+
+    def write_servo_angle(self,servo_number,angle):
+        cmd = "sServoN{}V{}".format(str(servo_number),str(angle))
+        response = self.send_cmd(cmd)
+        if response == "ok":
+            return True
+        else:
+            return False
 
     def move_wrist(self, angle):
         angle = str(round(angle, 3))
         cmd = "handV{0}".format(angle)
-        return self.send_cmd(cmd)
+        if self.send_cmd(cmd) == "ok":
+            return True
+        else:
+            return False
 
     def pump_on(self):
-        return self.send_cmd("pumpV1")
+        if self.send_cmd("sPumpV1") == "ok":
+            return True
+        else:
+            return False
 
     def pump_off(self):
-        return self.send_cmd("pumpV0")
+        if self.send_cmd("sPumpV0") == "ok":
+            return True
+        else:
+            return False
 
     def servo_attach(self, servo_number):
         servo_number = str(int(servo_number))
@@ -156,44 +188,53 @@ class UArm(object):
 
     def servo_detach(self, servo_number):
         servo_number = str(int(servo_number))
-        cmnd = "detachS" + servo_number
-        return self.send_cmd(cmnd)
+        cmd = "detachS" + servo_number
+        return self.send_cmd(cmd)
 
     def set_buzzer(self, frequency, duration):
-        cmnd = "buzzF" + str(frequency) + "T" + str(duration)
-        return self.send_cmd(cmnd)
+        cmd = "sBuzzF" + str(frequency) + "T" + str(duration)
+        if self.send_cmd(cmd) == "r1":
+            return True
+        else:
+            return False
 
     def get_coordinate(self):
         # Returns an array of the format [x, y, z] of the robots current location
 
-        response = self.send_cmd("gcoords")
+        response = self.send_cmd("gCrd")
 
-        parse_cmd = self.read_cmd(response, "coords", ["x", "y", "z"])
+        parse_cmd = self.parse_cmd(response, "ok", ["x", "y", "z"])
         coordinate = [parse_cmd["x"], parse_cmd["y"], parse_cmd["z"]]
 
         return coordinate
 
-    def get_is_moving(self):
+    def is_moving(self):
         # Returns a 0 or a 1, depending on whether or not the robot is moving.
 
-        response = self.send_cmd("gmoving")
+        response = self.send_cmd("gMoving")
+        if response == "r2":
+            return False
+        elif response == "r1":
+            return True
 
-        parse_cmd = self.read_cmd(response, "moving", ["m"])
-        return parse_cmd["m"]
-
-    def get_servo_angle(self, servo_number):
+    def get_servo_angle(self, servo_number=None):
         # Returns an angle in degrees, of the servo
+        cmd = "gAng"
 
-        cmnd = "gAngleS" + str(servo_number)
-        response = self.send_cmd(cmnd)
-        parse_cmd = self.read_cmd(response, "angle", ["a"])
-
-        return parse_cmd["a"]
+        response = self.send_cmd(cmd)
+        parse_cmd = self.parse_cmd(response, "ok", ["r", "l", "r", "h"])
+        angles = [parse_cmd["r"], parse_cmd["l"], parse_cmd["r"],parse_cmd["h"]]
+        if servo_number is not None:
+            if 0 <= servo_number <= 3:
+                return angles[servo_number]
+            else:
+                return None
+        else:
+            return angles
 
     def get_tip_sensor(self):
-        # Returns 0 or 1, whether or not the tip sensor is currently activated
-
-        response  = self.send_cmd("gtip")
-        parse_cmd = self.read_cmd(response, "tip", ["v"])
-
-        return (True, False)[int(parse_cmd['v'])]  # Flip the value and turn it into a boolean
+        response = self.send_cmd("gTip")
+        if response == "r2":
+            return False
+        elif response == "r1":
+            return True
