@@ -1,3 +1,12 @@
+## [2.0.0] - 2016-07-13
+### Updated - Alex Tan
+
+### Compatible
+- Firmware 2.0
+
+### Changes
+- Brand new Protocol
+
 ## [1.3.27] - 2016-07-08
 ### Updated - Alex Tan
 

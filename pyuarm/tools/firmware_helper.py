@@ -72,7 +72,7 @@ class FirmwareHelper():
             try:
                 subprocess.call(cmd)
             except OSError as e:
-                print ("Error occurred: error code {0}".format(str(e.errno)))
+                print ("Error occurred: error code {0}, error msg: {1}".format(str(e.errno), e.strerror))
                 if e.errno == 2:
                     if platform.system() == 'Darwin':
                         try:
@@ -80,7 +80,7 @@ class FirmwareHelper():
                             subprocess.call(['brew', 'install', 'avrdude'])
                             subprocess.call(cmd)
                         except OSError as e:
-                            print ("Error occurred: error code {0}".format(str(e.errno)))
+                            print ("Error occurred: error code {0}, error msg: {1}".format(str(e.errno), e.strerror))
                             if e.errno == 2:
                                 print ("-------------------------------------------------------")
                                 print ("You didn't install homebrew, please visit http://bew.sh")
