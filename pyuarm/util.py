@@ -75,7 +75,7 @@ def get_uarm():
     """
     ports = uarm_ports()
     if len(ports) > 0:
-        return pyuarm.uArm(port=ports[0])
+        return pyuarm.UArm(port=ports[0])
     else:
         print("There is no uArm port available")
 

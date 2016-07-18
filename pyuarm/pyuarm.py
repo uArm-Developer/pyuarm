@@ -1,8 +1,14 @@
 from __future__ import print_function
-from util import NoUArmPortException,UnknownFirmwareException, UnSupportedFirmwareVersionException, UArmConnectException
+from util import NoUArmPortException,UnknownFirmwareException, UnSupportedFirmwareVersionException, UArmConnectException, get_uarm
 from tools.list_uarms import uarm_ports
 import serial
 from version import is_a_version,is_supported_version
+import logging
+
+
+logging.basicConfig(filename='logger.log', level=logging.INFO)
+
+logging.info("------------------------------------")
 
 
 class UArm(object):
@@ -147,10 +153,11 @@ class UArm(object):
         s = str(round(speed, 2))
         command = "sMoveX{0}Y{1}Z{2}S{3}".format(x,y,z,s)
         response = self.send_cmd(command)
-        if response == "r1":
+        logging.info("response from move to: {}".format(response))
+        if response == "r1:succeed":
             return True
-        elif response == "r2":
-            self.log("move_to: failed in ({}, {}, {})".format(x,y,z))
+        elif response == "r2:fail":
+            # self.log("move_to: failed in ({}, {}, {})".format(x,y,z))
             return False
 
     def write_servo_angle(self,servo_number,angle):
