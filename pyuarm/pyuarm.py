@@ -4,7 +4,7 @@ from tools.list_uarms import uarm_ports
 import serial
 from version import is_a_version,is_supported_version
 import logging
-
+import protocol
 
 logging.basicConfig(filename='logger.log', level=logging.INFO)
 
@@ -100,26 +100,26 @@ class UArm(object):
 
         # If the robot returned an error, print that out
         if "ERROR" in response:
-            self.log("Uarm.read(): ERROR: Recieved error from robot: {0}".format(response))
+            self.log("Uarm.read(): ERROR: Received error from robot: {0}".format(response))
 
         if self.debug:
             self.log("response: {0}".format(response))
         return response
 
-    def parse_cmd(self, message, command, arguments):
+    def __parse_cmd(self, message, arguments):
         response_dict = {n: 0 for n in arguments}  # Fill the dictionary with zero's
 
         # Do error checking, in case communication didn't work
         if message is False:
-            self.log("Uarm.__parseArgs(): Since an error occured in communication, returning 0's for all arguments!")
+            self.log("UArm.__parse_cmd(): Since an error occurred in communication, returning 0's for all arguments!")
             return response_dict
 
-        if command not in message:
-            self.log("Uarm.__parseArgs(): ERROR: The message did not come with the appropriate command!")
-            return response_dict
-
-        # Get rid of the "command" part of the message, so it's just arguments and their numbers
-        message = message.replace(command, "")
+        # if command not in message:
+        #     self.log("UArm.__parse_cmd(): ERROR: The message did not come with the appropriate command!")
+        #     return response_dict
+        #
+        # # Get rid of the "command" part of the message, so it's just arguments and their numbers
+        # message = message.replace(command, "")
 
         # Get the arguments and place them into the array
         for i, arg in enumerate(arguments):
@@ -135,14 +135,19 @@ class UArm(object):
 # -------------------------------------------------------- Commands ----------------------------------------------------
 
     def read_firmware_version(self):
-        cmd = "gVer"
-        return self.send_cmd(cmd).replace('ver ', '')
+        cmd = protocol.GET_VERSION
+        response = self.send_cmd(cmd)
+        logging.info(response)
+        if response.startswith("s"):
+            return response[1:]
+        else:
+            return False
 
     def validate_coordinate(self, x, y, z):
         x = str(round(x, 2))
         y = str(round(y, 2))
         z = str(round(z, 2))
-        cmd = "gSimuX{0}Y{1}Z{2}".format(x,y,z)
+        cmd = protocol.SIMULATION.format(x,y,z)
         response = self.send_cmd(cmd)
         print (response)
 
@@ -151,19 +156,19 @@ class UArm(object):
         y = str(round(y, 2))
         z = str(round(z, 2))
         s = str(round(speed, 2))
-        command = "sMoveX{0}Y{1}Z{2}S{3}".format(x,y,z,s)
+        command = protocol.SET_MOVE.format(x,y,z,s)
         response = self.send_cmd(command)
         logging.info("response from move to: {}".format(response))
-        if response == "r1:succeed":
+        if response.startswith("s"):
             return True
-        elif response == "r2:fail":
-            # self.log("move_to: failed in ({}, {}, {})".format(x,y,z))
+        elif response.startswith("f"):
+            logging.info("move_to: failed in ({}, {}, {})".format(x,y,z))
             return False
 
     def write_servo_angle(self,servo_number,angle):
-        cmd = "sServoN{}V{}".format(str(servo_number),str(angle))
+        cmd = protocol.SET_SERVO_ANGLE.format(str(servo_number),str(angle))
         response = self.send_cmd(cmd)
-        if response == "ok":
+        if response.startswith("s"):
             return True
         else:
             return False
@@ -177,30 +182,34 @@ class UArm(object):
             return False
 
     def pump_on(self):
-        if self.send_cmd("sPumpV1") == "ok":
+        if self.send_cmd(protocol.SET_PUMP.format(1)).startswith("s"):
             return True
         else:
             return False
 
     def pump_off(self):
-        if self.send_cmd("sPumpV0") == "ok":
+        if self.send_cmd(protocol.SET_PUMP.format(0)).startswith("s"):
             return True
         else:
             return False
 
     def servo_attach(self, servo_number):
-        servo_number = str(int(servo_number))
-        cmd = "attachS{}".format(servo_number)
-        return self.send_cmd(cmd)
+        cmd = protocol.ATTACH_SERVO.format(servo_number)
+        if self.send_cmd(cmd).startswith("s"):
+            return True
+        else:
+            return False
 
     def servo_detach(self, servo_number):
-        servo_number = str(int(servo_number))
-        cmd = "detachS" + servo_number
-        return self.send_cmd(cmd)
+        cmd = protocol.DETACH_SERVO.format(servo_number)
+        if self.send_cmd(cmd).startswith("s"):
+            return True
+        else:
+            return False
 
     def set_buzzer(self, frequency, duration):
-        cmd = "sBuzzF" + str(frequency) + "T" + str(duration)
-        if self.send_cmd(cmd) == "r1":
+        cmd = protocol.SET_BUZZER.format(frequency,duration)
+        if self.send_cmd(cmd).startswith("s"):
             return True
         else:
             return False
@@ -208,40 +217,52 @@ class UArm(object):
     def get_coordinate(self):
         # Returns an array of the format [x, y, z] of the robots current location
 
-        response = self.send_cmd("gCrd")
-
-        parse_cmd = self.parse_cmd(response, "ok", ["x", "y", "z"])
-        coordinate = [parse_cmd["x"], parse_cmd["y"], parse_cmd["z"]]
-
-        return coordinate
+        response = self.send_cmd(protocol.GET_COOR)
+        if response.startsiwth("s"):
+            parse_cmd = self.__parse_cmd(response[1:], ["x", "y", "z"])
+            coordinate = [parse_cmd["x"], parse_cmd["y"], parse_cmd["z"]]
+            return coordinate
+        else:
+            return False
 
     def is_moving(self):
         # Returns a 0 or a 1, depending on whether or not the robot is moving.
 
-        response = self.send_cmd("gMoving")
-        if response == "r2":
+        response = self.send_cmd(protocol.GET_IS_MOVE)
+        if response == "f":
             return False
-        elif response == "r1":
+        elif response == "s":
             return True
+
+    def gripper_catch(self):
+        response = self.send_cmd(protocol.SET_GRIPPER.format(1))
+        if response == "f":
+            return False
+        elif response == "s":
+            return True
+
 
     def get_servo_angle(self, servo_number=None):
         # Returns an angle in degrees, of the servo
-        cmd = "gAng"
+        cmd = protocol.GET_SERVO_ANGLE
 
         response = self.send_cmd(cmd)
-        parse_cmd = self.parse_cmd(response, "ok", ["r", "l", "r", "h"])
-        angles = [parse_cmd["r"], parse_cmd["l"], parse_cmd["r"],parse_cmd["h"]]
-        if servo_number is not None:
-            if 0 <= servo_number <= 3:
-                return angles[servo_number]
+        if response.startsiwth("s"):
+            parse_cmd = self.__parse_cmd(response[1:],  ["t", "l", "r"])
+            angles = [parse_cmd["r"], parse_cmd["l"], parse_cmd["r"]]
+            if servo_number is not None:
+                if 0 <= servo_number <= 3:
+                    return angles[servo_number]
+                else:
+                    return False
             else:
-                return None
+                return angles
         else:
-            return angles
+            return False
 
     def get_tip_sensor(self):
-        response = self.send_cmd("gTip")
-        if response == "r2":
+        response = self.send_cmd(protocol.GET_TIP)
+        if response == "f":
             return False
-        elif response == "r1":
+        elif response == "s":
             return True

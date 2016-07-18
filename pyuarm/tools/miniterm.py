@@ -32,6 +32,7 @@ class MiniTerm():
                 self.uarm.debug = debug
 
     def loop(self):
+        print ("Please input command:")
         while True:
             line = raw_input()
             # logging.info(line)
@@ -43,11 +44,11 @@ class MiniTerm():
             elif values[0].lower() == 'mv':
                 if len(values) == 4:
                     result = self.uarm.move_to(int(values[1]), int(values[2]), int(values[3]))
-                    msg = "Move to X:{} Y:{} Z:{}".format(values[1],values[2], values[3])
+                    msg = "Move to X:{} Y:{} Z:{}".format(int(values[1]),int(values[2]), int(values[3]))
                     if result:
                         self.output(msg)
                     else:
-                        self.output("Fail")
+                        self.output("Fail on {}".format(msg))
                 else:
                     self.output("argument number not correct, must be: mv number1 number2 number3")
             elif values[0].lower() == 'pump':
@@ -66,7 +67,7 @@ class MiniTerm():
                 self.output("command not found: {}".format(values[0]))
 
     def output(self, msg=""):
-        logging.info(msg)
+        print(msg)
 
 
 def main():
