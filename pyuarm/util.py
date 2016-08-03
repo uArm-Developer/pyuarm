@@ -97,6 +97,7 @@ class UnknownFirmwareException(Exception):
     """
     def __init__(self, error):
         self.error = error
+        self.message = error
 
     def __str__(self):
         return repr(self.error)
@@ -108,6 +109,7 @@ class UnSupportedFirmwareVersionException(Exception):
     """
     def __init__(self, error):
         self.error = error
+        self.message = error
 
     def __str__(self):
         return repr(self.error)
@@ -116,6 +118,7 @@ class UnSupportedFirmwareVersionException(Exception):
 class UArmConnectException(Exception):
     def __init__(self, error):
         self.error = error
+        self.message = error
 
     def __str__(self):
         return repr(self.error)

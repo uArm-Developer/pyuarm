@@ -20,6 +20,9 @@
 - update firmware_helper.py with new Protocol
 - add miniterm for for control
 
+### detail - 2016-08-03
+- Compatible with v0.9.7b
+
 ## [1.3.27] - 2016-07-08
 ### Updated - Alex Tan
 

@@ -1,4 +1,4 @@
-SET_MOVE = "sMovX{}Y{}Z{}S{}"
+SET_MOVE = "sMovX{}Y{}Z{}V{}"
 SIMULATION = "gSimX{}Y{}Z{}"
 GET_VERSION = "gVer"
 SET_SERVO_ANGLE = "sSerN{}V{}"

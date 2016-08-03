@@ -5,6 +5,7 @@ import serial
 from version import is_a_version,is_supported_version
 import logging
 import protocol
+import time
 
 logging.basicConfig(filename='logger.log', level=logging.INFO)
 
@@ -29,19 +30,20 @@ class UArm(object):
         self.log("Initialize uArm, port is {0}...".format(port))
         try:
             self.sp = serial.Serial(port=port,baudrate=115200)
+            time.sleep(3)
         except serial.SerialException as e:
-            raise UArmConnectException("Unable to connect to the port: {}, error: {}".format(port,e.strerror))
+            raise UArmConnectException("Unable to connect to the port: {}, error: {}".format(port, e.strerror))
         self.responseLog = []
         try:
-            if self.is_ready():
-                self.firmware_version = self.read_firmware_version()
-            # print (self.read_firmware_version())
-                if is_a_version(self.firmware_version):
-                    self.log("Firmware Version: {0}".format(self.firmware_version))
-                    if not is_supported_version(self.firmware_version):
-                        raise UnSupportedFirmwareVersionException("Error: unsupported uArm Firmware version")
-                else:
-                    raise UnknownFirmwareException("Error: unknown Firmware Version")
+            # if self.is_ready():
+            self.firmware_version = self.read_firmware_version()
+        # print (self.read_firmware_version())
+            if is_a_version(self.firmware_version):
+                self.log("Firmware Version: {0}".format(self.firmware_version))
+                if not is_supported_version(self.firmware_version):
+                    raise UnSupportedFirmwareVersionException("Error: unsupported uArm Firmware version")
+            else:
+                raise UnknownFirmwareException("Error: unknown Firmware Version")
         except TypeError:
             raise UnknownFirmwareException("Error: unknown Firmware Version")
 
@@ -54,12 +56,12 @@ class UArm(object):
         else:
             return True
 
-    def is_ready(self):
-        if self.sp.readline().strip() == "start":
-            self.log("connected...")
-            return True
-        else:
-            return False
+    # def is_ready(self):
+    #     if self.send_cmd("gMov") == "F":
+    #         self.log("connected...")
+    #         return True
+    #     else:
+    #         return False
 
     def send_cmd(self, cmnd):
         # This command will send a command and recieve the robots response. There must always be a response!
@@ -151,7 +153,7 @@ class UArm(object):
         response = self.send_cmd(cmd)
         print (response)
 
-    def move_to(self, x, y, z, speed=5):
+    def move_to(self, x, y, z, speed=300):
         x = str(round(x, 2))
         y = str(round(y, 2))
         z = str(round(z, 2))
@@ -218,7 +220,7 @@ class UArm(object):
         # Returns an array of the format [x, y, z] of the robots current location
 
         response = self.send_cmd(protocol.GET_COOR)
-        if response.startsiwth("s"):
+        if response.startswith("s"):
             parse_cmd = self.__parse_cmd(response[1:], ["x", "y", "z"])
             coordinate = [parse_cmd["x"], parse_cmd["y"], parse_cmd["z"]]
             return coordinate
@@ -240,7 +242,6 @@ class UArm(object):
             return False
         elif response == "s":
             return True
-
 
     def get_servo_angle(self, servo_number=None):
         # Returns an angle in degrees, of the servo
