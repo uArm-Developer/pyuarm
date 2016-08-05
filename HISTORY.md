@@ -18,7 +18,7 @@
 - update move_to,pump_on, pump_off, set_buzzer, is_moving, get_servo_angle, get_tip_sensor
 - add write_servos_angle
 - update firmware_helper.py with new Protocol
-- add miniterm for for control
+- add cmd for for control
 
 ### detail - 2016-08-03
 - Compatible with v0.9.7b

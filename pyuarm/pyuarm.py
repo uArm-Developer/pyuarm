@@ -50,6 +50,9 @@ class UArm(object):
     def disconnect(self):
         self.sp.close()
 
+    def reconnect(self):
+        self.sp.open()
+
     def is_connected(self):
         if not self.sp.isOpen():
             return False
@@ -248,7 +251,7 @@ class UArm(object):
         cmd = protocol.GET_SERVO_ANGLE
 
         response = self.send_cmd(cmd)
-        if response.startsiwth("s"):
+        if response.startswith("s"):
             parse_cmd = self.__parse_cmd(response[1:],  ["t", "l", "r"])
             angles = [parse_cmd["r"], parse_cmd["l"], parse_cmd["r"]]
             if servo_number is not None:
