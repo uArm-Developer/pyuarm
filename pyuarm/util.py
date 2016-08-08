@@ -116,6 +116,9 @@ class UnSupportedFirmwareVersionException(Exception):
 
 
 class UArmConnectException(Exception):
+    """
+
+    """
     def __init__(self, error):
         self.error = error
         self.message = error

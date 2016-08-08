@@ -22,7 +22,7 @@ setup(name='pyuarm',
                 'uarm-firmware = pyuarm.tools.firmware_helper:main',
                 'uarm-calibrate = pyuarm.tools.calibrate:main',
                 'uarm-listport = pyuarm.tools.list_uarms:main',
-                'uarm-cmd = pyuarm.tools.cmd:main',
+                'uarm-cli = pyuarm.tools.cli:main',
             ]
     },
     package_data={'pyuarm.tools': ['avrdude/*']},

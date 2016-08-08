@@ -114,38 +114,38 @@ class Calibration(object):
             min_angle = 30
             angle_step = min_angle
             analog_pin = SERVO_BOTTOM_ANALOG_PIN
-            self.uarm.write_servo_angle(SERVO_BOTTOM, angle_step, False)
-            self.uarm.write_servo_angle(SERVO_LEFT, 90, False)
-            self.uarm.write_servo_angle(SERVO_RIGHT, 60, False)
+            self.uarm.set_servo_angle(SERVO_BOTTOM, angle_step, False)
+            self.uarm.set_servo_angle(SERVO_LEFT, 90, False)
+            self.uarm.set_servo_angle(SERVO_RIGHT, 60, False)
         if servo_number == SERVO_LEFT:
             max_angle = 120
             min_angle = 35
             angle_step = min_angle
             analog_pin = SERVO_LEFT_ANALOG_PIN
-            self.uarm.write_servo_angle(SERVO_BOTTOM, 90, False)
-            self.uarm.write_servo_angle(SERVO_LEFT, angle_step, False)
-            self.uarm.write_servo_angle(SERVO_RIGHT, 65, False)
+            self.uarm.set_servo_angle(SERVO_BOTTOM, 90, False)
+            self.uarm.set_servo_angle(SERVO_LEFT, angle_step, False)
+            self.uarm.set_servo_angle(SERVO_RIGHT, 65, False)
         if servo_number == SERVO_RIGHT:
             max_angle = 120
             min_angle = 15
             angle_step = min_angle
             analog_pin = SERVO_RIGHT_ANALOG_PIN
-            self.uarm.write_servo_angle(SERVO_BOTTOM, 90, False)
-            self.uarm.write_servo_angle(SERVO_LEFT, 65, False)
-            self.uarm.write_servo_angle(SERVO_RIGHT, angle_step, False)
+            self.uarm.set_servo_angle(SERVO_BOTTOM, 90, False)
+            self.uarm.set_servo_angle(SERVO_LEFT, 65, False)
+            self.uarm.set_servo_angle(SERVO_RIGHT, angle_step, False)
         if servo_number == SERVO_HAND:
             max_angle = 160
             min_angle = 20
             angle_step = min_angle
             analog_pin = SERVO_HAND_ANALOG_PIN
-            self.uarm.write_servo_angle(SERVO_BOTTOM, 90, False)
-            self.uarm.write_servo_angle(SERVO_LEFT, 90, False)
-            self.uarm.write_servo_angle(SERVO_RIGHT, 60, False)
-            self.uarm.write_servo_angle(SERVO_HAND, angle_step, False)
+            self.uarm.set_servo_angle(SERVO_BOTTOM, 90, False)
+            self.uarm.set_servo_angle(SERVO_LEFT, 90, False)
+            self.uarm.set_servo_angle(SERVO_RIGHT, 60, False)
+            self.uarm.set_servo_angle(SERVO_HAND, angle_step, False)
         time.sleep(2)
         while angle_step < max_angle:
 
-            self.uarm.write_servo_angle(servo_number, angle_step, False)
+            self.uarm.set_servo_angle(servo_number, angle_step, False)
 
             servo_analog_read = 0
             for i in range(5):
@@ -171,7 +171,7 @@ class Calibration(object):
         self.write_completed_flag(CALIBRATION_SERVO_FLAG, False)
         self.uf_print("2. Start Calibrate Servo Offset")
         self.manual_operation_trigger = True
-        self.uarm.write_servo_angle(SERVO_BOTTOM, 45, 0)
+        self.uarm.set_servo_angle(SERVO_BOTTOM, 45, 0)
         time.sleep(1)
         self.uarm.write_left_right_servo_angle(130, 20, 0)
         time.sleep(1)
