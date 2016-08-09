@@ -20,6 +20,10 @@
 - update firmware_helper.py with new Protocol
 - add cmd for for control
 
+### detail - 2016-08-09
+- connect() function after open port
+- cli add serial mode
+
 ### detail - 2016-08-03
 - Compatible with v0.9.7b
 

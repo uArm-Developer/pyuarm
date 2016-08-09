@@ -41,12 +41,26 @@ class UArm(object):
             self.log = print
         self.port = port
         self.debug = debug
-        self.log("Initialize uArm, port is {0}...".format(port))
+
+        self.sp = serial.Serial(baudrate=115200,timeout=5)
+        self.connect()
+
+    def disconnect(self):
+        """
+        disconnect will release/close the uarm port
+        :return:
+        """
+        self.log("Disconnect from port - {0}...".format(self.port))
+        self.sp.close()
+
+    def connect(self):
         try:
-            self.sp = serial.Serial(port=port,baudrate=115200)
+            self.sp.port = self.port
+            self.log("Connecting from port - {0}...".format(self.port))
+            self.sp.open()
             time.sleep(3)
         except serial.SerialException as e:
-            raise UArmConnectException("Unable to connect to the port: {}, error: {}".format(port, e.strerror))
+            raise UArmConnectException("Unable to connect to the port: {}, error: {}".format(self.port, e.strerror))
         self.responseLog = []
         try:
             # if self.is_ready():
@@ -61,19 +75,12 @@ class UArm(object):
         except TypeError:
             raise UnknownFirmwareException("Error: unknown Firmware Version")
 
-    def disconnect(self):
-        """
-        disconnect will release/close the uarm port
-        :return:
-        """
-        self.sp.close()
-
     def reconnect(self):
         """
         reconnect will open the uarm port
         :return:
         """
-        self.sp.open()
+        self.connect()
 
     def is_connected(self):
         """
@@ -92,7 +99,7 @@ class UArm(object):
     #     else:
     #         return False
 
-    def __send_cmd(self, cmnd):
+    def send_cmd(self, cmnd):
         # This command will send a command and recieve the robots response. There must always be a response!
         if not self.is_connected():
             return None
@@ -172,7 +179,7 @@ class UArm(object):
         :return: firmware version, if failed return False
         """
         cmd = protocol.GET_VERSION
-        response = self.__send_cmd(cmd)
+        response = self.send_cmd(cmd)
         logging.info(response)
         if response.startswith("s"):
             return response[1:]
@@ -191,7 +198,7 @@ class UArm(object):
         y = str(round(y, 2))
         z = str(round(z, 2))
         cmd = protocol.SIMULATION.format(x,y,z)
-        response = self.__send_cmd(cmd)
+        response = self.send_cmd(cmd)
         if response.startswith("s"):
             return True
         else:
@@ -203,7 +210,7 @@ class UArm(object):
         z = str(round(z, 2))
         s = str(round(speed, 2))
         command = protocol.SET_MOVE.format(x,y,z,s)
-        response = self.__send_cmd(command)
+        response = self.send_cmd(command)
         logging.info("response from move to: {}".format(response))
         if response.startswith("s"):
             return True
@@ -213,7 +220,7 @@ class UArm(object):
 
     def set_servo_angle(self, servo_number, angle):
         cmd = protocol.SET_SERVO_ANGLE.format(str(servo_number),str(angle))
-        response = self.__send_cmd(cmd)
+        response = self.send_cmd(cmd)
         if response.startswith("s"):
             return True
         else:
@@ -222,19 +229,19 @@ class UArm(object):
     def move_wrist(self, angle):
         angle = str(round(angle, 3))
         cmd = "handV{0}".format(angle)
-        if self.__send_cmd(cmd) == "ok":
+        if self.send_cmd(cmd) == "ok":
             return True
         else:
             return False
 
     def pump_on(self):
-        if self.__send_cmd(protocol.SET_PUMP.format(1)).startswith("s"):
+        if self.send_cmd(protocol.SET_PUMP.format(1)).startswith("s"):
             return True
         else:
             return False
 
     def pump_off(self):
-        if self.__send_cmd(protocol.SET_PUMP.format(0)).startswith("s"):
+        if self.send_cmd(protocol.SET_PUMP.format(0)).startswith("s"):
             return True
         else:
             return False
@@ -242,7 +249,7 @@ class UArm(object):
     def servo_attach(self, servo_number=None):
         if servo_number is not None:
             cmd = protocol.ATTACH_SERVO.format(servo_number)
-            if self.__send_cmd(cmd).startswith("s"):
+            if self.send_cmd(cmd).startswith("s"):
                 return True
             else:
                 return False
@@ -256,7 +263,7 @@ class UArm(object):
     def servo_detach(self, servo_number=None):
         if servo_number is not None:
             cmd = protocol.DETACH_SERVO.format(servo_number)
-            if self.__send_cmd(cmd).startswith("s"):
+            if self.send_cmd(cmd).startswith("s"):
                 return True
             else:
                 return False
@@ -269,7 +276,7 @@ class UArm(object):
 
     def set_buzzer(self, frequency, duration):
         cmd = protocol.SET_BUZZER.format(frequency,duration)
-        if self.__send_cmd(cmd).startswith("s"):
+        if self.send_cmd(cmd).startswith("s"):
             return True
         else:
             return False
@@ -277,7 +284,7 @@ class UArm(object):
     def get_coordinate(self):
         # Returns an array of the format [x, y, z] of the robots current location
 
-        response = self.__send_cmd(protocol.GET_COOR)
+        response = self.send_cmd(protocol.GET_COOR)
         if response.startswith("s"):
             parse_cmd = self.__parse_cmd(response[1:], ["x", "y", "z"])
             coordinate = [parse_cmd["x"], parse_cmd["y"], parse_cmd["z"]]
@@ -288,14 +295,14 @@ class UArm(object):
     def is_moving(self):
         # Returns a 0 or a 1, depending on whether or not the robot is moving.
 
-        response = self.__send_cmd(protocol.GET_IS_MOVE)
+        response = self.send_cmd(protocol.GET_IS_MOVE)
         if response == "f":
             return False
         elif response == "s":
             return True
 
     def gripper_catch(self):
-        response = self.__send_cmd(protocol.SET_GRIPPER.format(1))
+        response = self.send_cmd(protocol.SET_GRIPPER.format(1))
         if response == "f":
             return False
         elif response == "s":
@@ -303,14 +310,14 @@ class UArm(object):
 
     def set_polar(self, rotation, stretch, height, speed=100):
         cmd = protocol.SET_POLAR.format(stretch, rotation, height, speed)
-        if self.__send_cmd(cmd).startswith("s"):
+        if self.send_cmd(cmd).startswith("s"):
             return True
         else:
             return False
 
     def get_polar(self):
         cmd = protocol.GET_POLAR
-        response = self.__send_cmd(cmd)
+        response = self.send_cmd(cmd)
         if response.startswith("s"):
             parse_cmd = self.__parse_cmd(response[1:], ["s", "r", "h"])
             polar_crd = [parse_cmd["s"], parse_cmd["r"], parse_cmd["h"]]
@@ -322,12 +329,12 @@ class UArm(object):
         # Returns an angle in degrees, of the servo
         cmd = protocol.GET_SERVO_ANGLE
 
-        response = self.__send_cmd(cmd)
+        response = self.send_cmd(cmd)
         if response.startswith("s"):
             parse_cmd = self.__parse_cmd(response[1:],  ["t", "l", "r"])
             angles = [parse_cmd["r"], parse_cmd["l"], parse_cmd["r"]]
             if servo_number is not None:
-                if 0 <= servo_number <= 3:
+                if 0 <= servo_number <= 2:
                     return angles[servo_number]
                 else:
                     return False
@@ -337,7 +344,7 @@ class UArm(object):
             return False
 
     def get_tip_sensor(self):
-        response = self.__send_cmd(protocol.GET_TIP)
+        response = self.send_cmd(protocol.GET_TIP)
         if response == "f":
             return False
         elif response == "s":
