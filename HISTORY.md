@@ -1,3 +1,13 @@
+## [2.0.3] - 2016-08-10
+### Updated - Alex Tan
+
+### Compatible
+- Firmware 0.9.8b
+
+### Fix
+**uarm-cli**
+- help topic hide welcome message
+
 ## [2.0.2] - 2016-08-10
 ### Updated - Alex Tan
 

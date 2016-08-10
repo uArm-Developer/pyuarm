@@ -357,12 +357,14 @@ class UArmCmd(Cmd):
         return completions
 
     def do_help(self, arg):
-        help_title = Style.BRIGHT + Fore.MAGENTA + "uArm Command line Help Center" + Fore.RESET + Style.RESET_ALL
-        help_title += "\n\n"
-        help_title += "Please use {}{}connect{}{} before any control action".format(Back.BLACK, Fore.WHITE, Fore.RESET, Back.RESET)
-        help_title += "\n"
-        help_title += self.help_msg
-        print (help_title)
+        values = arg.split(' ')
+        if len(values) == 1 and values[0] == '':
+            help_title = Style.BRIGHT + Fore.MAGENTA + "uArm Command line Help Center" + Fore.RESET + Style.RESET_ALL
+            help_title += "\n\n"
+            help_title += "Please use {}{}connect{}{} before any control action".format(Back.BLACK, Fore.WHITE, Fore.RESET, Back.RESET)
+            help_title += "\n"
+            help_title += self.help_msg
+            print (help_title)
         # print (self.help_msg)
         Cmd.do_help(self,arg)
 
