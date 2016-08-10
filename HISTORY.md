@@ -1,3 +1,17 @@
+## [2.0.2] - 2016-08-10
+### Updated - Alex Tan
+
+### Compatible
+- Firmware 0.9.8b
+
+### Fix
+**uarm-cli**  
+- Use colorama Compatible with Windows platform
+- fix firmware error if no uarm connect
+- Catch KeyboardInterrupt
+- add shortcut tip when cli start, and help center
+
+
 ## [2.0.0] - 2016-07-13
 ### Updated - Alex Tan
 

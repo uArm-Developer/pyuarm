@@ -9,38 +9,51 @@
 
 import pyuarm
 from cmd import Cmd
-import logging
 from pyuarm.tools.list_uarms import uarm_ports
 from pyuarm.tools import firmware_helper
 import subprocess
+from colorama import Fore, Back, init, Style
 
-logging.basicConfig(filename='logger.log', level=logging.INFO)
+# logging.basicConfig(filename='logger.log', level=logging.INFO)
+#
+# logging.info("------------------------------------")
+#
 
-logging.info("------------------------------------")
+# class bcolors:
+#     HEADER = '\033[95m'
+#     OKBLUE = '\033[94m'
+#     OKGREEN = '\033[92m'
+#     WARNING = '\033[93m'
+#     FAIL = '\033[91m'
+#     ENDC = '\033[0m'
+#     BOLD = '\033[1m'
+#     UNDERLINE = '\033[4m'
 
-
-class bcolors:
-    HEADER = '\033[95m'
-    OKBLUE = '\033[94m'
-    OKGREEN = '\033[92m'
-    WARNING = '\033[93m'
-    FAIL = '\033[91m'
-    ENDC = '\033[0m'
-    BOLD = '\033[1m'
-    UNDERLINE = '\033[4m'
+init()
 
 
 class UArmCmd(Cmd):
+
+    help_msg = Style.BRIGHT + Fore.MAGENTA + "Shortcut:" + Fore.RESET + Style.RESET_ALL + "\n"
+    help_msg += "Quit: " + Style.BRIGHT + Fore.RED + "Ctrl + D" + Fore.RESET + Style.RESET_ALL
+    help_msg += ", or input: " + Back.BLACK + Fore.WHITE + "quit" + Fore.RESET + Style.RESET_ALL + "\n"
+    help_msg += "Clear Screen: " + Style.BRIGHT + Fore.RED + "Ctrl + L" + Fore.RESET + Style.RESET_ALL
 
     ON_OFF = ['on', 'off']
 
     FIRMWARE =['version', 'force', 'upgrade']
 
-    prompt = ">>> "
-    intro = "Welcome to use {}uArm Command Line{}, please input {}help{} for usage"\
-        .format(bcolors.BOLD, bcolors.ENDC, bcolors.UNDERLINE,bcolors.ENDC)
+    SERVO_STATUS = ['attach', 'detach']
 
-    doc_header = "uArm Console help center"
+    prompt = ">>> "
+    intro = "Welcome to use {}uArm Command Line{}\n"\
+        .format(Fore.YELLOW, Fore.RESET)
+
+    intro += help_msg
+    intro += "\n\n"
+    intro += "Input {}{}help{}{} for more usage".format(Back.BLACK, Fore.WHITE,Fore.RESET, Back.RESET)
+
+    # doc_header = "documented commands:"
     ruler = '-'
 
     uarm = None
@@ -50,13 +63,13 @@ class UArmCmd(Cmd):
 
     def __is_connected(self):
         if self.uarm is None:
-            print ("No uArm is connected, please use {}connect{}".format(bcolors.BOLD,bcolors.ENDC))
+            print ("No uArm is connected, please use {}{}connect{}{}".format(Back.BLACK, Fore.WHITE,Fore.RESET, Back.RESET))
             return False
         else:
             if self.uarm.is_connected():
                 return True
             else:
-                print ("No uArm is connected, please use {}connect{}".format(bcolors.BOLD,bcolors.ENDC))
+                print ("No uArm is connected, please use {}{}connect{}{}".format(Back.BLACK, Fore.WHITE,Fore.RESET, Back.RESET))
                 return False
 
     def do_connect(self, arg):
@@ -76,8 +89,8 @@ class UArmCmd(Cmd):
                 try:
                     self.uarm = pyuarm.UArm(uarm_port)
                 except pyuarm.UnknownFirmwareException:
-                    print ("Unknown Firmware, please use {}uarm-firmware -upgrade{} to your firmware"
-                           .format(bcolors.UNDERLINE,bcolors.ENDC))
+                    print ("Unknown Firmware, please use {}{}uarm-firmware -upgrade{}{} to your firmware"
+                           .format(Back.BLACK, Fore.WHITE,Fore.RESET, Back.RESET))
             elif len(ports) == 1:
                 self.uarm = pyuarm.UArm()
             elif len(ports) == 0:
@@ -251,25 +264,69 @@ class UArmCmd(Cmd):
                 print ("polar coordinate: {}".format(result))
 
     def do_servo(self, arg):
+        """
+        Servo status
+        format: servo attach servo_number
+                servo detach servo_number
+        servo_number:
+            0 bottom servo,
+            1 left servo,
+            2 right servo,
+            3 hand servo
+            all
+        eg. servo attach all
+            servo detach all
+        """
         if self.__is_connected():
             values = arg.split(' ')
             if len(values) == 2:
                 if values[0] == 'attach':
                     if values[1] == 'all':
                         self.uarm.servo_attach()
+                    elif values[1].isdigit():
+                        v = int(values[1])
+                        if 0 <= v <= 3:
+                            self.uarm.servo_attach(v)
+                elif values[0] == 'detach':
+                    if values[1] == 'all':
+                        self.uarm.servo_detach()
+                    elif values[1].isdigit():
+                        v = int(values[1])
+                        if 0 <= v <= 3:
+                            self.uarm.servo_detach(v)
+
+    def complete_servo(self, text, line, begidx, endidx):
+        if not text:
+            completions = self.SERVO_STATUS[:]
+        else:
+            completions = [f
+                           for f in self.SERVO_STATUS
+                           if f.startswith(text)
+                           ]
+        return completions
 
     def do_serial(self, arg):
+        """
+        Raw Serial Mode
+        You could direct input the communication protocol here.
+        """
         if self.__is_connected():
             serial_mode = SerialMode(self.uarm)
             serial_mode.cmdloop()
 
-    # def do_test(self, arg1):
-    #     print arg1
-
     def do_firmware(self, arg):
+        """
+        Firmware command
+        sub command: version, upgrade, force
+        version - display Remote Firmware version and local Firmware version (if connected)
+        upgrade - if remote version latter than local firmware version, will flash the latest firmware to uarm
+        force - force upgrade
+
+        """
         if arg == 'version':
-            print ("Local Firmware Version: {}".format(self.uarm.firmware_version))
             print ("Remote Firmware Version: {}".format(firmware_helper.get_latest_version()))
+            if self.__is_connected():
+                print ("Local Firmware Version: {}".format(self.uarm.firmware_version))
         elif arg == 'upgrade':
             if self.uarm is not None:
                 if self.uarm.is_connected():
@@ -299,7 +356,17 @@ class UArmCmd(Cmd):
                            ]
         return completions
 
-    def do_EOF(self, args):
+    def do_help(self, arg):
+        help_title = Style.BRIGHT + Fore.MAGENTA + "uArm Command line Help Center" + Fore.RESET + Style.RESET_ALL
+        help_title += "\n\n"
+        help_title += "Please use {}{}connect{}{} before any control action".format(Back.BLACK, Fore.WHITE, Fore.RESET, Back.RESET)
+        help_title += "\n"
+        help_title += self.help_msg
+        print (help_title)
+        # print (self.help_msg)
+        Cmd.do_help(self,arg)
+
+    def do_quit(self, args):
         """
         Quit, if uarm is connected, will disconnect before quit
         """
@@ -308,6 +375,8 @@ class UArmCmd(Cmd):
                 self.uarm.disconnect()
         print ("Quiting")
         raise SystemExit
+
+    do_EOF = do_quit
 
 
 class SerialMode(Cmd):
@@ -329,10 +398,13 @@ class SerialMode(Cmd):
 
     do_EOF = do_quit
 
-def main():
 
-    uarm_cmd = UArmCmd()
-    uarm_cmd.cmdloop()
+def main():
+    try:
+        uarm_cmd = UArmCmd()
+        uarm_cmd.cmdloop()
+    except KeyboardInterrupt:
+        print ("KeyboardInterrupt")
 
 if __name__ == '__main__':
     main()
