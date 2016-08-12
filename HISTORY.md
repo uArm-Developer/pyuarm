@@ -1,3 +1,13 @@
+## [1.3.28] - 2016-07-08
+### Updated - Alex Tan
+
+### Compatible
+- Firmware 1.7
+
+### Fix
+- Update firmware_helper.py add --upgrade argument
+
+
 ## [1.3.27] - 2016-07-08
 ### Updated - Alex Tan
 
