@@ -2,11 +2,13 @@
 ### Updated - Alex Tan
 
 ### Compatible
-- Firmware 0.9.8b
+- Firmware 0.9.9
 
 ### Fix
 **uarm-cli**
 - help topic hide welcome message
+- compatible with 0.9.9
+- uarm-cli add debug option
 
 ## [2.0.2] - 2016-08-10
 ### Updated - Alex Tan

@@ -14,8 +14,11 @@ logging.info("------------------------------------")
 
 class UArm(object):
 
+    firmware_version = None
+    product_type = None
+
     def __init__(self, port=None, debug=False, log=None):
-        '''
+        """
         :param port: UArm Serial Port name, if no port provide, will try first port we detect
         :param debug: if True, will print out all debug message
         :param log: log function, if no log function provide, will use standard print.
@@ -28,7 +31,7 @@ class UArm(object):
         port is a device name: depending on operating system. eg. `/dev/ttyUSB0` on GNU/Linux or `COM3` on Windows.
         debug will display all debug messages, include All serial commands.
         log is a function reference, if you don't provide log function, we will display to stdout
-        '''
+        """
         if not port:
             ports = uarm_ports()
             if len(ports) > 0:
@@ -64,7 +67,7 @@ class UArm(object):
         self.responseLog = []
         try:
             # if self.is_ready():
-            self.firmware_version = self.read_firmware_version()
+            self.read_firmware_version()
         # print (self.read_firmware_version())
             if is_a_version(self.firmware_version):
                 self.log("Firmware Version: {0}".format(self.firmware_version))
@@ -182,7 +185,9 @@ class UArm(object):
         response = self.send_cmd(cmd)
         logging.info(response)
         if response.startswith("s"):
-            return response[1:]
+            values = response.split('-')
+            self.product_type = values[0][:1]
+            self.firmware_version = values[1]
         else:
             return False
 

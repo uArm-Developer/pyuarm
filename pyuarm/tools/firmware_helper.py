@@ -182,6 +182,8 @@ class FirmwareHelper():
                     print (e.error)
             else:
                 print ("Exit")
+        except NetworkError as e:
+            print (e.error)
 
 
 def main():

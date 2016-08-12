@@ -256,12 +256,26 @@ class UArmCmd(Cmd):
                 result = self.uarm.set_polar(values[0], values[1], values[2], values[3])
                 msg = "succeed" if result else "failed"
                 print (msg)
+            if len(values) == 3:
+                result = self.uarm.set_polar(values[0], values[1], values[2])
+                msg = "succeed" if result else "failed"
+                print (msg)
 
     def do_get_polar(self, arg):
         if self.__is_connected():
             result = self.uarm.get_polar()
             if result:
                 print ("polar coordinate: {}".format(result))
+
+    def do_debug(self, arg):
+        is_debug = False
+        if arg.lower() == 'on':
+            is_debug = True
+        elif arg.lower() == 'off':
+            is_debug = False
+
+        if self.uarm:
+            self.uarm.debug = is_debug
 
     def do_servo(self, arg):
         """
