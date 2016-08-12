@@ -5,7 +5,7 @@
 - Firmware 1.7
 
 ### Fix
-- Update firmware_helper.py add --upgrade argument
+- Update firmware_helper.py add --upgrade argument, multi ports support
 - add cli.py uarm command line
 
 
