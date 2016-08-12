@@ -9,6 +9,7 @@
 - help topic hide welcome message
 - compatible with 0.9.9
 - uarm-cli add debug option
+- uarm-firmware fix -d argument issue
 
 ## [2.0.2] - 2016-08-10
 ### Updated - Alex Tan
