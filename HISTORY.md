@@ -6,6 +6,7 @@
 
 ### Fix
 - Update firmware_helper.py add --upgrade argument
+- add cli.py uarm command line
 
 
 ## [1.3.27] - 2016-07-08

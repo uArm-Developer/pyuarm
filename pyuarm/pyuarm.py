@@ -397,7 +397,7 @@ class uArm(object):
         msg.append(END_SYSEX)
         self.serial_write(msg)
 
-    def write_servo_angle(self, servo_number, servo_angle, with_offset):
+    def write_servo_angle(self, servo_number, servo_angle, with_offset=1):
         """
         Write Servo Angle
 
@@ -415,6 +415,7 @@ class uArm(object):
         msg.extend(getOne7BitBytesFloatArray(with_offset))
         msg.append(END_SYSEX)
         self.serial_write(msg)
+        return True
 
     def write_left_right_servo_angle(self, servo_left_angle, servo_right_angle, with_offset):
         """
@@ -433,6 +434,7 @@ class uArm(object):
         msg.extend(getOne7BitBytesFloatArray(with_offset))
         msg.append(END_SYSEX)
         self.serial_write(msg)
+        return True
 
     def move_to(self, x, y, z, hand_angle=None, relative_flags=ABSOLUTE, time_spend=2, path_type=PATH_LINEAR, ease_type=INTERP_EASE_INOUT_CUBIC):
         """
@@ -467,6 +469,7 @@ class uArm(object):
         msg.append(END_SYSEX)
         time.sleep(0.01)
         self.serial_write(msg)
+        return True
 
     def pump_control(self, val):
         """
@@ -479,6 +482,7 @@ class uArm(object):
         msg.extend(getOne7BitBytesFloatArray(pump_status))
         msg.append(END_SYSEX)
         self.serial_write(msg)
+        return True
 
     def gripper_control(self, val):
         """
