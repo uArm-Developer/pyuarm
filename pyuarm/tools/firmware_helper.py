@@ -18,7 +18,7 @@ from distutils.version import LooseVersion
 import argparse
 
 firmware_download_url = "http://download.ufactory.cc/firmware/firmware_dev.hex"
-remote_version_url = "http://download.ufactory.cc/firmware/version_dev"
+remote_version_url = "http://download.ufactory.cc/firmware/version_dev.txt"
 
 
 if getattr(sys, 'frozen', False):
@@ -156,19 +156,15 @@ class FirmwareHelper():
                 print ("Would you want to upgrade your uArm with {0}{1}".format(self.remote_firmware_version, "?"))
                 user_choice = raw_input("Please Enter Y if yes. ")
                 if user_choice == "Y" or user_choice == "y":
-                    try:
-                        download_firmware()
-                        flash_firmware(port=self.uarm_port)
-                    except NetworkError as e:
-                        print (e.error)
-                    except APIError as e:
-                        print (e.error)
+                    download_firmware()
+                    flash_firmware(port=self.uarm_port)
+
                 else:
                     print ("Exit")
             else:
                 print("You already have the latest version of Firmware installed in uArm!!!")
                 print("If you still want to download & flash the firmware, Please use `uarm-firmware -df`")
-        except Exception as e:
+        except TypeError as e:
             print "Latest Firmware version: {0} ".format(self.remote_firmware_version)
             print ("Unknown uArm Firmware version, Would you want to upgrade your uArm with {0}{1}".format(self.remote_firmware_version, "?"))
             user_choice = raw_input("Please Enter Y if yes. ")
@@ -183,6 +179,8 @@ class FirmwareHelper():
             else:
                 print ("Exit")
         except NetworkError as e:
+            print (e.error)
+        except APIError as e:
             print (e.error)
 
 
@@ -257,8 +255,8 @@ def main():
         sys.exit(0)
     elif args.check == "remote":
         print "Fetching the remote version..."
-        get_latest_version()
-        print "Latest firmware release version is: {0}".format(helper.remote_firmware_version)
+        remote_firmware_version = get_latest_version()
+        print "Latest firmware release version is: {0}".format(remote_firmware_version)
         sys.exit(0)
 
     # upgrade
