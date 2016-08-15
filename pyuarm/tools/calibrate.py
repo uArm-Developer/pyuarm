@@ -1,5 +1,5 @@
 from pyuarm import *
-from pyuarm.tools.list_uarms import uarm_ports
+from pyuarm.tools.list_uarms import get_uarm_port_cli
 import copy
 import argparse
 import sys
@@ -22,14 +22,13 @@ class Calibration(object):
     temp_manual_offset_arr = [0.00, 0.00, 0.00]
     manual_offset_correct_flag = [False, False, False]
 
-    def __init__(self, uarm=None, log_function=None):
-        if uarm is not None:
-            self.uarm = uarm
-        elif len(uarm_ports()) > 0:
-            self.uarm = get_uarm()
+    def __init__(self, port=None, log_function=None):
+        if port is not None:
+            self.uarm = pyuarm.uArm(port=port)
         else:
-            raise NoUArmPortException('No available uArm Founds')
-
+            uarm_port=get_uarm_port_cli()
+            if uarm_port:
+                self.uarm = pyuarm.uArm(port=uarm_port)
         if log_function is not None:
             self.log_function = log_function
         else:
@@ -244,66 +243,6 @@ class Calibration(object):
         self.stretch_calibration_flag = True
         self.uf_print("3.0. Clearing Stretch Completed Flag in EEPROM.")
         self.write_completed_flag(CALIBRATION_STRETCH_FLAG, False)
-        # self.uf_print("3. Start Calibrate Stretch Offset")
-        #
-        # self.uf_print("3.0 Moving uArm to Correct Place")
-        # self.uarm.write_servo_angle(SERVO_BOTTOM, 45, 0)
-        # time.sleep(1)
-        # self.uarm.write_left_right_servo_angle(130, 20, 0)
-        # time.sleep(1)
-        #
-        # initPosL = INIT_POS_L - 12
-        # initPosR = INIT_POS_R - 12
-        # minAngle_L = self.uarm.read_analog(SERVO_LEFT_ANALOG_PIN) - 16;
-        # minAngle_R = self.uarm.read_analog(SERVO_RIGHT_ANALOG_PIN) - 16;
-        # print ('minAngle_L: {0}'.format(minAngle_L))
-        # print ('minAngle_R: {0}'.format(minAngle_R))
-        #
-        # self.uarm.write_servo_angle(SERVO_LEFT, initPosL, 0)
-        # self.uarm.write_servo_angle(SERVO_RIGHT, initPosR, 0)
-        # time.sleep(1)
-        # while self.uarm.read_analog(SERVO_RIGHT_ANALOG_PIN) < (minAngle_R - SAMPLING_DEADZONE) \
-        #         and self.stretch_calibration_flag:
-        #     initPosR += 1
-        #     self.uarm.write_servo_angle(SERVO_RIGHT, initPosR, 0)
-        #     print ('initPosR: {0}'.format(initPosR))
-        #     time.sleep(0.05)
-        #
-        # while self.uarm.read_analog(SERVO_RIGHT_ANALOG_PIN) > (minAngle_R + SAMPLING_DEADZONE) \
-        #         and self.stretch_calibration_flag:
-        #     initPosR -= 1
-        #     self.uarm.write_servo_angle(SERVO_RIGHT, initPosR, 0)
-        #     print ('initPosR: {0}'.format(initPosR))
-        #     time.sleep(0.05)
-        #
-        # while self.uarm.read_analog(SERVO_LEFT_ANALOG_PIN) < (minAngle_L - SAMPLING_DEADZONE) \
-        #         and self.stretch_calibration_flag:
-        #     initPosL += 1
-        #     self.uarm.write_servo_angle(SERVO_LEFT, initPosL, 0)
-        #     print ('initPosL: {0}'.format(initPosL))
-        #     time.sleep(0.05)
-        #
-        # while self.uarm.read_analog(SERVO_LEFT_ANALOG_PIN) > (minAngle_L + SAMPLING_DEADZONE) \
-        #         and self.stretch_calibration_flag:
-        #     initPosL -= 1
-        #     self.uarm.write_servo_angle(SERVO_LEFT, initPosL, 0)
-        #     print ('initPosL: {0}'.format(initPosL))
-        #     time.sleep(0.05)
-        #
-        # offsetL = initPosL - INIT_POS_L + 3
-        # offsetR = initPosR - INIT_POS_R + 3
-        # offset_correct_flag = [False, False]
-        # if abs(offsetL) < 20:
-        #     offset_correct_flag[0] = True
-        # if abs(offsetR) < 20:
-        #     offset_correct_flag[1] = True
-        #
-        # stretch_offset = copy.deepcopy(self.stretch_offset_template)
-        # stretch_offset['LEFT'] = offsetL
-        # stretch_offset['RIGHT'] = offsetR
-        # if callback is not None:
-        #     callback(stretch_offset, offset_correct_flag)
-
         self.uf_print("    3.1 Saving Stretch Offset into EEPROM")
         self.uarm.write_eeprom(EEPROM_DATA_TYPE_FLOAT, OFFSET_STRETCH_START_ADDRESS, -10)
         self.uarm.write_eeprom(EEPROM_DATA_TYPE_FLOAT, OFFSET_STRETCH_START_ADDRESS + 4, -10)
@@ -448,16 +387,18 @@ def main():
          3. Stretch Calibration section
     """
     parser = argparse.ArgumentParser()
-    # parser.add_argument("-d", "--download", help="download firmware into firmware.hex", action="store_true")
     parser.add_argument("-f", "--force", help="Force calibrate uArm, `all` , `linear`, `manual`")
     parser.add_argument("-c", "--check", help="Check If Calibration is completed? if completed, display the offset value", action="store_true")
-    # parser.add_argument("-f", "--force", help="Will Force calibrate uArm", action="store_true")
+    parser.add_argument("-p", "--port", nargs='?', help="specify port number")
     args = parser.parse_args()
-    calibration = Calibration()
+    if args.port:
+        calibration = Calibration(port=args.port)
+    else:
+        calibration = Calibration()
     time.sleep(2)
     # check
     if args.check:
-        print ("\n");
+        print ("\n")
         print ("-------------------------------------------------")
         print ("Checking Calibration information....")
         print ("-------------------------------------------------")
@@ -488,7 +429,7 @@ def main():
             print ("Manual Calibration not Completed !!!")
         exit_fun()
     if args.force:
-        print ("\n");
+        print ("\n")
         print ("-------------------------------------------------")
         print ("Force Calibrating....")
         print ("-------------------------------------------------")

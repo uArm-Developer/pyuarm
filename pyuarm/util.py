@@ -84,29 +84,6 @@ INTERP_EASE_INOUT       = 2  # quadratic easing methods
 INTERP_EASE_IN          = 3
 INTERP_EASE_OUT         = 4
 
-def get_uarm():
-    """
-    ===============================
-    Get First uArm Port instance
-    ===============================
-    It will return the first uArm Port detected by **pyuarm.tools.list_uarms**,
-    If no available uArm ports, will print *There is no uArm port available*
-
-    .. raw:python
-    >>> import pyuarm
-    >>> uarm = pyuarm.get_uarm()
-    There is no uArm port available
-
-
-    :returns: uArm() Instance
-
-    """
-    ports = uarm_ports()
-    if len(ports) > 0:
-        return pyuarm.uArm(port=ports[0])
-    else:
-        print("There is no uArm port available")
-
 
 def getOne7BitBytesFloatArray(val):
     """

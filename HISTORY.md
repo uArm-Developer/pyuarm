@@ -1,4 +1,4 @@
-## [1.3.28] - 2016-07-08
+## [1.3.28] - 2016-08-15
 ### Updated - Alex Tan
 
 ### Compatible
@@ -7,7 +7,9 @@
 ### Fix
 - Update firmware_helper.py add --upgrade argument, multi ports support
 - add cli.py uarm command line
-
+- uarm-calibrate supports multi ports
+- move get_uarm() to list_uarms.py
+- add get_uarm_port_cli()
 
 ## [1.3.27] - 2016-07-08
 ### Updated - Alex Tan

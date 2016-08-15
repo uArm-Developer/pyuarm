@@ -9,7 +9,7 @@
 
 import pyuarm
 from cmd import Cmd
-from pyuarm.tools.list_uarms import uarm_ports
+from pyuarm.tools.list_uarms import get_uarm_port_cli ,uarm_ports
 from pyuarm.tools import firmware_helper
 import subprocess
 from colorama import Fore, Back, init, Style
@@ -80,12 +80,7 @@ class UArmCmd(Cmd):
         if self.uarm is None:
             ports = uarm_ports()
             if len(ports) > 1:
-                i = 1
-                for port in ports:
-                    print ("[{}] - {}".format(i, port))
-                    i += 1
-                port_index = raw_input("Please Choose the uArm Port: ")
-                uarm_port = ports[int(port_index) - 1]
+                uarm_port = get_uarm_port_cli()
                 try:
                     self.uarm = pyuarm.uArm(uarm_port)
                 except pyuarm.UnknownFirmwareException:

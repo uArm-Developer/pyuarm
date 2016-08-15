@@ -7,7 +7,7 @@
 # (C) 2016 UFACTORY <developer@ufactory.cc>
 
 import pyuarm
-from pyuarm.tools.list_uarms import uarm_ports
+from pyuarm.tools.list_uarms import get_uarm_port_cli
 from progressbar import ProgressBar, Percentage, FileTransferSpeed, Bar, ETA
 import requests
 import os, sys, platform, subprocess
@@ -30,22 +30,7 @@ firmware_defaul_filename = 'firmware.hex'
 default_firmware_path = os.path.join(os.getcwd(), firmware_defaul_filename)
 
 
-def get_uarm_port():
-    uarm_list = uarm_ports()
-    ports = uarm_ports()
-    if len(ports) > 1:
-        i = 1
-        for port in ports:
-            print ("[{}] - {}".format(i, port))
-            i += 1
-        port_index = raw_input("Please Choose the uArm Port: ")
-        uarm_port = ports[int(port_index) - 1]
-        return uarm_port
-    elif len(ports) == 1:
-        return uarm_list[0]
-    elif len(ports) == 0:
-        print ("No uArm ports is found.")
-        return None
+
     # if len(uarm_list) > 0:
     #     return uarm_list[0]
     # else:
@@ -143,7 +128,7 @@ class FirmwareHelper():
         if port is not None:
             self.uarm_port = port
         else:
-            self.uarm_port = get_uarm_port()
+            self.uarm_port = get_uarm_port_cli()
         self.remote_firmware_version = "0.0.0"
         self.uarm_firmware_version = "0.0.0"
 
