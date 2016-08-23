@@ -7,6 +7,8 @@ from util import *
 from distutils.version import LooseVersion
 from version import support_versions
 
+from tools.list_uarms import get_uarm
+
 
 class uArm(object):
     """

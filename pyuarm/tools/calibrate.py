@@ -22,13 +22,11 @@ class Calibration(object):
     temp_manual_offset_arr = [0.00, 0.00, 0.00, 0.00]
     manual_offset_correct_flag = [False, False, False, False]
 
-    def __init__(self, port=None, log_function=None):
-        if port is not None:
-            self.uarm = pyuarm.uArm(port=port)
+    def __init__(self, uarm, log_function=None):
+        if uarm is not None:
+            self.uarm = uarm
         else:
-            uarm_port=get_uarm_port_cli()
-            if uarm_port:
-                self.uarm = pyuarm.uArm(port=uarm_port)
+            raise pyuarm.NoUArmPortException("No uArm Port provided")
         if log_function is not None:
             self.log_function = log_function
         else:
@@ -415,9 +413,9 @@ def main():
     parser.add_argument("-p", "--port", nargs='?', help="specify port number")
     args = parser.parse_args()
     if args.port:
-        calibration = Calibration(port=args.port)
+        calibration = Calibration(pyuarm.uArm(port=args.port))
     else:
-        calibration = Calibration()
+        calibration = Calibration(pyuarm.get_uarm())
     time.sleep(2)
     # check
     if args.check:
