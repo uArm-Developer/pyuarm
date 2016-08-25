@@ -1,3 +1,13 @@
+## [1.3.30] - 2016-08-25
+### Updated - Alex Tan
+
+### Compatible
+- Firmware 1.7
+
+### Fix
+- update miniterm, read servo angles return 4 angles.
+
+
 ## [1.3.29] - 2016-08-15
 ### Updated - Alex Tan
 
@@ -6,7 +16,7 @@
 
 ### Fix
 - Update calibrate.py, fix hand servo (Null offset)
-- change cli to miniterm 
+- change cli to miniterm
 
 ## [1.3.28] - 2016-08-15
 ### Updated - Alex Tan

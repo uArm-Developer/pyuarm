@@ -220,7 +220,7 @@ class UArmCmd(Cmd):
             if len(values) == 1:
                 if values[0] == '':
                     angles = self.uarm.read_servo_angle()
-                    print ("Current Servo Angles: b-{}, l-{}, r-{}".format(angles.pop(),angles.pop(),angles.pop()))
+                    print ("Current Servo Angles: b-{}, l-{}, r-{}, h-{}".format(angles.pop(),angles.pop(),angles.pop(), angles.pop()))
 
                 else:
                     servo_num = int(values[0])
