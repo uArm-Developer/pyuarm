@@ -497,6 +497,7 @@ class uArm(object):
         msg.extend(getOne7BitBytesFloatArray(gripper_status))
         msg.append(END_SYSEX)
         self.serial_write(msg)
+        return True
 
     def write_stretch(self, length, height):
         """

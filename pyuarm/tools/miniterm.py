@@ -179,6 +179,33 @@ class UArmCmd(Cmd):
     #             msg = "succeed" if result else "failed"
     #             print (msg)
 
+    def do_gripper(self, arg):
+        """
+        gripper
+        format: gripper on/ gripper off
+        """
+        if self.__is_connected():
+            if arg == 'on':
+                result = self.uarm.gripper_control(True)
+                print ("succeed" if result else "failed")
+            elif arg == 'off':
+                result = self.uarm.gripper_control(False)
+                print ("succeed" if result else "failed")
+            elif arg == '':
+                print ("please input argument: {}".format(','.join(self.ON_OFF)))
+            else:
+                print ("Command not found {}".format(arg))
+
+    def complete_gripper(self, text, line, begidx, endidx):
+        if not text:
+            completions = self.ON_OFF[:]
+        else:
+            completions = [f
+                           for f in self.ON_OFF
+                           if f.startswith(text)
+                           ]
+        return completions
+
     def do_write_angle(self, arg):
         """
         write_angle

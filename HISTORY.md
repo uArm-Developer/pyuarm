@@ -1,3 +1,13 @@
+## [1.3.31] - 2016-08-30
+### Updated - Alex Tan
+
+### Compatible
+- Firmware 1.7
+
+### Fix
+- update miniterm, add gripper control
+
+
 ## [1.3.30] - 2016-08-25
 ### Updated - Alex Tan
 
