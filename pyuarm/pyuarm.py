@@ -365,5 +365,5 @@ class UArm(object):
     def get_serial_number(self):
         serial_number = ""
         for i in range(14):
-            serial_number += self.get_eeprom(SERIAL_NUMBER_ADDRESS + i)
+            serial_number += chr(int(self.get_eeprom(SERIAL_NUMBER_ADDRESS + i)))
         print (serial_number)
