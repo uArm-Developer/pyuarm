@@ -1,3 +1,12 @@
+## [1.3.32] - 2016-08-31
+### Updated - Alex Tan
+
+### Compatible
+- Firmware 1.7
+
+### Fix
+- update miniterm, fix some Document issue, add miniterm version
+
 ## [1.3.31] - 2016-08-30
 ### Updated - Alex Tan
 

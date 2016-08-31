@@ -30,6 +30,7 @@ from colorama import Fore, Back, init, Style
 #     UNDERLINE = '\033[4m'
 
 init()
+version = "0.1.3"
 
 
 class UArmCmd(Cmd):
@@ -46,8 +47,8 @@ class UArmCmd(Cmd):
     SERVO_STATUS = ['attach', 'detach']
 
     prompt = ">>> "
-    intro = "Welcome to use {}uArm Command Line{}\n"\
-        .format(Fore.YELLOW, Fore.RESET)
+    intro = "Welcome to use {}uArm Command Line{} - v{}\n"\
+        .format(Fore.YELLOW, Fore.RESET, version)
 
     intro += help_msg
     intro += "\n\n"
@@ -109,8 +110,8 @@ class UArmCmd(Cmd):
         """
         move_to, move to destination coordinate.
         format: move_to X Y Z or move_to X Y Z S
-        X,Y,Z unit millimeter, S means Speed, unit mm/s
-        eg. move_to 100 200 150
+        X,Y,Z unit centimeter, S time - default 2 sec
+        eg. move_to 12 -12 12
         """
         if self.__is_connected():
             values = arg.split(' ')
