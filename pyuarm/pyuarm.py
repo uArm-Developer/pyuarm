@@ -362,8 +362,28 @@ class UArm(object):
             val = response[1:]
             return val
 
+    def set_eeprom(self, address, data, type=EEPROM_DATA_TYPE_BYTE):
+        cmd = protocol.SET_EEPROM.format(address,type,data)
+        response = self.send_cmd(cmd)
+        if response.startswith("s"):
+            return True
+
     def get_serial_number(self):
         serial_number = ""
         for i in range(15):
             serial_number += chr(int(self.get_eeprom(SERIAL_NUMBER_ADDRESS + i)))
         return serial_number
+
+    def get_analog(self,pin):
+        cmd = protocol.GET_ANALOG.format(pin)
+        response = self.send_cmd(cmd)
+        if response.startswith("s"):
+            val = response[1:]
+            return val
+
+    def get_digital(self,pin):
+        cmd = protocol.GET_DIGITAL.format(pin)
+        response = self.send_cmd(cmd)
+        if response.startswith("s"):
+            val = response[1:]
+            return val

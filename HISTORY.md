@@ -1,3 +1,13 @@
+## [2.0.5] - 2016-08-31
+### Updated - Alex Tan
+
+### Compatible
+- Firmware 2.0
+
+### Fix
+**uarm-cli**
+- get_analog, get_eeprom, set_eeprom, get_serial_number
+
 ## [2.0.3] - 2016-08-10
 ### Updated - Alex Tan
 
