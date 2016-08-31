@@ -1,15 +1,15 @@
 from __future__ import print_function
-from util import NoUArmPortException,UnknownFirmwareException, UnSupportedFirmwareVersionException, UArmConnectException
+from util import *
 from tools.list_uarms import uarm_ports
 import serial
 from version import is_a_version,is_supported_version
 import logging
 import protocol
 import time
-
-logging.basicConfig(filename='logger.log', level=logging.INFO)
-
-logging.info("------------------------------------")
+#
+# logging.basicConfig(filename='logger.log', level=logging.INFO)
+#
+# logging.info("------------------------------------")
 
 
 class UArm(object):
@@ -186,7 +186,7 @@ class UArm(object):
         logging.info(response)
         if response.startswith("s"):
             values = response.split('-')
-            self.product_type = values[0][:1]
+            self.product_type = values[0][1:]
             self.firmware_version = values[1]
         else:
             return False
@@ -354,3 +354,16 @@ class UArm(object):
             return False
         elif response == "s":
             return True
+
+    def get_eeprom(self, address, type=EEPROM_DATA_TYPE_BYTE):
+        cmd = protocol.GET_EEPROM.format(address, type)
+        response = self.send_cmd(cmd)
+        if response.startswith("s"):
+            val = response[1:]
+            return val
+
+    def get_serial_number(self):
+        serial_number = ""
+        for i in range(14):
+            serial_number += self.get_eeprom(SERIAL_NUMBER_ADDRESS + i)
+        print (serial_number)
