@@ -32,6 +32,7 @@ class UArm(object):
         debug will display all debug messages, include All serial commands.
         log is a function reference, if you don't provide log function, we will display to stdout
         """
+        self.debug = debug
         if not port:
             ports = uarm_ports()
             if len(ports) > 0:
@@ -43,8 +44,6 @@ class UArm(object):
         else:
             self.log = print
         self.port = port
-        self.debug = debug
-
         self.sp = serial.Serial(baudrate=115200,timeout=5)
         self.connect()
 
@@ -130,9 +129,9 @@ class UArm(object):
         # Save the response to a log variable, in case it's needed for debugging
         self.responseLog.append((cmnd, response))
 
-        # Make sure the response has the valid start and end characters
+        # # Make sure the response has the valid start and end characters
         if not (response.count('[') == 1 and response.count(']') == 1):
-            self.log("Uarm.read(): ERROR: The message {0} did not come with proper formatting!".format(response))
+            self.log("send_cmd(): ERROR: The message {0} did not come with proper formatting!".format(response))
 
         # Clean up the response
         response = response.replace("[", "")
@@ -140,8 +139,8 @@ class UArm(object):
         response = response.lower()
 
         # If the robot returned an error, print that out
-        if "ERROR" in response:
-            self.log("Uarm.read(): ERROR: Received error from robot: {0}".format(response))
+        if response.startswith("f"):
+            self.log("send_cmd(): ERROR: Received error from robot: {0}".format(response))
 
         if self.debug:
             self.log("response: {0}".format(response))
@@ -184,9 +183,9 @@ class UArm(object):
         cmd = protocol.GET_VERSION
         response = self.send_cmd(cmd)
         logging.info(response)
-        if response.startswith("s"):
+        if response.startswith("v"):
             values = response.split('-')
-            self.product_type = values[0][1:]
+            self.product_type = values[0]
             self.firmware_version = values[1]
         else:
             return False
@@ -224,7 +223,15 @@ class UArm(object):
             return False
 
     def set_servo_angle(self, servo_number, angle):
-        cmd = protocol.SET_SERVO_ANGLE.format(str(servo_number),str(angle))
+        cmd = protocol.SET_ANGLE.format(str(servo_number), str(angle))
+        response = self.send_cmd(cmd)
+        if response.startswith("s"):
+            return True
+        else:
+            return False
+
+    def set_raw_angle(self, servo_number, angle):
+        cmd = protocol.SET_RAW_ANGLE.format(str(servo_number), str(angle))
         response = self.send_cmd(cmd)
         if response.startswith("s"):
             return True
@@ -279,8 +286,8 @@ class UArm(object):
             self.servo_detach(3)
             return True
 
-    def set_buzzer(self, frequency, duration):
-        cmd = protocol.SET_BUZZER.format(frequency,duration)
+    def set_buzzer(self, frequency, duration, stop_duration):
+        cmd = protocol.SET_BUZZER.format(frequency,duration, stop_duration)
         if self.send_cmd(cmd).startswith("s"):
             return True
         else:
@@ -332,14 +339,14 @@ class UArm(object):
 
     def get_servo_angle(self, servo_number=None):
         # Returns an angle in degrees, of the servo
-        cmd = protocol.GET_SERVO_ANGLE
+        cmd = protocol.GET_ANGLE
 
         response = self.send_cmd(cmd)
         if response.startswith("s"):
-            parse_cmd = self.__parse_cmd(response[1:],  ["t", "l", "r"])
-            angles = [parse_cmd["r"], parse_cmd["l"], parse_cmd["r"]]
+            parse_cmd = self.__parse_cmd(response[1:],  ["b", "l", "r", "h"])
+            angles = [parse_cmd["b"], parse_cmd["l"], parse_cmd["r"], parse_cmd["h"]]
             if servo_number is not None:
-                if 0 <= servo_number <= 2:
+                if 0 <= servo_number <= 3:
                     return angles[servo_number]
                 else:
                     return False
@@ -348,6 +355,25 @@ class UArm(object):
         else:
             return False
 
+    def get_raw_angle(self, servo_number=None):
+        # Returns an angle in degrees, of the servo
+        cmd = protocol.GET_RAW_ANGLE
+
+        response = self.send_cmd(cmd)
+        if response.startswith("s"):
+            parse_cmd = self.__parse_cmd(response[1:],  ["b", "l", "r", "h"])
+            angles = [parse_cmd["b"], parse_cmd["l"], parse_cmd["r"], parse_cmd["h"]]
+            if servo_number is not None:
+                if 0 <= servo_number <= 3:
+                    return angles[servo_number]
+                else:
+                    return False
+            else:
+                return angles
+        else:
+            return False
+
+
     def get_tip_sensor(self):
         response = self.send_cmd(protocol.GET_TIP)
         if response == "f":
@@ -355,15 +381,20 @@ class UArm(object):
         elif response == "s":
             return True
 
-    def get_eeprom(self, address, type=EEPROM_DATA_TYPE_BYTE):
-        cmd = protocol.GET_EEPROM.format(address, type)
+    def get_eeprom(self, address, data_type=EEPROM_DATA_TYPE_BYTE):
+        cmd = protocol.GET_EEPROM.format(address, data_type)
         response = self.send_cmd(cmd)
         if response.startswith("s"):
             val = response[1:]
-            return val
+            if data_type == EEPROM_DATA_TYPE_FLOAT:
+                return float(val)
+            elif data_type == EEPROM_DATA_TYPE_INTEGER:
+                return int(float(val))
+            elif data_type == EEPROM_DATA_TYPE_BYTE:
+                return int(float(val))
 
-    def set_eeprom(self, address, data, type=EEPROM_DATA_TYPE_BYTE):
-        cmd = protocol.SET_EEPROM.format(address,type,data)
+    def set_eeprom(self, address, data, data_type=EEPROM_DATA_TYPE_BYTE):
+        cmd = protocol.SET_EEPROM.format(address, data_type, data)
         response = self.send_cmd(cmd)
         if response.startswith("s"):
             return True
@@ -379,7 +410,7 @@ class UArm(object):
         response = self.send_cmd(cmd)
         if response.startswith("s"):
             val = response[1:]
-            return val
+            return int(float(val))
 
     def get_digital(self,pin):
         cmd = protocol.GET_DIGITAL.format(pin)

@@ -8,6 +8,7 @@ INIT_POS_L = 139
 INIT_POS_R = 26
 SAMPLING_DEADZONE = 2
 
+version = "1.1.0"
 
 class Calibration(object):
     manual_calibration_trigger = True
@@ -17,10 +18,10 @@ class Calibration(object):
     linear_offset_template = {"INTERCEPT": 0.00, "SLOPE": 0.00}
     linear_offset = [linear_offset_template, linear_offset_template, linear_offset_template, linear_offset_template]
     linear_offset_servo_flag = [False, False, False, False]
-    manual_offset = [0.00, 0.00, 0.00]
+    manual_offset = [0.00, 0.00, 0.00, 0.00]
     stretch_offset_template = {"LEFT": 0.00, "RIGHT": 0.00}
-    temp_manual_offset_arr = [0.00, 0.00, 0.00]
-    manual_offset_correct_flag = [False, False, False]
+    temp_manual_offset_arr = [0.00, 0.00, 0.00, 0.00]
+    manual_offset_correct_flag = [False, False, False, False]
 
     def __init__(self, uarm=None, log_function=None):
         if uarm is not None:
@@ -42,12 +43,13 @@ class Calibration(object):
 
     @staticmethod
     def default_log(msg):
-        print msg
+        print (msg)
 
     def uf_print(self, msg=None):
         self.log_function(msg)
 
     def calibrate_all(self, linear_callback=None, manual_callback=None, stretch_callback=None):
+        self.uf_print("--------Start Calibrate uArm, v{}-----------".format(version))
         self.uf_print("0. Clearing Completed Flag in EEPROM.")
         self.write_completed_flag(CALIBRATION_FLAG, False)
         time.sleep(1)
@@ -74,6 +76,11 @@ class Calibration(object):
         if self.read_completed_flag(CALIBRATION_STRETCH_FLAG):
             self.write_completed_flag(CALIBRATION_FLAG, True)
             self.uf_print("Calibration DONE!!")
+            self.uarm.servo_attach()
+            self.uarm.set_servo_angle(SERVO_BOTTOM,90)
+            self.uarm.set_servo_angle(SERVO_LEFT, 60)
+            self.uarm.set_servo_angle(SERVO_RIGHT, 60)
+            self.uarm.set_servo_angle(SERVO_HAND,90)
 
     def linear_calibration_section(self, callback=None):
         self.linear_calibration_start_flag = True
@@ -102,6 +109,7 @@ class Calibration(object):
             self.uf_print("Error - 1. Linear Offset not equal to EEPROM, Please retry.")
             self.uf_print("Error - 1. linear_offset(): {0}".format(self.read_linear_offset()))
             self.linear_calibration_start_flag = False
+            sys.exit(0)
 
     def calibrate_linear_servo_offset(self, servo_number):
         global analog_read_pin, servo_analog_read
@@ -114,42 +122,42 @@ class Calibration(object):
             min_angle = 30
             angle_step = min_angle
             analog_pin = SERVO_BOTTOM_ANALOG_PIN
-            self.uarm.set_servo_angle(SERVO_BOTTOM, angle_step, False)
-            self.uarm.set_servo_angle(SERVO_LEFT, 90, False)
-            self.uarm.set_servo_angle(SERVO_RIGHT, 60, False)
+            self.uarm.set_raw_angle(SERVO_BOTTOM, angle_step)
+            self.uarm.set_raw_angle(SERVO_LEFT, 90)
+            self.uarm.set_raw_angle(SERVO_RIGHT, 60)
         if servo_number == SERVO_LEFT:
             max_angle = 120
             min_angle = 35
             angle_step = min_angle
             analog_pin = SERVO_LEFT_ANALOG_PIN
-            self.uarm.set_servo_angle(SERVO_BOTTOM, 90, False)
-            self.uarm.set_servo_angle(SERVO_LEFT, angle_step, False)
-            self.uarm.set_servo_angle(SERVO_RIGHT, 65, False)
+            self.uarm.set_raw_angle(SERVO_BOTTOM, 90)
+            self.uarm.set_raw_angle(SERVO_LEFT, angle_step)
+            self.uarm.set_raw_angle(SERVO_RIGHT, 65)
         if servo_number == SERVO_RIGHT:
             max_angle = 120
             min_angle = 15
             angle_step = min_angle
             analog_pin = SERVO_RIGHT_ANALOG_PIN
-            self.uarm.set_servo_angle(SERVO_BOTTOM, 90, False)
-            self.uarm.set_servo_angle(SERVO_LEFT, 65, False)
-            self.uarm.set_servo_angle(SERVO_RIGHT, angle_step, False)
+            self.uarm.set_raw_angle(SERVO_BOTTOM, 90)
+            self.uarm.set_raw_angle(SERVO_LEFT, 65)
+            self.uarm.set_raw_angle(SERVO_RIGHT, angle_step)
         if servo_number == SERVO_HAND:
             max_angle = 160
             min_angle = 20
             angle_step = min_angle
             analog_pin = SERVO_HAND_ANALOG_PIN
-            self.uarm.set_servo_angle(SERVO_BOTTOM, 90, False)
-            self.uarm.set_servo_angle(SERVO_LEFT, 90, False)
-            self.uarm.set_servo_angle(SERVO_RIGHT, 60, False)
-            self.uarm.set_servo_angle(SERVO_HAND, angle_step, False)
+            self.uarm.set_raw_angle(SERVO_BOTTOM, 90)
+            self.uarm.set_raw_angle(SERVO_LEFT, 90)
+            self.uarm.set_raw_angle(SERVO_RIGHT, 60)
+            self.uarm.set_raw_angle(SERVO_HAND, angle_step)
         time.sleep(2)
         while angle_step < max_angle:
 
-            self.uarm.set_servo_angle(servo_number, angle_step, False)
+            self.uarm.set_raw_angle(servo_number, angle_step)
 
             servo_analog_read = 0
             for i in range(5):
-                servo_analog_read += self.uarm.read_analog(analog_pin)
+                servo_analog_read += self.uarm.get_analog(analog_pin)
                 time.sleep(0.05)
 
             servo_analog_read /= 5
@@ -171,11 +179,12 @@ class Calibration(object):
         self.write_completed_flag(CALIBRATION_SERVO_FLAG, False)
         self.uf_print("2. Start Calibrate Servo Offset")
         self.manual_operation_trigger = True
-        self.uarm.set_servo_angle(SERVO_BOTTOM, 45, 0)
+        self.uarm.set_raw_angle(SERVO_BOTTOM, 45)
         time.sleep(1)
-        self.uarm.write_left_right_servo_angle(130, 20, 0)
+        self.uarm.set_raw_angle(SERVO_LEFT,130)
+        self.uarm.set_raw_angle(SERVO_RIGHT, 20)
         time.sleep(1)
-        self.uarm.detach_all_servos()
+        self.uarm.servo_detach()
         time.sleep(0.3)
 
         time_counts = 0
@@ -184,51 +193,43 @@ class Calibration(object):
         servo_2_offset = 0
         servo_3_offset = 0
         self.uf_print("Please move uArm in right position")
-        self.uarm.alarm(3, 100, 100)
+        self.uarm.set_buzzer(3, 100, 100)
         while self.manual_operation_trigger:
 
-            servo_1_offset = self.uarm.read_servo_angle(SERVO_BOTTOM, 0) - 45
-            servo_2_offset = self.uarm.read_servo_angle(SERVO_LEFT, 0) - 130
-            servo_3_offset = self.uarm.read_servo_angle(SERVO_RIGHT, 0) - 20
 
-            if abs(servo_1_offset) < 5.5:
-                self.manual_offset_correct_flag[0] = True
-            else:
-                self.manual_offset_correct_flag[0] = False
-                # self.uf_print("Please try move the Servo 1")
-            if abs(servo_2_offset) < 5.5:
-                self.manual_offset_correct_flag[1] = True
-            else:
-                self.manual_offset_correct_flag[1] = False
-                # self.uf_print("Please try move the Servo 2")
-            if abs(servo_3_offset) < 5.5:
-                self.manual_offset_correct_flag[2] = True
-            else:
-                self.manual_offset_correct_flag[2] = False
                 # self.uf_print("Please try move the Servo 3")
 
-            if time_counts > self.servo_calibrate_timeout:
-                self.manual_operation_trigger = False
+            # if time_counts > self.servo_calibrate_timeout:
+            #     self.manual_operation_trigger = False
+            self.__read_current_angle()
             time_counts += 1
-            self.temp_manual_offset_arr[0] = servo_1_offset
-            self.temp_manual_offset_arr[1] = servo_2_offset
-            self.temp_manual_offset_arr[2] = servo_3_offset
-            if self.manual_offset_correct_flag[0] & self.manual_offset_correct_flag[1] & \
-                    self.manual_offset_correct_flag[2]:
-                self.uf_print(str(self.servo_calibrate_timeout - time_counts) + ", Please Confirm the positions")
+            self.temp_manual_offset_arr[0] = self.servo_1_offset
+            self.temp_manual_offset_arr[1] = self.servo_2_offset
+            self.temp_manual_offset_arr[2] = self.servo_3_offset
+            self.temp_manual_offset_arr[3] = self.servo_4_offset
+            # if self.manual_offset_correct_flag[0] & self.manual_offset_correct_flag[1] & \
+            #         self.manual_offset_correct_flag[2]:
+            #     self.uf_print(str(self.servo_calibrate_timeout - time_counts) + ", Please Confirm the positions")
             if callback is not None:
                 callback(self.temp_manual_offset_arr, self.manual_offset_correct_flag)
                 self.uf_print()
             else:
-                confirm = raw_input(
-                    "servo offset, bottom: {0}, left: {1}, right: {2},\nConfirm Please Press Y: ".format(servo_1_offset,servo_2_offset,servo_3_offset))
-                if confirm == "Y" or confirm == "y":
-                    self.manual_operation_trigger = False
+                confirm_enter = raw_input("Please move uArm to correct position, When complete, please press Enter to contine. ")
+                if confirm_enter == "":
+                    confirm = ""
+                    while confirm.lower() != "y":
+                        self.__read_current_angle()
+                        confirm = raw_input(
+                            "servo offset, bottom: {0}, left: {1}, right: {2}, hand: {3},\nConfirm Please Press Y, Retry press Other Key: "
+                                .format(self.servo_1_offset,self.servo_2_offset,self.servo_3_offset, self.servo_4_offset))
+                        if confirm.lower() == "y":
+                            self.manual_operation_trigger = False
             time.sleep(0.1)
 
-        self.temp_manual_offset_arr[0] = round(servo_1_offset, 2)
-        self.temp_manual_offset_arr[1] = round(servo_2_offset, 2)
-        self.temp_manual_offset_arr[2] = round(servo_3_offset, 2)
+        self.temp_manual_offset_arr[0] = round(self.servo_1_offset, 2)
+        self.temp_manual_offset_arr[1] = round(self.servo_2_offset, 2)
+        self.temp_manual_offset_arr[2] = round(self.servo_3_offset, 2)
+        self.temp_manual_offset_arr[3] = round(self.servo_4_offset, 2)
         self.save_manual_offset()
         if self.read_manual_offset() == self.temp_manual_offset_arr:
             self.uf_print("    2.3 Mark Completed Flag in EEPROM")
@@ -238,79 +239,44 @@ class Calibration(object):
             self.uf_print("Error - 2, Manual Calibration Servo offset not equal to EEPROM")
             self.uf_print("Error - 2, manual Servo Offset: {0}".format(self.temp_manual_offset_arr))
             self.uf_print("Error - 2, read_manual_offset: {0}".format(self.read_manual_offset()))
-        self.uarm.attach_all_servos()
+        self.uarm.servo_attach()
+        
+    def __read_current_angle(self):
+        self.servo_1_offset = self.uarm.get_servo_angle(SERVO_BOTTOM) - 45
+        self.servo_2_offset = self.uarm.get_servo_angle(SERVO_LEFT) - 130
+        self.servo_3_offset = self.uarm.get_servo_angle(SERVO_RIGHT) - 20
+        self.servo_4_offset = self.uarm.get_servo_angle(SERVO_HAND) - 90
+
+        if abs(self.servo_1_offset) < 5.5:
+            self.manual_offset_correct_flag[0] = True
+        else:
+            self.manual_offset_correct_flag[0] = False
+            # self.uf_print("Please try move the Servo 1")
+        if abs(self.servo_2_offset) < 5.5:
+            self.manual_offset_correct_flag[1] = True
+        else:
+            self.manual_offset_correct_flag[1] = False
+            # self.uf_print("Please try move the Servo 2")
+        if abs(self.servo_3_offset) < 5.5:
+            self.manual_offset_correct_flag[2] = True
+        else:
+            self.manual_offset_correct_flag[2] = False
+        if abs(self.servo_4_offset) < 5.5:
+            self.manual_offset_correct_flag[3] = True
+        else:
+            self.manual_offset_correct_flag[3] = False
 
     def stretch_calibration_section(self):
         self.stretch_calibration_flag = True
         self.uf_print("3.0. Clearing Stretch Completed Flag in EEPROM.")
         self.write_completed_flag(CALIBRATION_STRETCH_FLAG, False)
-        # self.uf_print("3. Start Calibrate Stretch Offset")
-        #
-        # self.uf_print("3.0 Moving uArm to Correct Place")
-        # self.uarm.write_servo_angle(SERVO_BOTTOM, 45, 0)
-        # time.sleep(1)
-        # self.uarm.write_left_right_servo_angle(130, 20, 0)
-        # time.sleep(1)
-        #
-        # initPosL = INIT_POS_L - 12
-        # initPosR = INIT_POS_R - 12
-        # minAngle_L = self.uarm.read_analog(SERVO_LEFT_ANALOG_PIN) - 16;
-        # minAngle_R = self.uarm.read_analog(SERVO_RIGHT_ANALOG_PIN) - 16;
-        # print ('minAngle_L: {0}'.format(minAngle_L))
-        # print ('minAngle_R: {0}'.format(minAngle_R))
-        #
-        # self.uarm.write_servo_angle(SERVO_LEFT, initPosL, 0)
-        # self.uarm.write_servo_angle(SERVO_RIGHT, initPosR, 0)
-        # time.sleep(1)
-        # while self.uarm.read_analog(SERVO_RIGHT_ANALOG_PIN) < (minAngle_R - SAMPLING_DEADZONE) \
-        #         and self.stretch_calibration_flag:
-        #     initPosR += 1
-        #     self.uarm.write_servo_angle(SERVO_RIGHT, initPosR, 0)
-        #     print ('initPosR: {0}'.format(initPosR))
-        #     time.sleep(0.05)
-        #
-        # while self.uarm.read_analog(SERVO_RIGHT_ANALOG_PIN) > (minAngle_R + SAMPLING_DEADZONE) \
-        #         and self.stretch_calibration_flag:
-        #     initPosR -= 1
-        #     self.uarm.write_servo_angle(SERVO_RIGHT, initPosR, 0)
-        #     print ('initPosR: {0}'.format(initPosR))
-        #     time.sleep(0.05)
-        #
-        # while self.uarm.read_analog(SERVO_LEFT_ANALOG_PIN) < (minAngle_L - SAMPLING_DEADZONE) \
-        #         and self.stretch_calibration_flag:
-        #     initPosL += 1
-        #     self.uarm.write_servo_angle(SERVO_LEFT, initPosL, 0)
-        #     print ('initPosL: {0}'.format(initPosL))
-        #     time.sleep(0.05)
-        #
-        # while self.uarm.read_analog(SERVO_LEFT_ANALOG_PIN) > (minAngle_L + SAMPLING_DEADZONE) \
-        #         and self.stretch_calibration_flag:
-        #     initPosL -= 1
-        #     self.uarm.write_servo_angle(SERVO_LEFT, initPosL, 0)
-        #     print ('initPosL: {0}'.format(initPosL))
-        #     time.sleep(0.05)
-        #
-        # offsetL = initPosL - INIT_POS_L + 3
-        # offsetR = initPosR - INIT_POS_R + 3
-        # offset_correct_flag = [False, False]
-        # if abs(offsetL) < 20:
-        #     offset_correct_flag[0] = True
-        # if abs(offsetR) < 20:
-        #     offset_correct_flag[1] = True
-        #
-        # stretch_offset = copy.deepcopy(self.stretch_offset_template)
-        # stretch_offset['LEFT'] = offsetL
-        # stretch_offset['RIGHT'] = offsetR
-        # if callback is not None:
-        #     callback(stretch_offset, offset_correct_flag)
-
         self.uf_print("    3.1 Saving Stretch Offset into EEPROM")
-        self.uarm.write_eeprom(EEPROM_DATA_TYPE_FLOAT, OFFSET_STRETCH_START_ADDRESS, -10)
-        self.uarm.write_eeprom(EEPROM_DATA_TYPE_FLOAT, OFFSET_STRETCH_START_ADDRESS + 4, -10)
+        self.uarm.set_eeprom(OFFSET_STRETCH_START_ADDRESS, -10, EEPROM_DATA_TYPE_FLOAT)
+        self.uarm.set_eeprom(OFFSET_STRETCH_START_ADDRESS + 4, -10, EEPROM_DATA_TYPE_FLOAT)
         self.uf_print("    3.2 Mark Completed Flag in EEPROM")
         self.write_completed_flag(CALIBRATION_STRETCH_FLAG, True)
         # print offsetL, offsetR
-        self.uarm.detach_all_servos()
+        self.uarm.servo_detach()
         self.stretch_calibration_flag = False
 
     def save_linear_offset(self):
@@ -318,11 +284,12 @@ class Calibration(object):
         intercept_address = LINEAR_INTERCEPT_START_ADDRESS
         slope_address = LINEAR_SLOPE_START_ADDRESS
         for i in range(4):
+            print ("Servo {}:".format(i))
             print ("Intercept Address:{0}, Offset Value:{1}.".format(intercept_address, self.linear_offset[i]['INTERCEPT']))
             print ("Slope Address:{0}, Offset Value:{1}.".format(slope_address, self.linear_offset[i]['SLOPE']))
-            self.uarm.write_eeprom(EEPROM_DATA_TYPE_FLOAT, intercept_address, self.linear_offset[i]['INTERCEPT'])
+            self.uarm.set_eeprom(intercept_address, self.linear_offset[i]['INTERCEPT'] ,EEPROM_DATA_TYPE_FLOAT)
             time.sleep(0.5)
-            self.uarm.write_eeprom(EEPROM_DATA_TYPE_FLOAT, slope_address, self.linear_offset[i]['SLOPE'])
+            self.uarm.set_eeprom(slope_address, self.linear_offset[i]['SLOPE'], EEPROM_DATA_TYPE_FLOAT)
             time.sleep(0.5)
             intercept_address += 4
             slope_address += 4
@@ -331,14 +298,14 @@ class Calibration(object):
         self.uf_print("    2.1 Saving Servo Offset into EEPROM")
         address = OFFSET_START_ADDRESS
         for i in self.temp_manual_offset_arr:
-            self.uarm.write_eeprom(EEPROM_DATA_TYPE_FLOAT, address, i)
+            self.uarm.set_eeprom(address, i, EEPROM_DATA_TYPE_FLOAT)
             address += 4
 
     def read_manual_offset(self):
         address = OFFSET_START_ADDRESS
         read_manual_offset = []
-        for i in range(3):
-            read_manual_offset.append(round(self.uarm.read_eeprom(EEPROM_DATA_TYPE_FLOAT, address), 2))
+        for i in range(4):
+            read_manual_offset.append(round(self.uarm.get_eeprom(address, EEPROM_DATA_TYPE_FLOAT), 2))
             address += 4
         return read_manual_offset
 
@@ -349,8 +316,8 @@ class Calibration(object):
         for i in range(4):
             linear_offset_template = copy.deepcopy(self.linear_offset_template)
             linear_offset_template['INTERCEPT'] = round(
-                self.uarm.read_eeprom(EEPROM_DATA_TYPE_FLOAT, intercept_address), 2)
-            linear_offset_template['SLOPE'] = round(self.uarm.read_eeprom(EEPROM_DATA_TYPE_FLOAT, slope_address), 2)
+                self.uarm.get_eeprom(intercept_address, EEPROM_DATA_TYPE_FLOAT), 2)
+            linear_offset_template['SLOPE'] = round(self.uarm.get_eeprom(slope_address, EEPROM_DATA_TYPE_FLOAT), 2)
             linear_offset_data.append(linear_offset_template)
             intercept_address += 4
             slope_address += 4
@@ -358,8 +325,8 @@ class Calibration(object):
 
     def read_stretch_offset(self):
         address = OFFSET_STRETCH_START_ADDRESS
-        left_offset = round(self.uarm.read_eeprom(EEPROM_DATA_TYPE_FLOAT, address), 2)
-        right_offset = round(self.uarm.read_eeprom(EEPROM_DATA_TYPE_FLOAT, address + 4), 2)
+        left_offset = round(self.uarm.get_eeprom(address, EEPROM_DATA_TYPE_FLOAT), 2)
+        right_offset = round(self.uarm.get_eeprom(address + 4, EEPROM_DATA_TYPE_FLOAT), 2)
         stretch_offset = copy.deepcopy(self.stretch_offset_template)
         stretch_offset['LEFT'] = left_offset
         stretch_offset['RIGHT'] = right_offset
@@ -373,32 +340,32 @@ class Calibration(object):
 
     def write_completed_flag(self, flag_type, flag):
         if flag_type == CALIBRATION_FLAG:
-            self.uarm.write_eeprom(EEPROM_DATA_TYPE_BYTE, CALIBRATION_FLAG, CONFIRM_FLAG if flag else 0)
+            self.uarm.set_eeprom(CALIBRATION_FLAG, CONFIRM_FLAG if flag else 0)
         elif flag_type == CALIBRATION_LINEAR_FLAG:
-            self.uarm.write_eeprom(EEPROM_DATA_TYPE_BYTE, CALIBRATION_LINEAR_FLAG, CONFIRM_FLAG if flag else 0)
+            self.uarm.set_eeprom(CALIBRATION_LINEAR_FLAG, CONFIRM_FLAG if flag else 0)
         elif flag_type == CALIBRATION_SERVO_FLAG:
-            self.uarm.write_eeprom(EEPROM_DATA_TYPE_BYTE, CALIBRATION_SERVO_FLAG, CONFIRM_FLAG if flag else 0)
+            self.uarm.set_eeprom(CALIBRATION_SERVO_FLAG, CONFIRM_FLAG if flag else 0)
         elif flag_type == CALIBRATION_STRETCH_FLAG:
-            self.uarm.write_eeprom(EEPROM_DATA_TYPE_BYTE, CALIBRATION_STRETCH_FLAG, CONFIRM_FLAG if flag else 0)
+            self.uarm.set_eeprom(CALIBRATION_STRETCH_FLAG, CONFIRM_FLAG if flag else 0)
 
     def read_completed_flag(self, flag_type):
         if flag_type == CALIBRATION_FLAG:
-            if self.uarm.read_eeprom(EEPROM_DATA_TYPE_BYTE, CALIBRATION_FLAG) == CONFIRM_FLAG:
+            if self.uarm.get_eeprom(CALIBRATION_FLAG) == CONFIRM_FLAG:
                 return True
             else:
                 return False
         elif flag_type == CALIBRATION_LINEAR_FLAG:
-            if self.uarm.read_eeprom(EEPROM_DATA_TYPE_BYTE, CALIBRATION_LINEAR_FLAG) == CONFIRM_FLAG:
+            if self.uarm.get_eeprom(CALIBRATION_LINEAR_FLAG) == CONFIRM_FLAG:
                 return True
             else:
                 return False
         elif flag_type == CALIBRATION_SERVO_FLAG:
-            if self.uarm.read_eeprom(EEPROM_DATA_TYPE_BYTE, CALIBRATION_SERVO_FLAG) == CONFIRM_FLAG:
+            if self.uarm.get_eeprom(CALIBRATION_SERVO_FLAG) == CONFIRM_FLAG:
                 return True
             else:
                 return False
         elif flag_type == CALIBRATION_STRETCH_FLAG:
-            if self.uarm.read_eeprom(EEPROM_DATA_TYPE_BYTE, CALIBRATION_STRETCH_FLAG) == CONFIRM_FLAG:
+            if self.uarm.get_eeprom(CALIBRATION_STRETCH_FLAG) == CONFIRM_FLAG:
                 return True
             else:
                 return False
@@ -451,13 +418,16 @@ def main():
     # parser.add_argument("-d", "--download", help="download firmware into firmware.hex", action="store_true")
     parser.add_argument("-f", "--force", help="Force calibrate uArm, `all` , `linear`, `manual`")
     parser.add_argument("-c", "--check", help="Check If Calibration is completed? if completed, display the offset value", action="store_true")
-    # parser.add_argument("-f", "--force", help="Will Force calibrate uArm", action="store_true")
+    parser.add_argument("-p", "--port", nargs='?', help="specify port number")
     args = parser.parse_args()
-    calibration = Calibration()
+    if args.port:
+        calibration = Calibration(pyuarm.uArm(port=args.port))
+    else:
+        calibration = Calibration(pyuarm.get_uarm())
     time.sleep(2)
     # check
     if args.check:
-        print ("\n");
+        print ("\n")
         print ("-------------------------------------------------")
         print ("Checking Calibration information....")
         print ("-------------------------------------------------")
@@ -488,7 +458,7 @@ def main():
             print ("Manual Calibration not Completed !!!")
         exit_fun()
     if args.force:
-        print ("\n");
+        print ("\n")
         print ("-------------------------------------------------")
         print ("Force Calibrating....")
         print ("-------------------------------------------------")

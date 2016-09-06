@@ -1,3 +1,31 @@
+## [2.0.6] - 2016-09-06
+### Updated - Alex Tan
+
+### Compatible
+- Firmware 2.0
+
+### Fix
+1. Protocol:  
+- Support Raw Servo Angle, SET_ANGLE = "sAngN{}V{}", SET_RAW_ANGLE = "sSerN{}V{}", GET_RAW_ANGLE = "gSer", GET_ANGLE = "gAng"
+- Buzzer add stop Duration, SET_BUZZER = "sBuzF{}T{}S{}"
+- version start with "v"
+2. pyuarm:  
+- set Debug before any action.
+- if response message start with "f", means error
+- set & get EEPROM return value depend on data type
+3. Calibrate:  
+- Add version 1.1.0
+- Compatible with 2.0 firmware
+4. list_uarm:  
+- get_uarm()
+- get_uarm_port_cli()
+5. Miniterm:
+- change read_servo_angle to get_servo_angle, write_servo_angle to set_servo_angle
+- Add version 0.1.3
+6. Others:  
+- `python -m pyuarm.version` will display the library version and support version
+
+
 ## [2.0.5] - 2016-08-31
 ### Updated - Alex Tan
 

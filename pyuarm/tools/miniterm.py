@@ -9,7 +9,7 @@
 
 import pyuarm
 from cmd import Cmd
-from pyuarm.tools.list_uarms import uarm_ports
+from pyuarm.tools.list_uarms import get_uarm_port_cli ,uarm_ports
 from pyuarm.tools import firmware_helper
 import subprocess
 from colorama import Fore, Back, init, Style
@@ -30,6 +30,7 @@ from colorama import Fore, Back, init, Style
 #     UNDERLINE = '\033[4m'
 
 init()
+version = "0.1.3"
 
 
 class UArmCmd(Cmd):
@@ -46,8 +47,8 @@ class UArmCmd(Cmd):
     SERVO_STATUS = ['attach', 'detach']
 
     prompt = ">>> "
-    intro = "Welcome to use {}uArm Command Line{}\n"\
-        .format(Fore.YELLOW, Fore.RESET)
+    intro = "Welcome to use {}uArm Command Line{} - v{}\n"\
+        .format(Fore.YELLOW, Fore.RESET, version)
 
     intro += help_msg
     intro += "\n\n"
@@ -80,12 +81,7 @@ class UArmCmd(Cmd):
         if self.uarm is None:
             ports = uarm_ports()
             if len(ports) > 1:
-                i = 1
-                for port in ports:
-                    print ("[{}] - {}".format(i, port))
-                    i += 1
-                port_index = raw_input("Please Choose the uArm Port: ")
-                uarm_port = ports[int(port_index) - 1]
+                uarm_port = get_uarm_port_cli()
                 try:
                     self.uarm = pyuarm.UArm(uarm_port)
                 except pyuarm.UnknownFirmwareException:
@@ -140,7 +136,7 @@ class UArmCmd(Cmd):
         """
         if self.__is_connected():
             coords = self.uarm.get_coordinate()
-            print ("Current coordinate: X-{} Y-{} Z-{}".format(coords.pop(),coords.pop(),coords.pop()))
+            print ("Current coordinate: X:{} Y:{} Z:{}".format(*coords))
 
     def do_pump(self, arg):
         """
@@ -184,9 +180,9 @@ class UArmCmd(Cmd):
                 msg = "succeed" if result else "failed"
                 print (msg)
 
-    def do_write_angle(self, arg):
+    def do_set_angle(self, arg):
         """
-        write_angle
+        set_angle
         format: write_angle servo_number angle
         servo_number:
             0 bottom servo,
@@ -194,7 +190,7 @@ class UArmCmd(Cmd):
             2 right servo,
             3 hand servo
         eg.
-        >>> write_angle 0 90
+        >>> set_angle 0 90
         succeed
         """
         if self.__is_connected():
@@ -206,9 +202,9 @@ class UArmCmd(Cmd):
                 msg = "succeed" if result else "failed"
                 print (msg)
 
-    def do_read_angle(self, arg):
+    def do_get_angle(self, arg):
         """
-        read_angle
+        get_angle
         Read current servo angle.
         format: read_angle servo_number
         servo_number:
@@ -217,15 +213,15 @@ class UArmCmd(Cmd):
             2 right servo,
         if no servo_number provide, will list all servos angle
         eg.
-        >>> read_angle
-        Current Servo Angles: b-35.25, l-53.4, r-35.25
+        >>> get_angle
+        Current Servo Angles: t:17.97, l:112.72, r:17.97, f:151.14
         """
         if self.__is_connected():
             values = arg.split(' ')
             if len(values) == 1:
                 if values[0] == '':
                     angles = self.uarm.get_servo_angle()
-                    print ("Current Servo Angles: b-{}, l-{}, r-{}".format(angles.pop(),angles.pop(),angles.pop()))
+                    print ("Current Servo Angles: t:{}, l:{}, r:{}, f:{}".format(*angles))
 
                 else:
                     servo_num = int(values[0])

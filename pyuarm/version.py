@@ -1,11 +1,11 @@
 import re
-__version__ = '2.0.5'
+__version__ = '2.0.6'
 
 support_versions = ['2.0']
 
 
 def is_a_version(version):
-    version_pattern = re.compile(r'\d+\.\d+\.\d+')
+    version_pattern = re.compile(r'\d+\.\d+\.\d+\w*')
     if version_pattern.match(version):
         return True
     else:
@@ -19,3 +19,11 @@ def is_supported_version(version):
         if major_version == v:
             return True
     return False
+
+
+def main():
+    print ("Version: {}".format(__version__))
+    print ("Support Firmware Version: {}".format(support_versions))
+
+if __name__ == '__main__':
+    main()
