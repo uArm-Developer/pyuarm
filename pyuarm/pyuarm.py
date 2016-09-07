@@ -183,7 +183,7 @@ class UArm(object):
         cmd = protocol.GET_VERSION
         response = self.send_cmd(cmd)
         logging.info(response)
-        if response.startswith("v"):
+        if response.startswith("s"):
             values = response.split('-')
             self.product_type = values[0]
             self.firmware_version = values[1]
