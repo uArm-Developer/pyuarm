@@ -111,15 +111,15 @@ class Calibration(object):
         self.ab_values = []
 
         if servo_number == SERVO_BOTTOM:
-            max_angle = 150
-            min_angle = 30
+            max_angle = 140
+            min_angle = 40
             angle_step = min_angle
             analog_pin = SERVO_BOTTOM_ANALOG_PIN
             self.uarm.write_servo_angle(SERVO_BOTTOM, angle_step, False)
             self.uarm.write_servo_angle(SERVO_LEFT, 90, False)
             self.uarm.write_servo_angle(SERVO_RIGHT, 60, False)
         if servo_number == SERVO_LEFT:
-            max_angle = 120
+            max_angle = 110
             min_angle = 35
             angle_step = min_angle
             analog_pin = SERVO_LEFT_ANALOG_PIN
@@ -127,7 +127,7 @@ class Calibration(object):
             self.uarm.write_servo_angle(SERVO_LEFT, angle_step, False)
             self.uarm.write_servo_angle(SERVO_RIGHT, 65, False)
         if servo_number == SERVO_RIGHT:
-            max_angle = 120
+            max_angle = 110
             min_angle = 15
             angle_step = min_angle
             analog_pin = SERVO_RIGHT_ANALOG_PIN
@@ -135,8 +135,8 @@ class Calibration(object):
             self.uarm.write_servo_angle(SERVO_LEFT, 65, False)
             self.uarm.write_servo_angle(SERVO_RIGHT, angle_step, False)
         if servo_number == SERVO_HAND:
-            max_angle = 160
-            min_angle = 20
+            max_angle = 140
+            min_angle = 40
             angle_step = min_angle
             analog_pin = SERVO_HAND_ANALOG_PIN
             self.uarm.write_servo_angle(SERVO_BOTTOM, 90, False)
@@ -149,11 +149,17 @@ class Calibration(object):
             self.uarm.write_servo_angle(servo_number, angle_step, False)
 
             servo_analog_read = 0
-            for i in range(5):
-                servo_analog_read += self.uarm.read_analog(analog_pin)
+            analog_vals = []
+            for i in range(8):
+                analog_vals.append(self.uarm.read_analog(analog_pin))
                 time.sleep(0.05)
+            analog_vals.remove(max(analog_vals))
+            analog_vals.remove(max(analog_vals))
+            analog_vals.remove(min(analog_vals))
+            analog_vals.remove(min(analog_vals))
+            servo_analog_read = sum(analog_vals) / 4
 
-            servo_analog_read /= 5
+            # servo_analog_read = 5
             angles.append(angle_step)
             analogs.append(servo_analog_read)
             self.uf_print ("Servo Number: {0}, Angle: {1}, Analog: {2}".format(servo_number, angle_step, servo_analog_read))

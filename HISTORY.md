@@ -1,3 +1,13 @@
+## [1.3.34] - 2016-09-12
+### Updated - Alex Tan
+
+### Compatible
+- Firmware 1.7
+
+### Fix
+- calibrate.py update, analog read logic, add a simple filter.
+
+
 ## [1.3.32] - 2016-08-31
 ### Updated - Alex Tan
 
