@@ -8,7 +8,6 @@
 
 import pyuarm
 from pyuarm.tools.list_uarms import get_uarm_port_cli
-from time import sleep
 from tqdm import tqdm
 import requests
 import os, sys, platform, subprocess
@@ -29,13 +28,6 @@ elif __file__:
 
 firmware_defaul_filename = 'firmware.hex'
 default_firmware_path = os.path.join(os.getcwd(), firmware_defaul_filename)
-
-
-
-    # if len(uarm_list) > 0:
-    #     return uarm_list[0]
-    # else:
-    #     print "No uArm is connected."
 
 
 def get_latest_version(release_url=remote_version_url):
@@ -59,15 +51,8 @@ def download_firmware(firmware_path=default_firmware_path, firmware_url=firmware
         response = requests.get(firmware_url, stream=True)
         firmware_size = int(response.headers['content-length'])
         with open(firmware_path, "wb") as handle:
-            widgets = ['Downloading: ', tqdm, ' ',
-                       tqdm(marker='#', left='[', right=']'),
-                       ' ', '''ETA(), ' ', FileTransferSpeed()''']
-            pbar = tqdm(widgets=widgets, maxval=firmware_size)
-            pbar.start()
-            for i, data in zip(list(range(firmware_size)), response.iter_content()):
+            for data in tqdm(response.iter_content(), total=firmware_size):
                 handle.write(data)
-                pbar.update(i)
-            pbar.finish()
     except requests.exceptions.ConnectionError:
         raise NetworkError("NetWork Error, Please retry...")
 

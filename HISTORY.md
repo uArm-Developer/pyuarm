@@ -1,4 +1,13 @@
-## [1.4.0] - 20160-9-22
+## [1.4.1] - 2016-09-22
+## Updated - leixiayang
+
+### Fix
+
+- Move version to __init__.py instead of version.py
+- Add __future__ feature for print function
+- replace tqdm with progressbar to Compatible with python3
+
+## [1.4.0] - 2016-09-22
 ## Updated - leixiayang
 分别修改了 history.md , requirements.txt , __init__.py
 pyuarm.py , util.py calibrate.py , firmware_helper.py

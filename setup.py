@@ -2,7 +2,7 @@ from distutils.util import convert_path
 from setuptools import setup, find_packages
 
 main_ns = {}
-ver_path = convert_path('pyuarm/version.py')
+ver_path = convert_path('pyuarm/__init__.py')
 with open(ver_path) as ver_file:
         exec(ver_file.read(), main_ns)
 

@@ -1,11 +1,10 @@
-
+from __future__ import print_function
 import serial
 import time
 import binascii
 
 from .util import *
 from distutils.version import LooseVersion
-from .version import support_versions
 
 from .tools.list_uarms import get_uarm
 

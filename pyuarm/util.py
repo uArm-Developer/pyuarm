@@ -1,8 +1,3 @@
-from .tools.list_uarms import uarm_ports
-from . import pyuarm
-import os
-import json
-
 # Firmata
 
 REPORT_FIRMATA_VERSION = 0x79

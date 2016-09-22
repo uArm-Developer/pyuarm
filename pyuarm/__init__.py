@@ -1,4 +1,7 @@
 from pyuarm import *
 # noinspection PyUnresolvedReferences
-from version import __version__, support_versions
+
+__version__ = '1.4.0'
+
+support_versions = ['1.7']
 
