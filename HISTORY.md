@@ -1,3 +1,8 @@
+## [2.1.0] - 2016-09-22
+### Updated - leixiayang
+内容更新:
+        miniterm.py , pyuarm.py , version.py , 文件内容更新兼容了 Python3.0
+
 ## [2.0.7] - 2016-09-06
 ### Updated - Alex Tan
 

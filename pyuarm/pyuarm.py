@@ -1,10 +1,10 @@
-from __future__ import print_function
-from util import *
-from tools.list_uarms import uarm_ports
+
+from .util import *
+from .tools.list_uarms import uarm_ports
 import serial
-from version import is_a_version,is_supported_version
+from .version import is_a_version,is_supported_version
 import logging
-import protocol
+from . import protocol
 import time
 #
 # logging.basicConfig(filename='logger.log', level=logging.INFO)
