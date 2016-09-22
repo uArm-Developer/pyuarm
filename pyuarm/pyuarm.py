@@ -139,8 +139,8 @@ class UArm(object):
         response = response.lower()
 
         # If the robot returned an error, print that out
-        if response.startswith("f"):
-            self.log("send_cmd(): ERROR: Received error from robot: {0}".format(response))
+        # if response.startswith("f"):
+        #     self.log("send_cmd(): ERROR: Received error from robot: {0}".format(response))
 
         if self.debug:
             self.log("response: {0}".format(response))

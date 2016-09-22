@@ -1,3 +1,13 @@
+## [2.0.7] - 2016-09-06
+### Updated - Alex Tan
+
+### Compatible
+- Firmware 2.0
+
+### Fix
+1. Fix list port issue
+2. Fix receive F start error
+
 ## [2.0.6] - 2016-09-06
 ### Updated - Alex Tan
 
