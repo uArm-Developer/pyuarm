@@ -19,15 +19,14 @@ import argparse
 
 firmware_download_url = "http://download.ufactory.cc/firmware.hex"
 remote_version_url = "http://download.ufactory.cc/version"
-
+firmware_defaul_filename = 'firmware.hex'
 
 if getattr(sys, 'frozen', False):
     application_path = os.path.dirname(sys.executable)
 elif __file__:
     application_path = os.path.dirname(__file__)
 
-firmware_defaul_filename = 'firmware.hex'
-default_firmware_path = os.path.join(os.getcwd(), firmware_defaul_filename)
+default_firmware_path = os.path.join(application_path, firmware_defaul_filename)
 
 
 def get_latest_version(release_url=remote_version_url):
@@ -270,9 +269,9 @@ def main():
             print("firmware.hex not existed")
         else:
             if args.port:
-                helper.flash_firmware()
+                helper.flash_firmware(default_firmware_path)
             else:
-                helper.flash_firmware()
+                helper.flash_firmware(default_firmware_path)
         sys.exit(0)
     elif args.force is not None and args.force != "":
         if not os.path.exists(args.force):

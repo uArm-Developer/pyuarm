@@ -6,6 +6,7 @@
 - Move version to __init__.py instead of version.py
 - Add __future__ feature for print function
 - replace tqdm with progressbar to Compatible with python3
+- Fix firmware.hex path issue
 
 ## [1.4.0] - 2016-09-22
 ## Updated - leixiayang
