@@ -64,13 +64,13 @@ class UArmCmd(Cmd):
 
     def __is_connected(self):
         if self.uarm is None:
-            print ("No uArm is connected, please use {}{}connect{}{}".format(Back.BLACK, Fore.WHITE,Fore.RESET, Back.RESET))
+            print(("No uArm is connected, please use {}{}connect{}{}".format(Back.BLACK, Fore.WHITE,Fore.RESET, Back.RESET)))
             return False
         else:
             if self.uarm.is_connected():
                 return True
             else:
-                print ("No uArm is connected, please use {}{}connect{}{}".format(Back.BLACK, Fore.WHITE,Fore.RESET, Back.RESET))
+                print(("No uArm is connected, please use {}{}connect{}{}".format(Back.BLACK, Fore.WHITE,Fore.RESET, Back.RESET)))
                 return False
 
     def do_connect(self, arg):
@@ -85,15 +85,15 @@ class UArmCmd(Cmd):
                 try:
                     self.uarm = pyuarm.uArm(uarm_port)
                 except pyuarm.UnknownFirmwareException:
-                    print ("Unknown Firmware, please use {}{}uarm-firmware -upgrade{}{} to your firmware"
-                           .format(Back.BLACK, Fore.WHITE,Fore.RESET, Back.RESET))
+                    print(("Unknown Firmware, please use {}{}uarm-firmware -upgrade{}{} to your firmware"
+                           .format(Back.BLACK, Fore.WHITE,Fore.RESET, Back.RESET)))
             elif len(ports) == 1:
                 self.uarm = pyuarm.uArm()
             elif len(ports) == 0:
                 print ("No uArm ports is found.")
         else:
             if self.uarm.is_connected():
-                print ("uArm is already connected, port: {}".format(self.uarm.port))
+                print(("uArm is already connected, port: {}".format(self.uarm.port)))
             else:
                 if self.uarm.reconnect():
                     print ("uArm port: {} is reconnected")
@@ -136,7 +136,7 @@ class UArmCmd(Cmd):
         """
         if self.__is_connected():
             coords = self.uarm.read_coordinate()
-            print ("Current coordinate: X-{} Y-{} Z-{}".format(coords.pop(),coords.pop(),coords.pop()))
+            print(("Current coordinate: X-{} Y-{} Z-{}".format(coords.pop(),coords.pop(),coords.pop())))
 
     def do_pump(self, arg):
         """
@@ -146,14 +146,14 @@ class UArmCmd(Cmd):
         if self.__is_connected():
             if arg == 'on':
                 result = self.uarm.pump_control(True)
-                print ("succeed" if result else "failed")
+                print(("succeed" if result else "failed"))
             elif arg == 'off':
                 result = self.uarm.pump_control(False)
-                print ("succeed" if result else "failed")
+                print(("succeed" if result else "failed"))
             elif arg == '':
-                print ("please input argument: {}".format(','.join(self.ON_OFF)))
+                print(("please input argument: {}".format(','.join(self.ON_OFF))))
             else:
-                print ("Command not found {}".format(arg))
+                print(("Command not found {}".format(arg)))
 
     def complete_pump(self, text, line, begidx, endidx):
         if not text:
@@ -188,14 +188,14 @@ class UArmCmd(Cmd):
         if self.__is_connected():
             if arg == 'on':
                 result = self.uarm.gripper_control(True)
-                print ("succeed" if result else "failed")
+                print(("succeed" if result else "failed"))
             elif arg == 'off':
                 result = self.uarm.gripper_control(False)
-                print ("succeed" if result else "failed")
+                print(("succeed" if result else "failed"))
             elif arg == '':
-                print ("please input argument: {}".format(','.join(self.ON_OFF)))
+                print(("please input argument: {}".format(','.join(self.ON_OFF))))
             else:
-                print ("Command not found {}".format(arg))
+                print(("Command not found {}".format(arg)))
 
     def complete_gripper(self, text, line, begidx, endidx):
         if not text:
@@ -248,7 +248,7 @@ class UArmCmd(Cmd):
             if len(values) == 1:
                 if values[0] == '':
                     angles = self.uarm.read_servo_angle()
-                    print ("Current Servo Angles: b-{}, l-{}, r-{}, h-{}".format(angles.pop(),angles.pop(),angles.pop(), angles.pop()))
+                    print(("Current Servo Angles: b-{}, l-{}, r-{}, h-{}".format(angles.pop(),angles.pop(),angles.pop(), angles.pop())))
 
                 else:
                     servo_num = int(values[0])
@@ -362,9 +362,9 @@ class UArmCmd(Cmd):
 
         """
         if arg == 'version':
-            print ("Remote Firmware Version: {}".format(firmware_helper.get_latest_version()))
+            print(("Remote Firmware Version: {}".format(firmware_helper.get_latest_version())))
             if self.__is_connected():
-                print ("Local Firmware Version: {}".format(self.uarm.firmware_version))
+                print(("Local Firmware Version: {}".format(self.uarm.firmware_version)))
         elif arg == 'upgrade':
             if self.uarm is not None:
                 if self.uarm.is_connected():
@@ -380,9 +380,9 @@ class UArmCmd(Cmd):
             else:
                 subprocess.call(['uarm-firmware','-df'])
         elif arg == '':
-            print ("please input argument: {}".format(','.join(self.FIRMWARE)))
+            print(("please input argument: {}".format(','.join(self.FIRMWARE))))
         else:
-            print ("command not found: {}".format(arg))
+            print(("command not found: {}".format(arg)))
 
     def complete_firmware(self, text, line, begidx, endidx):
         if not text:

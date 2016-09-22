@@ -1,5 +1,5 @@
-from tools.list_uarms import uarm_ports
-import pyuarm
+from .tools.list_uarms import uarm_ports
+from . import pyuarm
 import os
 import json
 

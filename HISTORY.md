@@ -1,3 +1,9 @@
+## [1.4.0] - 20160-9-22
+## Updated - leixiayang
+分别修改了 history.md , requirements.txt , __init__.py
+pyuarm.py , util.py calibrate.py , firmware_helper.py
+list_helper. py , list_uarms.py , miniterm.py 文件内容都进行了不同的修改
+
 ## [1.3.32] - 2016-08-31
 ### Updated - Alex Tan
 

@@ -18,9 +18,9 @@ def get_uarm_port_cli():
     if len(ports) > 1:
         i = 1
         for port in ports:
-            print ("[{}] - {}".format(i, port))
+            print(("[{}] - {}".format(i, port)))
             i += 1
-        port_index = raw_input("Please Choose the uArm Port: ")
+        port_index = input("Please Choose the uArm Port: ")
         uarm_port = ports[int(port_index) - 1]
         return uarm_port
     elif len(ports) == 1:
@@ -67,7 +67,7 @@ def main():
     ports = uarm_ports()
     for p in ports:
         print (p)
-    print ("{0} ports found".format(len(ports)))
+    print(("{0} ports found".format(len(ports))))
 
 if __name__ == '__main__':
     main()
