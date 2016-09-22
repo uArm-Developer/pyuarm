@@ -3,6 +3,7 @@ from pyuarm.tools.list_uarms import get_uarm_port_cli
 import copy
 import argparse
 import sys
+import time
 
 INIT_POS_L = 139
 INIT_POS_R = 26
@@ -39,7 +40,7 @@ class Calibration(object):
 
     @staticmethod
     def default_log(msg):
-        print msg
+        print(msg)
 
     def uf_print(self, msg=None):
         self.log_function(msg)
@@ -214,12 +215,12 @@ class Calibration(object):
                 callback(self.temp_manual_offset_arr, self.manual_offset_correct_flag)
                 self.uf_print()
             else:
-                confirm_enter = raw_input("Please move uArm to correct position, When complete, please press Enter to contine. ")
+                confirm_enter = input("Please move uArm to correct position, When complete, please press Enter to contine. ")
                 if confirm_enter == "":
                     confirm = ""
                     while confirm.lower() != "y":
                         self.__read_current_angle()
-                        confirm = raw_input(
+                        confirm = input(
                             "servo offset, bottom: {0}, left: {1}, right: {2}, hand: {3},\nConfirm Please Press Y, Retry press Other Key: "
                                 .format(self.servo_1_offset,self.servo_2_offset,self.servo_3_offset, self.servo_4_offset))
                         if confirm.lower() == "y":
@@ -284,8 +285,8 @@ class Calibration(object):
         intercept_address = LINEAR_INTERCEPT_START_ADDRESS
         slope_address = LINEAR_SLOPE_START_ADDRESS
         for i in range(4):
-            print ("Intercept Address:{0}, Offset Value:{1}.".format(intercept_address, self.linear_offset[i]['INTERCEPT']))
-            print ("Slope Address:{0}, Offset Value:{1}.".format(slope_address, self.linear_offset[i]['SLOPE']))
+            print(("Intercept Address:{0}, Offset Value:{1}.".format(intercept_address, self.linear_offset[i]['INTERCEPT'])))
+            print(("Slope Address:{0}, Offset Value:{1}.".format(slope_address, self.linear_offset[i]['SLOPE'])))
             self.uarm.write_eeprom(EEPROM_DATA_TYPE_FLOAT, intercept_address, self.linear_offset[i]['INTERCEPT'])
             time.sleep(0.5)
             self.uarm.write_eeprom(EEPROM_DATA_TYPE_FLOAT, slope_address, self.linear_offset[i]['SLOPE'])
@@ -384,7 +385,7 @@ def basic_linear_regression(x, y):
     sum_x = sum(x)
     sum_y = sum(y)
 
-    sum_x_squared = sum(map(lambda a: a * a, x))
+    sum_x_squared = sum([a * a for a in x])
     sum_of_products = sum([x[i] * y[i] for i in range(length)])
 
     # Magic formulae!
@@ -436,15 +437,15 @@ def main():
             print ("Calibration All Completed !!!")
             linear_offset = calibration.read_linear_offset()
             print("Linear Offset:\n")
-            print ("Bottom Servo, INTERCEPT: {0}, SLOPE: {1}".format(linear_offset[0]['INTERCEPT'],linear_offset[0]['SLOPE']))
-            print ("Left Servo, INTERCEPT: {0}, SLOPE: {1}".format(linear_offset[1]['INTERCEPT'],linear_offset[1]['SLOPE']))
-            print ("Right Servo, INTERCEPT: {0}, SLOPE: {1}".format(linear_offset[2]['INTERCEPT'],linear_offset[2]['SLOPE']))
-            print ("Hand Servo, INTERCEPT: {0}, SLOPE: {1}".format(linear_offset[3]['INTERCEPT'],linear_offset[3]['SLOPE']))
+            print(("Bottom Servo, INTERCEPT: {0}, SLOPE: {1}".format(linear_offset[0]['INTERCEPT'],linear_offset[0]['SLOPE'])))
+            print(("Left Servo, INTERCEPT: {0}, SLOPE: {1}".format(linear_offset[1]['INTERCEPT'],linear_offset[1]['SLOPE'])))
+            print(("Right Servo, INTERCEPT: {0}, SLOPE: {1}".format(linear_offset[2]['INTERCEPT'],linear_offset[2]['SLOPE'])))
+            print(("Hand Servo, INTERCEPT: {0}, SLOPE: {1}".format(linear_offset[3]['INTERCEPT'],linear_offset[3]['SLOPE'])))
             manual_offset = calibration.read_manual_offset()
             print("Manual Offset:\n")
-            print ("Bottom Servo Offset: {0}".format(manual_offset[0]))
-            print ("Left Servo Offset: {0}".format(manual_offset[1]))
-            print ("Right Servo Offset: {0}".format(manual_offset[2]))
+            print(("Bottom Servo Offset: {0}".format(manual_offset[0])))
+            print(("Left Servo Offset: {0}".format(manual_offset[1])))
+            print(("Right Servo Offset: {0}".format(manual_offset[2])))
         elif is_linear_calibrated and is_manual_calibrated and not is_all_calibrated:
             print ("Calibration All Completed !!!")
         elif not is_linear_calibrated and is_manual_calibrated:
@@ -470,7 +471,7 @@ def main():
             else:
                 print ("Please Complete Linear Calibration First! You could use -f linear")
         else:
-            print ("unrecognized command: {0}".format(args.force))
+            print(("unrecognized command: {0}".format(args.force)))
         exit_fun()
 
     # No Argument
@@ -479,7 +480,7 @@ def main():
     is_all_calibrated = calibration.read_completed_flag(CALIBRATION_FLAG)
     if is_linear_calibrated and is_manual_calibrated and is_all_calibrated:
         print ("uArm has been calibrated already, Are you sure want to Calibrate it again?")
-        confirm = raw_input("Press Y if you want to calibrate anyway...\n")
+        confirm = input("Press Y if you want to calibrate anyway...\n")
         if confirm == "Y" or confirm=="y":
             calibration.calibrate_all()
         else:
@@ -490,7 +491,7 @@ def main():
 
 
 def exit_fun():
-    raw_input("\nPress Enter to Exit...")
+    input("\nPress Enter to Exit...")
     sys.exit(0)
 
 

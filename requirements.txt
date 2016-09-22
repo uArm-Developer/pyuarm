@@ -1,4 +1,4 @@
 colorama
-progressbar>=2.3
+tqdm >=4.8.4
 pyserial>=3.0
 requests>=2.10.0

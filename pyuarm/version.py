@@ -1,3 +1,3 @@
-__version__ = '1.3.32'
+__version__ = '1.4.0'
 
 support_versions = ['1.7']

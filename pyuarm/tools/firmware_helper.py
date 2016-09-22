@@ -8,11 +8,12 @@
 
 import pyuarm
 from pyuarm.tools.list_uarms import get_uarm_port_cli
-from progressbar import ProgressBar, Percentage, FileTransferSpeed, Bar, ETA
+from time import sleep
+from tqdm import tqdm
 import requests
 import os, sys, platform, subprocess
-from itertools import izip
-import ConfigParser, StringIO
+
+import configparser, io
 
 from distutils.version import LooseVersion
 import argparse
@@ -42,8 +43,8 @@ def get_latest_version(release_url=remote_version_url):
     try:
         r = requests.get(release_url)
         s_config = r.text
-        buf = StringIO.StringIO(s_config)
-        config = ConfigParser.ConfigParser()
+        buf = io.StringIO(s_config)
+        config = configparser.ConfigParser()
         config.readfp(buf)
         remote_firmware_version = config.get('firmware', 'version')
         return remote_firmware_version
@@ -58,12 +59,12 @@ def download_firmware(firmware_path=default_firmware_path, firmware_url=firmware
         response = requests.get(firmware_url, stream=True)
         firmware_size = int(response.headers['content-length'])
         with open(firmware_path, "wb") as handle:
-            widgets = ['Downloading: ', Percentage(), ' ',
-                       Bar(marker='#', left='[', right=']'),
-                       ' ', ETA(), ' ', FileTransferSpeed()]
-            pbar = ProgressBar(widgets=widgets, maxval=firmware_size)
+            widgets = ['Downloading: ', tqdm, ' ',
+                       tqdm(marker='#', left='[', right=']'),
+                       ' ', '''ETA(), ' ', FileTransferSpeed()''']
+            pbar = tqdm(widgets=widgets, maxval=firmware_size)
             pbar.start()
-            for i, data in izip(range(firmware_size), response.iter_content()):
+            for i, data in zip(list(range(firmware_size)), response.iter_content()):
                 handle.write(data)
                 pbar.update(i)
             pbar.finish()
@@ -71,7 +72,7 @@ def download_firmware(firmware_path=default_firmware_path, firmware_url=firmware
         raise NetworkError("NetWork Error, Please retry...")
 
 
-def flash_firmware(self,firmware_path='firmware.hex'):
+def flash_firmware(self, firmware_path='firmware.hex'):
     port = self.uarm_port
     if port:
         global avrdude_path, error_description, cmd
@@ -95,11 +96,11 @@ def flash_firmware(self,firmware_path='firmware.hex'):
                '-Uflash:w:{0}:i'.format(firmware_path)]
             error_description = "avrdude is required, Trying to install avrdude"
 
-        print (' '.join(cmd))
+        print((' '.join(cmd)))
         try:
             subprocess.call(cmd)
         except OSError as e:
-            print ("Error occurred: error code {0}, error msg: {1}".format(str(e.errno), e.strerror))
+            print(("Error occurred: error code {0}, error msg: {1}".format(str(e.errno), e.strerror)))
             if e.errno == 2:
                 if platform.system() == 'Darwin':
                     try:
@@ -107,7 +108,7 @@ def flash_firmware(self,firmware_path='firmware.hex'):
                         subprocess.call(['brew', 'install', 'avrdude'])
                         subprocess.call(cmd)
                     except OSError as e:
-                        print ("Error occurred: error code {0}, error msg: {1}".format(str(e.errno), e.strerror))
+                        print(("Error occurred: error code {0}, error msg: {1}".format(str(e.errno), e.strerror)))
                         if e.errno == 2:
                             print ("-------------------------------------------------------")
                             print ("You didn't install homebrew, please visit http://bew.sh")
@@ -156,11 +157,11 @@ class FirmwareHelper():
                    '-Uflash:w:{0}:i'.format(firmware_path)]
                 error_description = "avrdude is required, Trying to install avrdude"
 
-            print (' '.join(cmd))
+            print((' '.join(cmd)))
             try:
                 subprocess.call(cmd)
             except OSError as e:
-                print ("Error occurred: error code {0}, error msg: {1}".format(str(e.errno), e.strerror))
+                print(("Error occurred: error code {0}, error msg: {1}".format(str(e.errno), e.strerror)))
                 if e.errno == 2:
                     if platform.system() == 'Darwin':
                         try:
@@ -168,7 +169,7 @@ class FirmwareHelper():
                             subprocess.call(['brew', 'install', 'avrdude'])
                             subprocess.call(cmd)
                         except OSError as e:
-                            print ("Error occurred: error code {0}, error msg: {1}".format(str(e.errno), e.strerror))
+                            print(("Error occurred: error code {0}, error msg: {1}".format(str(e.errno), e.strerror)))
                             if e.errno == 2:
                                 print ("-------------------------------------------------------")
                                 print ("You didn't install homebrew, please visit http://bew.sh")
@@ -187,9 +188,9 @@ class FirmwareHelper():
                 uarm.disconnect()
                 return self.uarm_firmware_version
             except pyuarm.UnknownFirmwareException:
-                print "Unknown Firmware version."
+                print("Unknown Firmware version.")
             except pyuarm.NoUArmPortException:
-                print "No uArm is connected."
+                print("No uArm is connected.")
 
     def compare_version(self):
         self.remote_firmware_version = get_latest_version()
@@ -199,8 +200,8 @@ class FirmwareHelper():
     def upgrade(self):
         try:
             if self.compare_version():
-                print ("Would you want to upgrade your uArm with {0}{1}".format(self.remote_firmware_version, "?"))
-                user_choice = raw_input("Please Enter Y if yes. ")
+                print(("Would you want to upgrade your uArm with {0}{1}".format(self.remote_firmware_version, "?")))
+                user_choice = input("Please Enter Y if yes. ")
                 if user_choice == "Y" or user_choice == "y":
                     download_firmware()
                     self.flash_firmware()
@@ -211,23 +212,23 @@ class FirmwareHelper():
                 print("You already have the latest version of Firmware installed in uArm!!!")
                 print("If you still want to download & flash the firmware, Please use `uarm-firmware -df`")
         except TypeError as e:
-            print "Latest Firmware version: {0} ".format(self.remote_firmware_version)
-            print ("Unknown uArm Firmware version, Would you want to upgrade your uArm with {0}{1}".format(self.remote_firmware_version, "?"))
-            user_choice = raw_input("Please Enter Y if yes. ")
+            print("Latest Firmware version: {0} ".format(self.remote_firmware_version))
+            print(("Unknown uArm Firmware version, Would you want to upgrade your uArm with {0}{1}".format(self.remote_firmware_version, "?")))
+            user_choice = input("Please Enter Y if yes. ")
             if user_choice == "Y" or user_choice == "y":
                 try:
                     download_firmware()
                     self.flash_firmware()
                 except NetworkError as e:
-                    print (e.error)
+                    print((e.error))
                 except APIError as e:
-                    print (e.error)
+                    print((e.error))
             else:
                 print ("Exit")
         except NetworkError as e:
-            print (e.error)
+            print((e.error))
         except APIError as e:
-            print (e.error)
+            print((e.error))
 
 
 def main():
@@ -275,13 +276,13 @@ def main():
         try:
             download_firmware()
         except NetworkError as e:
-            print (e.error)
+            print((e.error))
         except APIError as e:
-            print (e.error)
+            print((e.error))
     # force
     if args.force == "force":
         if not os.path.exists(default_firmware_path):
-            print "firmware.hex not existed"
+            print("firmware.hex not existed")
         else:
             if args.port:
                 helper.flash_firmware()
@@ -290,7 +291,7 @@ def main():
         sys.exit(0)
     elif args.force is not None and args.force != "":
         if not os.path.exists(args.force):
-            print args.force + " not existed."
+            print(args.force + " not existed.")
         else:
             if args.port:
                 helper.flash_firmware(firmware_path=args.force)
@@ -304,9 +305,9 @@ def main():
         helper.get_uarm_version()
         sys.exit(0)
     elif args.check == "remote":
-        print "Fetching the remote version..."
+        print("Fetching the remote version...")
         remote_firmware_version = get_latest_version()
-        print "Latest firmware release version is: {0}".format(remote_firmware_version)
+        print("Latest firmware release version is: {0}".format(remote_firmware_version))
         sys.exit(0)
 
     # upgrade
@@ -326,7 +327,7 @@ def main():
 
 
 def exit_fun():
-    raw_input("\nPress Enter to Exit...")
+    input("\nPress Enter to Exit...")
     sys.exit(0)
 
 
