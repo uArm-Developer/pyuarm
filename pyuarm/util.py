@@ -139,6 +139,16 @@ def getFloatFromFour7BitBytes(array):
     val = negative * (ord(array[1]) + ord(array[2]) * 128 + ord(array[3]) / 100.00)
     return val
 
+class Interfaceinitializationerror(Exception):
+    """
+    .. UnknownFirmwareException:
+    """
+    def __init__(self, error):
+        self.error = error
+
+    def __str__(self):
+        return repr(self.error)
+
 
 class NoUArmPortException(IOError):
     """

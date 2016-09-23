@@ -43,15 +43,19 @@ class uArm(object):
         self.port = port
         self.debug = debug
         print("Initialize uArm, port is {0}...".format(self.port))
-        self.sp = serial.Serial(port, baudrate=57600, timeout=timeout)
-        time.sleep(3)
         try:
+            
+            self.sp = serial.Serial ( port , baudrate = 57600 , timeout = timeout )
+            
+            time.sleep ( 3 )
             self.get_firmware_version()
             print("Firmware Version: {0}".format(self.firmware_version))
         except TypeError as e:
             raise UnknownFirmwareException(
                 "Unknown Firmware Version, Please use 'python -m pyuarm.tools.firmware_helper' upgrade your firmware")
-
+        except calibrate as e:
+            raise Interfaceinitializationerror("Interface initialization error may have been occupied by the interface")
+            
         for v in support_versions:
             if LooseVersion(v) == LooseVersion(str(self.firmware_major_version) + "." + str(self.firmware_minor_version)):
                 return
