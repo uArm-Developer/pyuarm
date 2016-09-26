@@ -44,7 +44,7 @@ class UArm(object):
         else:
             self.log = print
         self.port = port
-        self.sp = serial.Serial(baudrate=115200,timeout=5)
+        self.sp = serial.Serial(baudrate=115200,timeout=.1)
         self.connect()
 
     def disconnect(self):
@@ -132,6 +132,7 @@ class UArm(object):
         # # Make sure the response has the valid start and end characters
         if not (response.count('[') == 1 and response.count(']') == 1):
             self.log("send_cmd(): ERROR: The message {0} did not come with proper formatting!".format(response))
+            return False
 
         # Clean up the response
         response = response.replace("[", "")
@@ -216,11 +217,12 @@ class UArm(object):
         command = protocol.SET_MOVE.format(x,y,z,s)
         response = self.send_cmd(command)
         logging.info("response from move to: {}".format(response))
-        if response.startswith("s"):
-            return True
-        elif response.startswith("f"):
-            logging.info("move_to: failed in ({}, {}, {})".format(x,y,z))
-            return False
+        if response:
+            if response.startswith("s"):
+                return True
+            elif response.startswith("f"):
+                logging.info("move_to: failed in ({}, {}, {})".format(x,y,z))
+                return False
 
     def set_servo_angle(self, servo_number, angle):
         cmd = protocol.SET_ANGLE.format(str(servo_number), str(angle))
@@ -372,7 +374,6 @@ class UArm(object):
                 return angles
         else:
             return False
-
 
     def get_tip_sensor(self):
         response = self.send_cmd(protocol.GET_TIP)

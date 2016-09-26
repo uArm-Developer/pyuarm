@@ -155,9 +155,9 @@ class FirmwareHelper():
                 uarm.disconnect()
                 return self.uarm_firmware_version
             except pyuarm.UnknownFirmwareException:
-                print "Unknown Firmware version."
+                print ("Unknown Firmware version.")
             except pyuarm.NoUArmPortException:
-                print "No uArm is connected."
+                print ("No uArm is connected.")
 
     def compare_version(self):
         self.remote_firmware_version = get_latest_version()
@@ -168,7 +168,7 @@ class FirmwareHelper():
         try:
             if self.compare_version():
                 print ("Would you want to upgrade your uArm with {0}{1}".format(self.remote_firmware_version, "?"))
-                user_choice = raw_input("Please Enter Y if yes. ")
+                user_choice = input("Please Enter Y if yes. ")
                 if user_choice == "Y" or user_choice == "y":
                     download_firmware()
                     self.flash_firmware()
@@ -179,9 +179,9 @@ class FirmwareHelper():
                 print("You already have the latest version of Firmware installed in uArm!!!")
                 print("If you still want to download & flash the firmware, Please use `uarm-firmware -df`")
         except TypeError as e:
-            print "Latest Firmware version: {0} ".format(self.remote_firmware_version)
+            print ("Latest Firmware version: {0} ".format(self.remote_firmware_version))
             print ("Unknown uArm Firmware version, Would you want to upgrade your uArm with {0}{1}".format(self.remote_firmware_version, "?"))
-            user_choice = raw_input("Please Enter Y if yes. ")
+            user_choice = input("Please Enter Y if yes. ")
             if user_choice == "Y" or user_choice == "y":
                 try:
                     download_firmware()
@@ -247,7 +247,7 @@ def main():
     # force
     if args.force == "force":
         if not os.path.exists(default_firmware_path):
-            print "firmware.hex not existed"
+            print ("firmware.hex not existed")
         else:
             if args.port:
                 helper.flash_firmware()
@@ -256,7 +256,7 @@ def main():
         sys.exit(0)
     elif args.force is not None and args.force != "":
         if not os.path.exists(args.force):
-            print args.force + " not existed."
+            print (args.force + " not existed.")
         else:
             if args.port:
                 helper.flash_firmware(firmware_path=args.force)
