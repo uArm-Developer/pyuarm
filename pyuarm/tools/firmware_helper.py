@@ -270,9 +270,9 @@ def main():
         helper.get_uarm_version()
         sys.exit(0)
     elif args.check == "remote":
-        print "Fetching the remote version..."
+        print ("Fetching the remote version..." )
         remote_firmware_version = get_latest_version()
-        print "Latest firmware release version is: {0}".format(remote_firmware_version)
+        print ("Latest firmware release version is: {0}".format(remote_firmware_version) )
         sys.exit(0)
 
     # upgrade

@@ -1,4 +1,4 @@
-from tools.list_uarms import uarm_ports
+from .tools.list_uarms import uarm_ports
 import pyuarm
 
 # parameters
