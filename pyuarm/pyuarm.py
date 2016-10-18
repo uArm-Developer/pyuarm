@@ -76,9 +76,6 @@ class UArm(object):
                 raise UnknownFirmwareException("Error: unknown Firmware Version")
         except TypeError:
             raise UnknownFirmwareException("Error: unknown Firmware Version")
-        except calibrate:
-            raise UnknownFirmwareException("Interface initialization error may have been occupied by the interface")
-        
 
     def reconnect(self):
         """
