@@ -42,7 +42,7 @@ class UArm(object):
         if log is not None:
             self.log = log
         else:
-            self.log = print
+            self.log = print()
         self.port = port
         self.sp = serial.Serial(baudrate=115200,timeout=.1)
         self.connect()
