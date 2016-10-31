@@ -66,5 +66,5 @@ target/
 .DS_Store
 .idea
 upx391w/
-*.hex
+firmware.hex
 *.sh

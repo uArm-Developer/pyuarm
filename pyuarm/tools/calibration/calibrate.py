@@ -1,13 +1,13 @@
 from __future__ import print_function
 import sys
-from .. import PY3
-from ..uarm import UArm
-from .list_uarms import get_uarm_port_cli
-from ..protocol import *
+from ... import PY3
+from ...uarm import UArm
+from ..list_uarms import get_uarm_port_cli
+from ...protocol import *
 import copy
 import time
 import os
-from .flash_firmware  import flash,get_uarm_port_cli, download, default_config
+from ..firmware  import flash,get_uarm_port_cli, download, default_config
 import serial
 
 if PY3:
@@ -31,26 +31,39 @@ else:
 default_calibration_hex = 'calibration.hex'
 
 
+
 def calibrate(port_name, calibration_hex_path):
     flash(port_name, calibration_hex_path)  # Flash the calibration firmware
-    sp = serial.Serial(port=port_name, baudrate=115200)
+    sp = serial.Serial(port=port_name, baudrate=115200, timeout=0.1)
+    READY = '[STEP]READY'
+    START = '[STEP]START'
+    COMPLETE = '[STEP]COMPLETE'
+    if PY3:
+        ready_msg = bytes(READY, encoding='ascii')
+        start_msg = bytes(START, encoding='ascii')
+        complete_msg = bytes(COMPLETE, encoding='ascii')
+    else:
+        ready_msg = READY
+        start_msg = START
+        complete_msg = COMPLETE
     while True:
-        if get_serial_line(sp).startswith('[STEP]READY'):  # Waiting For READY MESSAGE
+        if get_serial_line(sp).startswith(ready_msg):  # Waiting For READY MESSAGE
             break
         time.sleep(0.01)
     while True:
-        if get_serial_line(sp).startswith('[STEP]START'):  # Waiting For START MESSAGE
+        if get_serial_line(sp).startswith(start_msg):  # Waiting For START MESSAGE
             break
         time.sleep(0.01)
     while True:
-        if get_serial_line(sp).startswith('[STEP]COMPLETE'):  # Waiting For COMPLETED MESSAGE
+        if get_serial_line(sp).startswith(complete_msg):  # Waiting For COMPLETED MESSAGE
             break
         time.sleep(0.01)
 
 
 def get_serial_line(sp):
     line = sp.readline()
-    print(line, end='')
+    if line != b'':
+        print(line)
     return line
 
 
@@ -117,19 +130,28 @@ def main(args):
     else:
         debug = False
 
-    firmware_path = os.path.join(os.getcwd(), default_config['filename'])
-    download(default_config['download_url'], firmware_path)
-
-
-    calibrate(port_name, os.path.join(application_path, default_calibration_hex))
-    flash(port_name, firmware_path)
-
-    uarm = UArm(port_name=port_name, debug=debug)
-    print("All Calibration: {}".format("COMPLETED" if read_completed_flag(uarm, CALIBRATION_FLAG) else "NOT COMPLETED"))
-    print("Linear Calibration: {}".format("COMPLETED" if read_completed_flag(uarm, CALIBRATION_LINEAR_FLAG) else "NOT COMPLETED"))
-    print("Manual Calibration: {}".format("COMPLETED" if read_completed_flag(uarm, CALIBRATION_SERVO_FLAG) else "NOT COMPLETED"))
-    for linear_offset,manual_offset, i in izip(read_linear_offset(uarm), read_manual_offset(uarm), range(4)):
-        print ("Servo {} INTERCEPT: {}, SLOPE: {}, MANUAL: {}".format(i,linear_offset['INTERCEPT'], linear_offset['SLOPE'], manual_offset))
+    if args.check:
+        uarm = UArm(port_name=port_name, debug=debug)
+        print("All Calibration: {}".format("COMPLETED" if read_completed_flag(uarm, CALIBRATION_FLAG) else "NOT COMPLETED"))
+        print("Linear Calibration: {}".format("COMPLETED" if read_completed_flag(uarm, CALIBRATION_LINEAR_FLAG) else "NOT COMPLETED"))
+        print("Manual Calibration: {}".format("COMPLETED" if read_completed_flag(uarm, CALIBRATION_SERVO_FLAG) else "NOT COMPLETED"))
+        for linear_offset,manual_offset, i in izip(read_linear_offset(uarm), read_manual_offset(uarm), range(4)):
+            print ("Servo {} INTERCEPT: {}, SLOPE: {}, MANUAL: {}".format(i,linear_offset['INTERCEPT'], linear_offset['SLOPE'], manual_offset))
+    else:
+        uarm = UArm(port_name=port_name, debug=debug)
+        calibration_completed_flag = read_completed_flag(uarm, CALIBRATION_FLAG)
+        print("All Calibration: {}".format("COMPLETED" if calibration_completed_flag else "NOT COMPLETED"))
+        choice = ''
+        if calibration_completed_flag:
+            choice = input("Calibration Completed, Are you sure to continue? Yes, please press Y\n")
+            if choice.lower() == 'y':
+                input("Please don't quit until calibration completed. Continue please press Enter.\n")
+                firmware_path = os.path.join(os.getcwd(), default_config['filename'])
+                download(default_config['download_url'], firmware_path)
+                calibrate(port_name, os.path.join(application_path, default_calibration_hex))
+                flash(port_name, firmware_path)
+            else:
+                print ("Exit")
 
 if __name__ == '__main__':
     import argparse

@@ -1,5 +1,4 @@
 from serial.tools import list_ports
-import pyuarm
 
 UARM_HWID_KEYWORD = "USB VID:PID=0403:6001"
 
@@ -20,7 +19,7 @@ def get_uarm_port_cli():
         for port in ports:
             print ("[{}] - {}".format(i, port))
             i += 1
-        port_index = raw_input("Please Choose the uArm Port: ")
+        port_index = input("Please Choose the uArm Port: ")
         uarm_port = ports[int(port_index) - 1]
         return uarm_port
     elif len(ports) == 1:
@@ -30,7 +29,14 @@ def get_uarm_port_cli():
         return None
 
 
-def get_uarm():
+def get_port_property(port_name):
+    for p in list_ports.comports():
+        if p.device == port_name:
+            return p
+    return None
+
+
+def get_uarm(debug=False):
     """
     ===============================
     Get First uArm Port instance
@@ -49,11 +55,9 @@ def get_uarm():
     """
     ports = uarm_ports()
     if len(ports) > 0:
-        return pyuarm.UArm(port=ports[0])
+        return UArm(port_name=ports[0],debug=debug)
     else:
         print("There is no uArm port available")
-        return None
-
 
 def main():
     """

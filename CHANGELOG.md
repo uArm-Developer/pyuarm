@@ -1,3 +1,15 @@
+## [2.1.1] - 2016-10-28
+### Updated -Alex Tan
+
+### Compatible
+- Firmware 2.1
+
+### Changes
+1. Compatible with firmware 2.1
+2. Compatible with Python2.x and Python 3.x
+3. Rewrite Calibration logic
+4. Rewrite Firmware logic (Reduce 3rd-party library dependencies) Include `avrdude` on Mac/Windows/Linux
+5. Rename Functions in uarm. get/set for all communication protocol.
 
 ## [2.0.7] - 2016-09-06
 ### Updated - Alex Tan

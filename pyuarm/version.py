@@ -1,7 +1,6 @@
 import re
-__version__ = '2.0.7'
-
-support_versions = ['2.0']
+__version__ = '2.1.1'
+support_versions = ['2.1']
 
 
 def is_a_version(version):
@@ -19,11 +18,3 @@ def is_supported_version(version):
         if major_version == v:
             return True
     return False
-
-
-def main():
-    print ("Version: {}".format(__version__))
-    print ("Support Firmware Version: {}".format(support_versions))
-
-if __name__ == '__main__':
-    main()

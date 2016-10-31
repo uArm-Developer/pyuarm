@@ -28,7 +28,7 @@ else:
 default_config = {
     "filename": "firmware.hex",
     "hardware_id": "USB VID:PID=0403:6001",
-    "download_url": "http://download.ufactory.cc/firmware.hex",
+    "download_url": "http://download.ufactory.cc/firmware/firmware_dev.hex",
     "download_flag": False
 }
 
@@ -44,7 +44,10 @@ def resourcePath(relative_path):
     """ Get absolute path to resource, works for dev and for PyInstaller """
     if hasattr(sys, '_MEIPASS'):
         return os.path.join(sys._MEIPASS, relative_path)
-    return os.path.join(os.path.abspath("."), "pyuarm" , "tools", relative_path)
+    if FROZEN_APP:
+        return os.path.join(os.path.abspath("."),  "pyuarm" , "tools", "firmware",  relative_path)
+    else:
+        return os.path.join(os.path.dirname(__file__), relative_path)
 
 
 def exit_fun():
@@ -120,39 +123,22 @@ def flash(port, firmware_path):
     if port:
         global avrdude_bin, avrdude_conf, error_description, cmd
         if platform.system() == 'Darwin':
-            if FROZEN_APP:
-                avrdude_bin = os.path.join(resourcePath('avrdude'), 'bin', 'avrdude')
-                avrdude_conf = os.path.join(resourcePath('avrdude'), 'avrdude.conf')
-            else:
-                avrdude_bin = os.path.join(resourcePath('avrdude'), 'mac', 'bin', 'avrdude')
-                avrdude_conf = os.path.join(resourcePath('avrdude'), 'mac', 'avrdude.conf')
+            avrdude_bin = os.path.join(resourcePath('avrdude'), 'avrdude')
+            avrdude_conf = os.path.join(resourcePath('avrdude'), 'avrdude.conf')
 
             error_description = "built-in avrdude is not working, Trying to install avrdude..."
 
         elif platform.system() == 'Windows':
-            if FROZEN_APP:
-                avrdude_bin = os.path.join(resourcePath('avrdude'), 'avrdude.exe')
-                avrdude_conf = os.path.join(resourcePath('avrdude'), 'avrdude.conf')
-            else:
-                avrdude_bin = os.path.join(resourcePath('avrdude'), 'win', 'avrdude.exe')
-                avrdude_conf = os.path.join(resourcePath('avrdude'), 'win', 'avrdude.conf')
-            # cmd = [avrdude_path, '-C' + avrdude_conf, '-v', '-patmega328p', '-carduino', port_conf, '-b115200', '-D',
-            #        '-Uflash:w:{0}:i'.format(self.firmware_path)]
+            avrdude_bin = os.path.join(resourcePath('avrdude'), 'avrdude.exe')
+            avrdude_conf = os.path.join(resourcePath('avrdude'), 'avrdude.conf')
             error_description = "built-in avrdude is not working, Trying to download winavr..."
 
         elif platform.system() == 'Linux':
-            if FROZEN_APP:
-                if platform.architecture()[0] == '64bit':
-                    avrdude_bin = os.path.join(resourcePath('avrdude'), 'avrdude-x64')
-                else:
-                    avrdude_bin = os.path.join(resourcePath('avrdude'), 'avrdude')
-                avrdude_conf = os.path.join(resourcePath('avrdude'), 'avrdude.conf')
+            if platform.architecture()[0] == '64bit':
+                avrdude_bin = os.path.join(resourcePath('avrdude'), 'avrdude-x64')
             else:
-                if platform.architecture()[0] == '64bit':
-                    avrdude_bin = os.path.join(resourcePath('avrdude'), 'linux', 'avrdude-x64')
-                else:
-                    avrdude_bin = os.path.join(resourcePath('avrdude'), 'linux', 'avrdude')
-                avrdude_conf = os.path.join(resourcePath('avrdude'), 'linux', 'avrdude.conf')
+                avrdude_bin = os.path.join(resourcePath('avrdude'), 'avrdude')
+            avrdude_conf = os.path.join(resourcePath('avrdude'), 'avrdude.conf')
             error_description = "built-in avrdude is not working, Trying to install avrdude..."
 
         cmd = [avrdude_bin, '-C' + avrdude_conf, '-v', '-patmega328p', '-carduino', '-P' + port, '-b115200', '-D',
@@ -163,23 +149,6 @@ def flash(port, firmware_path):
             subprocess.call(cmd)
         except OSError as e:
             print(("Error occurred: error code {0}, error msg: {1}".format(str(e.errno), e.strerror)))
-            # if e.errno == 2:
-            #     if platform.system() == 'Darwin':
-            #         try:
-            #             print("Installing avrdude...")
-            #             subprocess.call(['brew', 'install', 'avrdude'])
-            #             subprocess.call(cmd)
-            #         except OSError as e:
-            #             print(("Error occurred: error code {0}, error msg: {1}".format(str(e.errno), e.strerror)))
-            #             if e.errno == 2:
-            #                 print("-------------------------------------------------------")
-            #                 print("You didn't install homebrew, please visit http://bew.sh")
-            #                 print("-------------------------------------------------------")
-            #     if platform.system() == 'Linux':
-            #         print("------------------------------------------------------------------------------")
-            #         print("You didn't install avrdude.\n "
-            #               "please try `sudo apt-get install avrdude` or other package management command ")
-            #         print("------------------------------------------------------------------------------")
 
 
 class FlashFirmware:
