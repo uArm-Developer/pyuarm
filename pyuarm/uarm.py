@@ -207,7 +207,7 @@ class UArm(object):
         response = self.__send_and_receive(cmd)
         if response.startswith("s"):
             values = response.split('-')
-            self.product_type = values[0]
+            self.product_type = values[0][1:]
             self.firmware_version = values[1]
         else:
             return False
@@ -281,7 +281,7 @@ class UArm(object):
         else:
             return False
 
-    def set_hand_wrist_angle(self, angle):
+    def set_wrist(self, angle):
         """
         Set uArm Hand Wrist Angle. Include servo offset.
         :param angle:
