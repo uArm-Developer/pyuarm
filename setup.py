@@ -30,7 +30,7 @@ if OS_TYPE.lower() == 'macosx':
                     ]
 elif OS_TYPE.lower()  == 'linux':
     avrdude_list = [os.path.join(avrdude_path, 'linux', 'avrdude'),
-                    os.path.join(avrdude_path, 'linux', 'avrdude_x64'),
+                    os.path.join(avrdude_path, 'linux', 'avrdude-x64'),
                     os.path.join(avrdude_path, 'linux', 'avrdude.conf'),
 
     ]
