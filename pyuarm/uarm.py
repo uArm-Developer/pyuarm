@@ -32,7 +32,7 @@ class UArm(object):
             if len(ports) > 0:
                 port_name = ports[0]
             else:
-                raise UArmConnectException("No uArm ports is found.")
+                raise UArmConnectException(0, "No uArm ports is found.")
         self.port = get_port_property(port_name)
         self.__serial = serial.Serial(baudrate=115200, timeout=.1)
         self.connect()

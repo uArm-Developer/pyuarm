@@ -61,6 +61,8 @@ class UArmConnectException(Exception):
             self.error = "Unknown Firmware Version"
         elif self.errno == 2:
             self.error = "Unsupported uArm Firmware Version"
+        else:
+            self.error = "Not Defined Error"
 
     def __str__(self):
-        return repr(self.error + " " + self.message)
+        return repr(self.error + "-" + self.message)
