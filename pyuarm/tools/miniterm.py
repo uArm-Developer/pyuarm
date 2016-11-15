@@ -411,7 +411,23 @@ class SerialMode(Cmd):
     do_EOF = do_quit
 
 def main(args):
+    """
+    ::
 
+        python -m pyuarm.tools.miniterm
+        pyuarm - INFO - pyuarm version: 2.1.1
+        pyuarm - INFO - Connecting from port - /dev/cu.usbserial-A600CRE6...
+        pyuarm - INFO - connected...
+        pyuarm - INFO - Firmware Version: 2.1.4
+        Welcome to use uArm Command Line - v0.1.4
+        Shortcut:
+        Quit: Ctrl + D, or input: quit
+        Clear Screen: Ctrl + L
+
+        Input help for more usage
+        >>>
+
+    """
     try:
         if args.port:
             uarm_cmd = UArmCmd(args.port)

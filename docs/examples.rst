@@ -16,7 +16,7 @@ There are two methods to Initialize uArm.
 
     >>> import pyuarm
     >>> uarm = pyuarm.get_uarm()
-    Firmware Version: 1.5.9
+    Firmware Version: 2.1.4
 
 if no uArm connected, will return `None` and display "There is no uArm Port available"
 
@@ -33,60 +33,63 @@ if no uArm connected, will return `None` and display "There is no uArm Port avai
 ::
 
     >>> import pyuarm
-    >>> uarm = pyuarm.uArm()
-    Firmware Version: 1.5.9
+    >>> uarm = pyuarm.UArm()
+    Firmware Version: 2.1.4
 
-If no uArm connected, will raise `NoUArmPortException`.
+If no uArm connected, will raise `UArmConnectException`.
 
 ::
 
-    >>> uarm = pyuarm.uArm()
+    >>> uarm = pyuarm.UArm()
+    pyuarm - INFO - pyuarm version: 2.1.1
     Traceback (most recent call last):
       File "<stdin>", line 1, in <module>
-      File "pyuarm.py", line 114, in __init__
-        raise NoUArmPortException()
-    pyuarm.NoUArmPortException
+      File "/Users/alex/Worksapce/project/metal/python/pyuarm/pyuarm/uarm.py", line 35, in __init__
+        raise UArmConnectException(0, "No uArm ports is found.")
+    pyuarm.util.UArmConnectException: 'Unable to connect uArm-No uArm ports is found.'
 
 You could turn on Debug Mode
 
 ::
 
-    >>> import pyuarm
-    >>> uarm = pyuarm.uArm(debug=True)
-    f0aa23f7
-    Firmware Version: 1.5.9
-
+    >>> uarm = pyuarm.UArm(debug=True)
+    pyuarm - INFO - pyuarm version: 2.1.1
+    pyuarm - INFO - Connecting from port - /dev/cu.usbserial-A600CRE6...
+    pyuarm - INFO - connected...
+    pyuarm - DEBUG - Communication| [gVer]                           [SH2-2.1.4]
+    pyuarm - INFO - Firmware Version: 2.1.4
 Define the uArm port
 
 ::
 
-    >>> import pyuarm
-    >>> uarm = pyuarm.uArm(port='/dev/cu.usbserial-A600CVS1')
-    Firmware Version: 1.5.9
+    >>> uarm = pyuarm.UArm(port_name='/dev/cu.usbserial-A600CRE6')
+    pyuarm - INFO - pyuarm version: 2.1.1
+    pyuarm - INFO - Connecting from port - /dev/cu.usbserial-A600CRE6...
+    pyuarm - INFO - connected...
+    pyuarm - INFO - Firmware Version: 2.1.4
 
 Movement
 ~~~~~~~~
 
 ::
 
-    >>> uarm.moveTo(15, -5, 15) ### Absolute coordinate in 2 seconds
-    >>> uarm.move(5, 5, 5) ### Relative coordinate
+    >>> uarm.set_position(150, 150, 150) #default speed is 300 mm/sec
+    >>> uarm.set_position(150, 150, 150, 100) ### set position in 100 mm/sec
 
 Current Positions
 ~~~~~~~~~~~~~~~~~
 
 ::
 
-    >>> uarm.read_coordinate() ### Read Current Coordinate
-
-
+    >>> uarm.get_position() # Get Current position
+    [354.62, 0.0, 90.0]
 Pump control
 ~~~~~~~~~~~~
 
 ::
 
-    >>> uarm.pump_control(True) ### Pump On
-    >>> uarm.pump_control(False) ### Pump Off
+    >>> uarm.set_pump(True) ### Pump On
+    >>> uarm.set_pump(False) ### Pump Off
 
 
 Others
@@ -96,7 +99,6 @@ Others
 
 ::
 
-    >>> import pyuarm
-    >>> pyuarm.list_uarms() #List All available uArm Ports
-    [u'/dev/cu.usbserial-A600CVS1']
-
+    >>> from pyuarm.tools.list_uarms import uarm_ports
+    >>> uarm_ports()
+    ['/dev/cu.usbserial-A600CRE6']

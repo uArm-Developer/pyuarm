@@ -16,14 +16,14 @@ def init_logger(debug):
         logger.setLevel(logging.DEBUG)
     else:
         logger.setLevel(logging.INFO)
-    formatter = logging.Formatter('%(name)s - %(levelname)s - %(message)s')
-
+    # formatter = logging.Formatter('%(name)s - %(levelname)s - %(message)s')
+    # #
     ch = logging.StreamHandler()
-    # if debug:
-    #     ch.setLevel(logging.DEBUG)
-    # else:
-    #     ch.setLevel(logging.INFO)
-    ch.setFormatter(formatter)
+    # # # if debug:
+    # # #     ch.setLevel(logging.DEBUG)
+    # # # else:
+    # # #     ch.setLevel(logging.INFO)
+    # ch.setFormatter(formatter)
     logger.addHandler(ch)
     logger.info('pyuarm version: ' + __version__)
 

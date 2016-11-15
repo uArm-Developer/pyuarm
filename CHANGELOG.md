@@ -1,3 +1,12 @@
+## [2.2.0] - 2016-11-16
+### Updated -Alex Tan
+
+### Compatible
+- Firmware 2.2
+
+### Changes
+1. Compatible with firmware 2.2 (Gcode)
+
 ## [2.1.1] - 2016-10-28
 ### Updated -Alex Tan
 

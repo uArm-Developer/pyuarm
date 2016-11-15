@@ -5,7 +5,7 @@ pyuarm API
 Classes
 --------
 
-.. automodule:: pyuarm.pyuarm
+.. automodule:: pyuarm.uarm
     :members:
     :undoc-members:
     :show-inheritance:
@@ -13,9 +13,7 @@ Classes
 Exception
 ---------
 
-.. autoclass:: pyuarm.util.NoUArmPortException
-
-.. autoclass:: pyuarm.util.UnkwonFirmwareException
+.. autoclass:: pyuarm.util.UArmConnectException
 
 
 Constants
@@ -35,19 +33,29 @@ pyuarm.tools.list_uarms
     :show-inheritance:
     :exclude-members: main
 
-pyuarm.tools.firmware_helper
+pyuarm.tools.firmware.flash_firmware
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-.. automodule:: pyuarm.tools.firmware_helper
+.. automodule:: pyuarm.tools.firmware.flash_firmware
     :members:
     :undoc-members:
     :show-inheritance:
     :exclude-members: main
 
-pyuarm.tools.calibrate
+pyuarm.tools.calibration.calibrate
 ~~~~~~~~~~~~~~~~~~~~~~
 
-.. automodule:: pyuarm.tools.calibrate
+.. automodule:: pyuarm.tools.calibration.calibrate
+    :members:
+    :undoc-members:
+    :show-inheritance:
+    :exclude-members: main
+
+
+pyuarm.tools.miniterm
+~~~~~~~~~~~~~~~~~~~~~~
+
+.. automodule:: pyuarm.tools.miniterm
     :members:
     :undoc-members:
     :show-inheritance:

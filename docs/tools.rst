@@ -10,19 +10,28 @@ pyuarm.tools.list_uarms
     :undoc-members:
     :show-inheritance:
 
-pyuarm.tools.firmware_helper
+pyuarm.tools.firmware.flash_firmware
 ----------------------------
 
-.. automodule:: pyuarm.tools.firmware_helper
+.. automodule:: pyuarm.tools.firmware.flash_firmware
     :members: main
     :undoc-members:
     :show-inheritance:
 
-pyuarm.tools.calibrate
+pyuarm.tools.calibration.calibrate
 -----------------------
 
-.. automodule:: pyuarm.tools.calibrate
+.. automodule:: pyuarm.tools.calibration.calibrate
     :members: main
     :undoc-members:
     :show-inheritance:
 
+
+pyuarm.tools.miniterm
+~~~~~~~~~~~~~~~~~~~~~~
+
+.. automodule:: pyuarm.tools.miniterm
+    :members:
+    :undoc-members:
+    :show-inheritance:
+    :exclude-members: main

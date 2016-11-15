@@ -36,29 +36,6 @@ def get_port_property(port_name):
     return None
 
 
-def get_uarm(debug=False):
-    """
-    ===============================
-    Get First uArm Port instance
-    ===============================
-    It will return the first uArm Port detected by **pyuarm.tools.list_uarms**,
-    If no available uArm ports, will print *There is no uArm port available*
-
-    .. raw:python
-    >>> import pyuarm
-    >>> uarm = pyuarm.get_uarm()
-    There is no uArm port available
-
-
-    :returns: uArm() Instance
-
-    """
-    ports = uarm_ports()
-    if len(ports) > 0:
-        return UArm(port_name=ports[0],debug=debug)
-    else:
-        print("There is no uArm port available")
-
 def main():
     """
     ::
