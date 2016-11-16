@@ -1,0 +1,19 @@
+include CHANGELOG.md
+
+include pyuarm/tools/firmware/avrdude/mac/avrdude
+include pyuarm/tools/firmware/avrdude/mac/avrdude.conf
+include pyuarm/tools/firmware/avrdude/mac/avrdude_bin
+include pyuarm/tools/firmware/avrdude/mac/builtin_tools_versions.txt
+include pyuarm/tools/firmware/avrdude/mac/libusb.dylib
+include pyuarm/tools/firmware/avrdude/mac/libusb-0.1.4.dylib
+include pyuarm/tools/firmware/avrdude/mac/libusb-1.0.0.dylib
+include pyuarm/tools/firmware/avrdude/mac/libusb-1.0.dylib
+include pyuarm/tools/firmware/avrdude/windows/avrdude.conf
+include pyuarm/tools/firmware/avrdude/windows/avrdude.exe
+include pyuarm/tools/firmware/avrdude/windows/libusb0.dll
+include pyuarm/tools/calibration/calibration.hex
+
+include requirements.txt
+include README.rst
+
+global-exclude .DS_Store

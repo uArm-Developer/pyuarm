@@ -1,3 +1,14 @@
+## [2.2.2] - 2016-11-16
+### Updated -Alex Tan
+
+### Compatible
+- Firmware 2.2
+
+### Changes
+1. Fix pyuarm.__version__
+2. Fix pypi MANIFEST.in not found
+
+
 ## [2.2.0] - 2016-11-16
 ### Updated -Alex Tan
 
@@ -6,6 +17,8 @@
 
 ### Changes
 1. Compatible with firmware 2.2 (Gcode)
+2. Fix Camera Disconnect No response
+3. Add Protocol Version
 
 ## [2.1.1] - 2016-10-28
 ### Updated -Alex Tan

@@ -3,6 +3,7 @@ import serial
 from . import version, protocol, util
 from .util import printf, ERROR, DEBUG, UArmConnectException
 from .tools.list_uarms import uarm_ports, get_port_property
+from .version import __version__
 from . import PY3
 import time
 

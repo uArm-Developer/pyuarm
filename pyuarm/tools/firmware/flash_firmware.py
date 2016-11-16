@@ -119,29 +119,28 @@ def download(url, filepath):
         print ("Error: " + str(e))
 
 
-def flash(port, firmware_path):
+def flash(port, firmware_path, avrdude_path=None):
+    global avrdude_bin, avrdude_conf, error_description, cmd
+    avrdude_conf = ""
+    if avrdude_path is None:
+        avrdude_path = resourcePath('avrdude')
     if port:
-        global avrdude_bin, avrdude_conf, error_description, cmd
         if platform.system() == 'Darwin':
-            avrdude_bin = os.path.join(resourcePath('avrdude'), 'avrdude')
-            avrdude_conf = os.path.join(resourcePath('avrdude'), 'avrdude.conf')
-
-            error_description = "built-in avrdude is not working, Trying to install avrdude..."
+            avrdude_bin = os.path.join(avrdude_path, 'mac', 'avrdude')
+            avrdude_conf = os.path.join(avrdude_path, 'mac', 'avrdude.conf')
+            avrdude_conf = '-C' + avrdude_conf
+            error_description = "built-in avrdude is not working, Please install avrdude..."
 
         elif platform.system() == 'Windows':
-            avrdude_bin = os.path.join(resourcePath('avrdude'), 'avrdude.exe')
-            avrdude_conf = os.path.join(resourcePath('avrdude'), 'avrdude.conf')
-            error_description = "built-in avrdude is not working, Trying to download winavr..."
+            avrdude_bin = os.path.join(avrdude_path, 'windows',  'avrdude.exe')
+            avrdude_conf = os.path.join(avrdude_path,'windows',  'avrdude.conf')
+            avrdude_conf = '-C' + avrdude_conf
+            error_description = "built-in avrdude is not working, Please install winavr..."
 
         elif platform.system() == 'Linux':
-            if platform.architecture()[0] == '64bit':
-                avrdude_bin = os.path.join(resourcePath('avrdude'), 'avrdude-x64')
-            else:
-                avrdude_bin = os.path.join(resourcePath('avrdude'), 'avrdude')
-            avrdude_conf = os.path.join(resourcePath('avrdude'), 'avrdude.conf')
-            error_description = "built-in avrdude is not working, Trying to install avrdude..."
-
-        cmd = [avrdude_bin, '-C' + avrdude_conf, '-v', '-patmega328p', '-carduino', '-P' + port, '-b115200', '-D',
+            avrdude_bin = "avrdude"
+            error_description = "Please install avrdude first..."
+        cmd = [avrdude_bin, avrdude_conf, '-v', '-patmega328p', '-carduino', '-P' + port, '-b115200', '-D',
                '-Uflash:w:{0}:i'.format(firmware_path)]
 
         print((' '.join(cmd)))
@@ -196,19 +195,26 @@ def main(args):
     if args.path:
         firmware_path = args.path
     else:
-        firmware_path = os.path.join(os.getcwd(), default_config['filename'])
+        if FROZEN_APP:
+            firmware_path = os.path.join(os.path.dirname(sys.executable), default_config['filename'])
+        else:
+            firmware_path = os.path.join(os.path.dirname(__file__), default_config['filename'])
 
     if args.download:
         download(default_config['download_url'], firmware_path)
 
-    flash(port_name, firmware_path)
+    avrdude_path = None
+    if not FROZEN_APP:
+        avrdude_path = os.path.join(os.path.dirname(__file__), 'avrdude')
+
+    flash(port_name, firmware_path,avrdude_path)
 
 if __name__ == '__main__':
     try:
         import argparse
 
         parser = argparse.ArgumentParser()
-        parser.add_argument("-p", "--port", help="specify port number")
+        parser.add_argument("--port", help="specify port number")
         parser.add_argument("--path", help="firmware path")
         parser.add_argument("-d", "--download",
                         help="download firmware from {}".format(default_config['download_url']),
