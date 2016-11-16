@@ -12,7 +12,7 @@ Other pages (online)
 
 - `project page on Github`_
 - `Download Page`_ with releases
-- This page, when viewed online is at https://pyuarm.readthedocs.io/en/latest/.
+- This page, when viewed online is at https://pyuarm.readthedocs.io.
 
 
 Features
