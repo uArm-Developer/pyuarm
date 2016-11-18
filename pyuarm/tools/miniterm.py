@@ -271,7 +271,7 @@ class UArmCmd(Cmd):
             is_debug = False
 
         if self.uarm:
-            self.uarm.debug = is_debug
+            self.uarm.__debug = is_debug
 
     def do_servo(self, arg):
         """

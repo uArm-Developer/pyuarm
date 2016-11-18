@@ -1,3 +1,15 @@
+## [2.2.2a] - 2016-11-16
+### Updated -Alex Tan
+
+### Compatible
+- Firmware 2.2
+
+### Changes
+1. Add function check_port_plug_in (beta)
+2. Get Hardware version once connect
+3. Fix is_connected when uarm plug out but still return True
+4. Add Set Debug for logger
+
 ## [2.2.2] - 2016-11-16
 ### Updated -Alex Tan
 

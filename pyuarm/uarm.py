@@ -1,12 +1,11 @@
 from __future__ import print_function
 import serial
 from . import version, protocol, util
-from .util import printf, ERROR, DEBUG, UArmConnectException
-from .tools.list_uarms import uarm_ports, get_port_property
+from .util import printf, ERROR, DEBUG, UArmConnectException, set_debug
+from .tools.list_uarms import uarm_ports, get_port_property, check_port_plug_in
 from .version import __version__
 from . import PY3
 import time
-
 
 def get_uarm(debug=False):
     """
@@ -34,7 +33,7 @@ def get_uarm(debug=False):
 class UArm(object):
 
     firmware_version = None
-    product_type = None
+    hardware_version = None
     __isConnected = False
 
     def __init__(self, port_name=None, debug=False):
@@ -49,7 +48,7 @@ class UArm(object):
         debug will display all debug messages, include All serial commands.
         log is a function reference, if you don't provide log function, we will display to stdout
         """
-        self.debug = debug
+        self.__debug = debug
         self.serial_id = 0
         util.init_logger(debug)
         if port_name is None:
@@ -61,6 +60,11 @@ class UArm(object):
         self.port = get_port_property(port_name)
         self.__serial = serial.Serial(baudrate=115200, timeout=.1)
         self.connect()
+    #
+    # def __checking_port_connection(self):
+    #     while self.checking_port_flag:
+    #         self.__isConnected = check_port_plug_in
+    #         time.sleep(0.1)
 
     def disconnect(self):
         """
@@ -70,6 +74,7 @@ class UArm(object):
         printf("Disconnect from port - {0}...".format(self.port.device))
         self.__serial.close()
         self.__isConnected = False
+        self.checking_port_flag = False
 
     def connect(self):
         """
@@ -92,6 +97,7 @@ class UArm(object):
             raise UArmConnectException(0, "port: {}, Error: {}".format(self.port.device, e.strerror))
         self.responseLog = []
         self.get_firmware_version()
+        self.get_hardware_version()
         if version.is_a_version(self.firmware_version):
             printf("Firmware Version: {0}".format(self.firmware_version))
             if not version.is_supported_version(self.firmware_version):
@@ -104,6 +110,21 @@ class UArm(object):
         is_connected will return the uarm connected status
         :return: connected status
         """
+        try:
+            if PY3:
+                self.__gen_serial_id()
+                cmnd = "#{} {}".format(self.serial_id, protocol.GET_FIRMWARE_VERSION)
+                cmndString = bytes(cmnd + "\n", encoding='ascii')
+                self.__serial.write(cmndString)
+                response = str(self.__serial.readline(),encoding='ascii')
+            else:
+                self.__gen_serial_id()
+                cmnd = "#{} {}".format(self.serial_id, protocol.GET_FIRMWARE_VERSION)
+                cmndString = bytes(cmnd + "\n")
+                self.__serial.write(cmndString)
+                response = self.__serial.readline()
+        except serial.serialutil.SerialException:
+            self.__isConnected = False
         if self.__serial.isOpen() and self.__isConnected:
             return True
         else:
@@ -157,7 +178,7 @@ class UArm(object):
 
         try:
             self.__serial.write(cmndString)
-            printf(cmndString,type=DEBUG)
+            # printf(cmndString,type=DEBUG)
         except serial.serialutil.SerialException as e:
             printf("while sending command {}. Disconnecting Serial! \nError: {}".format(cmndString, str(e)),type=ERROR)
             self.__isConnected = False
@@ -215,7 +236,7 @@ class UArm(object):
     def get_firmware_version(self):
         """
         Get the firmware version.
-        Protocol Cmd: `protocol.GET_VERSION`
+        Protocol Cmd: `protocol.GET_FIRMWARE_VERSION`
         :return: firmware version, if failed return False
         """
         cmd = protocol.GET_FIRMWARE_VERSION
@@ -225,6 +246,22 @@ class UArm(object):
         printf(value, type=DEBUG)
         if value:
             self.firmware_version = value[0][1:]
+        else:
+            return False
+
+    def get_hardware_version(self):
+        """
+        Get the Product version.
+        Protocol Cmd: `protocol.GET_HARDWARE_VERSION`
+        :return: firmware version, if failed return False
+        """
+        cmd = protocol.GET_HARDWARE_VERSION
+        response = self.__send_and_receive(cmd)
+
+        value = self.__gen_response_value(response)
+        printf(value, type=DEBUG)
+        if value:
+            self.hardware_version = value[0][1:]
         else:
             return False
 

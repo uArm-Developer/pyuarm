@@ -11,6 +11,14 @@ def uarm_ports():
     return uarm_ports
 
 
+def check_port_plug_in(serial_id):
+    ports = list_ports.comports()
+    for p in ports:
+       if p.serial_number == serial_id:
+           return True
+    return False
+
+
 def get_uarm_port_cli():
     uarm_list = uarm_ports()
     ports = uarm_ports()
