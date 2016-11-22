@@ -12,11 +12,11 @@ def init_logger(debug):
     :return:
     """
     logger = logging.getLogger('pyuarm')
-    if debug:
-        logger.setLevel(logging.DEBUG)
-    else:
-        logger.setLevel(logging.INFO)
     ch = logging.StreamHandler()
+    if debug:
+        ch.setLevel(logging.DEBUG)
+    else:
+        ch.setLevel(logging.INFO)
     logger.addHandler(ch)
     logger.info('pyuarm version: ' + __version__)
 
@@ -43,7 +43,7 @@ def printf(msg, type=INFO):
     elif type == DEBUG:
         logging.getLogger('pyuarm').debug(msg)
     elif type == ERROR:
-        logging.getLogger('pyuarm').debug(msg)
+        logging.getLogger('pyuarm').error(msg)
 
 
 class UArmConnectException(Exception):

@@ -1,5 +1,13 @@
 from distutils.util import convert_path
 from setuptools import setup, find_packages
+import platform
+
+if platform.system() == "Windows":
+    package_data = {'pyuarm.tools.calibration': ['calibration.hex'], 'pyuarm.tools.firmware': ['avrdude/windows/*']}
+elif platform.system() == "Darwin":
+    package_data = {'pyuarm.tools.calibration': ['calibration.hex'], 'pyuarm.tools.firmware': ['avrdude/mac/*']}
+else:
+    package_data = {'pyuarm.tools.calibration': ['calibration.hex']}
 
 # Get Version from version.py file
 main_ns = {}
@@ -25,7 +33,7 @@ setup(name='pyuarm',
             ]
     },
     # data_files=data_files,
-    package_data={'pyuarm.tools.calibration': ['calibration.hex'],'pyuarm.tools.firmware':['avrdude/*']},
+    package_data=package_data,
     include_package_data=True,
     author_email='developer@ufactory.cc',
     url="https://github.com/uarm-developer/pyuarm",

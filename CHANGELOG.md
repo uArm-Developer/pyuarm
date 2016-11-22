@@ -1,4 +1,24 @@
-## [2.2.2a] - 2016-11-16
+## [2.2.5] - 2016-11-22
+### Updated -Alex Tan
+
+### Compatible
+- Firmware 2.2
+
+### Changes
+1. Fix Tip Sensor return False always
+
+
+## [2.2.4] - 2016-11-16
+### Updated -Alex Tan
+
+### Compatible
+- Firmware 2.2
+
+### Changes
+1. Fix install bug
+
+
+## [2.2.3] - 2016-11-16
 ### Updated -Alex Tan
 
 ### Compatible

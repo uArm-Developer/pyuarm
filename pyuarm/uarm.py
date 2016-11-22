@@ -1,9 +1,8 @@
 from __future__ import print_function
 import serial
 from . import version, protocol, util
-from .util import printf, ERROR, DEBUG, UArmConnectException, set_debug
+from .util import printf, ERROR, DEBUG, UArmConnectException
 from .tools.list_uarms import uarm_ports, get_port_property, check_port_plug_in
-from .version import __version__
 from . import PY3
 import time
 
@@ -150,6 +149,7 @@ class UArm(object):
 
     def __gen_response_value(self, response):
         if response.startswith(protocol.OK.lower()):
+            print ("response.rstrip().split(' ')[1:]: {}".format(response.split(' ')[1:]))
             return response.rstrip().split(' ')[1:]
         else:
             return False
@@ -171,6 +171,7 @@ class UArm(object):
         # Prepare and send the command to the robot
         self.__gen_serial_id()
         cmnd = "#{} {}".format(self.serial_id,cmnd)
+        # printf(cmnd, type=ERROR)
         if PY3:
             cmndString = bytes(cmnd + "\n", encoding='ascii')
         else:
@@ -178,7 +179,7 @@ class UArm(object):
 
         try:
             self.__serial.write(cmndString)
-            # printf(cmndString,type=DEBUG)
+
         except serial.serialutil.SerialException as e:
             printf("while sending command {}. Disconnecting Serial! \nError: {}".format(cmndString, str(e)),type=ERROR)
             self.__isConnected = False
@@ -191,7 +192,7 @@ class UArm(object):
                 response = self.__serial.readline()
             if response.startswith("${}".format(self.serial_id)):
                 if "E20" in response or "E21" in response:
-                    printf("Communication| ERROR: received error from robot: {}".format(response), type=ERROR)
+                    printf("Communication| ERROR: send {}, received error from robot: {}".format(cmndString, response), type=ERROR)
                     return ""
                 response = response.replace('\n', '')
                 response = response.replace('${} '.format(self.serial_id),'')
@@ -527,10 +528,13 @@ class UArm(object):
         Get Status from Tip Sensor
         :return: True On/ False Off
         """
-        response = self.__send_and_receive(protocol.GET_TIP)
+        response = self.__send_and_receive(protocol.GET_TIP_SENSOR)
         value = self.__gen_response_value(response)
+        # print ("res: {}".format(response))
+
         if value:
-            if value[1:] == "1":
+            print ("type(value):{} value:{}, value[1:]: {}".format(type(value), value, value[1:]))
+            if "".join(value)[1:] == "0":
                 return True
             else:
                 return False
@@ -546,15 +550,18 @@ class UArm(object):
         """
         cmd = protocol.GET_EEPROM.format(address, data_type)
         response = self.__send_and_receive(cmd)
+        print("response: {}".format(response))
         value = self.__gen_response_value(response)
         if value:
-            val = value[1:]
+            # print("val: {}".format(type)))
+            val = "".join(value)[1:]
+
             if data_type == protocol.EEPROM_DATA_TYPE_FLOAT:
                 return float(val)
             elif data_type == protocol.EEPROM_DATA_TYPE_INTEGER:
-                return int(float(val))
+                return int(val)
             elif data_type == protocol.EEPROM_DATA_TYPE_BYTE:
-                return int(float(val))
+                return int(val)
         else:
             return False
 

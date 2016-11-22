@@ -1,5 +1,5 @@
 import re
-__version__ = '2.2.2a'
+__version__ = '2.2.5'
 support_versions = ['2.2']
 
 

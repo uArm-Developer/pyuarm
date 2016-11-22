@@ -141,24 +141,41 @@ def main(args):
         uarm = UArm(port_name=port_name, debug=debug)
         calibration_completed_flag = read_completed_flag(uarm, CALIBRATION_FLAG)
         print("All Calibration: {}".format("COMPLETED" if calibration_completed_flag else "NOT COMPLETED"))
-        choice = ''
         if calibration_completed_flag:
-            choice = input("Calibration Completed, Are you sure to continue? Yes, please press Y\n")
+            if PY3:
+                choice = input("Calibration Completed, Are you sure to continue? Yes, please press Y\n")
+            else:
+                choice = raw_input("Calibration Completed, Are you sure to continue? Yes, please press Y\n")
             if choice.lower() == 'y':
-                input("Please don't quit until calibration completed. Continue please press Enter.\n")
+                if PY3:
+                    input("Please don't quit until calibration completed. Continue please press Enter.\n")
+                else:
+                    raw_input("Please don't quit until calibration completed. Continue please press Enter.\n")
                 firmware_path = os.path.join(os.getcwd(), default_config['filename'])
                 download(default_config['download_url'], firmware_path)
                 calibrate(port_name, os.path.join(application_path, default_calibration_hex))
                 flash(port_name, firmware_path)
             else:
                 print ("Exit")
+        else:
+            if PY3:
+                input("Please don't quit until calibration completed. Continue please press Enter.\n")
+            else:
+                raw_input("Please don't quit until calibration completed. Continue please press Enter.\n")
+            firmware_path = os.path.join(os.getcwd(), default_config['filename'])
+            download(default_config['download_url'], firmware_path)
+            calibrate(port_name, os.path.join(application_path, default_calibration_hex))
+            flash(port_name, firmware_path)
+
 
 if __name__ == '__main__':
-    import argparse
-
-    parser = argparse.ArgumentParser()
-    parser.add_argument("-p", "--port", help="specify port number")
-    parser.add_argument("-d", "--debug", help="Open Debug Message", action="store_true")
-    parser.add_argument("-c", "--check", help="Check the calibrate offset values", action="store_true")
-    args = parser.parse_args()
-    main(args)
+    try:
+        import argparse
+        parser = argparse.ArgumentParser()
+        parser.add_argument("-p", "--port", help="specify port number")
+        parser.add_argument("-d", "--debug", help="Open Debug Message", action="store_true")
+        parser.add_argument("-c", "--check", help="Check the calibrate offset values", action="store_true")
+        args = parser.parse_args()
+        main(args)
+    except Exception as e:
+        print (str(e))
