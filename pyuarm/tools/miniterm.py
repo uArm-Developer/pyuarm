@@ -41,12 +41,9 @@ class UArmCmd(Cmd):
 
     uarm = None
 
-    def __init__(self, port=None, *args, **kwargs):
+    def __init__(self, port=None,debug=False, *args, **kwargs):
         Cmd.__init__(self, *args, **kwargs)
-        if port is not None:
-            self.connect(port)
-        else:
-            self.connect()
+        self.connect(port=port,debug=debug)
 
     def __is_connected(self):
         if self.uarm is None:
@@ -69,7 +66,7 @@ class UArmCmd(Cmd):
         elif len(arg) == 0:
             self.connect()
 
-    def connect(self, port=None):
+    def connect(self, port=None, debug=False):
         """
         connect uArm.
         :param port:
@@ -78,7 +75,7 @@ class UArmCmd(Cmd):
 
         if self.uarm is None:
             if port is not None:
-                self.uarm = UArm(port_name=port)
+                self.uarm = UArm(port_name=port, debug=debug)
             else:
                 ports = uarm_ports()
                 if len(ports) > 1:
@@ -263,16 +260,6 @@ class UArmCmd(Cmd):
     #         if result:
     #             print ("polar coordinate: {}".format(result))
 
-    def do_debug(self, arg):
-        is_debug = False
-        if arg.lower() == 'on':
-            is_debug = True
-        elif arg.lower() == 'off':
-            is_debug = False
-
-        if self.uarm:
-            self.uarm.__debug = is_debug
-
     def do_servo(self, arg):
         """
         Servo status
@@ -429,10 +416,7 @@ def main(args):
 
     """
     try:
-        if args.port:
-            uarm_cmd = UArmCmd(args.port)
-        else:
-            uarm_cmd = UArmCmd()
+        uarm_cmd = UArmCmd(port=args.port, debug=args.debug)
         uarm_cmd.cmdloop()
     except KeyboardInterrupt:
         print ("KeyboardInterrupt")

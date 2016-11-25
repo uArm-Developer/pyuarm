@@ -30,6 +30,7 @@ EEPROM_DATA_TYPE_FLOAT = 4
 READY                   = "@1"
 OK                      = "OK"
 SET_POSITION            = "G0 X{} Y{} Z{} F{}"
+SET_POSITION_RELATIVE   = "G204 X{} Y{} Z{} F{}"
 SIMULATION              = "M222 X{} Y{} Z{} P0"
 GET_FIRMWARE_VERSION    = "P203"
 GET_HARDWARE_VERSION    = "P202"

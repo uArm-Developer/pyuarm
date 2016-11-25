@@ -5,31 +5,31 @@ ERROR = 2
 INFO  = 1
 DEBUG = 0
 
-def init_logger(debug):
+global pylogger
+
+def get_default_logger(debug=False):
+    if debug:
+        logging_level = logging.DEBUG
+    else:
+        logging_level = logging.INFO
+    logger = logging.getLogger('pyuarm')
+    logger.setLevel(logging_level)
+    formatter = logging.Formatter('%(name)s - %(levelname)s - %(message)s')
+    ch = logging.StreamHandler()
+    ch.setFormatter(formatter)
+    ch.setLevel(logging_level)
+    logger.addHandler(ch)
+    return logger
+
+def init_logger(logger):
     """
     initialize global logger
     :param debug: if True, Turn on the logger debug
     :return:
     """
-    logger = logging.getLogger('pyuarm')
-    ch = logging.StreamHandler()
-    if debug:
-        ch.setLevel(logging.DEBUG)
-    else:
-        ch.setLevel(logging.INFO)
-    logger.addHandler(ch)
-    logger.info('pyuarm version: ' + __version__)
-
-def set_debug(debug):
-    """
-    Dynamically changing log level
-    :param debug:
-    :return:
-    """
-    if debug:
-        logging.getLogger('pyuarm').setLevel(logging.DEBUG)
-    else:
-        logging.getLogger('pyuarm').setLevel(logging.INFO)
+    global pylogger
+    pylogger = logger
+    printf('pyuarm version: ' + __version__)
 
 def printf(msg, type=INFO):
     """
@@ -39,11 +39,11 @@ def printf(msg, type=INFO):
     :return:
     """
     if type == INFO:
-        logging.getLogger('pyuarm').info(msg)
+        pylogger.info(msg)
     elif type == DEBUG:
-        logging.getLogger('pyuarm').debug(msg)
+        pylogger.debug(msg)
     elif type == ERROR:
-        logging.getLogger('pyuarm').error(msg)
+        pylogger.error(msg)
 
 
 class UArmConnectException(Exception):

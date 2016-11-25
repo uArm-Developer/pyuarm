@@ -14,6 +14,7 @@ import io
 import platform
 import subprocess
 import json
+from os.path import expanduser
 
 if sys.version > '3':
     PY3 = True
@@ -31,6 +32,9 @@ default_config = {
     "download_url": "http://download.ufactory.cc/firmware/firmware_dev.hex",
     "download_flag": False
 }
+
+home_dir = os.path.join(expanduser("~"), ".uarm", "")
+ua_dir = os.path.join(home_dir, "assistant")
 
 if getattr(sys, 'frozen', False):
     FROZEN_APP = True
@@ -119,7 +123,7 @@ def download(url, filepath):
         print ("Error: " + str(e))
 
 
-def flash(port, firmware_path, avrdude_path=None):
+def gen_flash_cmd(port, firmware_path, avrdude_path=None):
     global avrdude_bin, avrdude_conf, error_description, cmd
     avrdude_conf = ""
     if avrdude_path is None:
@@ -142,7 +146,11 @@ def flash(port, firmware_path, avrdude_path=None):
             error_description = "Please install avrdude first..."
         cmd = [avrdude_bin, avrdude_conf, '-v', '-patmega328p', '-carduino', '-P' + port, '-b115200', '-D',
                '-Uflash:w:{0}:i'.format(firmware_path)]
+    return cmd
 
+
+def flash(port, firmware_path, avrdude_path=None):
+        cmd = gen_flash_cmd(port,firmware_path,avrdude_path)
         print((' '.join(cmd)))
         try:
             subprocess.call(cmd)

@@ -1,4 +1,4 @@
-## [2.2.5] - 2016-11-22
+## [2.2.5.1] - 2016-11-25
 ### Updated -Alex Tan
 
 ### Compatible
@@ -6,6 +6,9 @@
 
 ### Changes
 1. Fix Tip Sensor return False always
+2. Rewrite logger logic
+3. Add Relative coordinate support
+4. Use printf in Calibrate
 
 
 ## [2.2.4] - 2016-11-16

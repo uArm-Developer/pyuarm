@@ -1,12 +1,13 @@
 from __future__ import print_function
 import serial
 from . import version, protocol, util
-from .util import printf, ERROR, DEBUG, UArmConnectException
+from .util import printf, ERROR, DEBUG, UArmConnectException, get_default_logger
 from .tools.list_uarms import uarm_ports, get_port_property, check_port_plug_in
 from . import PY3
 import time
 
-def get_uarm(debug=False):
+
+def get_uarm(logger=None):
     """
     ===============================
     Get First uArm Port instance
@@ -25,9 +26,10 @@ def get_uarm(debug=False):
     """
     ports = uarm_ports()
     if len(ports) > 0:
-        return UArm(port_name=ports[0],debug=debug)
+        return UArm(port_name=ports[0],logger=logger)
     else:
-        print("There is no uArm port available")
+        printf("There is no uArm port available",ERROR)
+        return None
 
 class UArm(object):
 
@@ -35,21 +37,22 @@ class UArm(object):
     hardware_version = None
     __isConnected = False
 
-    def __init__(self, port_name=None, debug=False):
+    def __init__(self, port_name=None, logger=None, debug=False):
         """
         :param port_name: UArm Serial Port name, if no port provide, will try first port we detect
-        :param debug: if True, will print out all debug message
+        :param logger: if no logger provide, will create a logger by default
         :raise UArmConnectException
 
         UArm port is immediately opened on object creation, if no port provide, we will detect all connected uArm serial
         devices. please reference `pyuarm.tools.list_uarms`
         port is a device name: depending on operating system. eg. `/dev/ttyUSB0` on GNU/Linux or `COM3` on Windows.
-        debug will display all debug messages, include All serial commands.
-        log is a function reference, if you don't provide log function, we will display to stdout
+        logger will display all info/debug/error/warning messages.
         """
-        self.__debug = debug
         self.serial_id = 0
-        util.init_logger(debug)
+        if logger is None:
+            util.init_logger(util.get_default_logger(debug))
+        else:
+            util.init_logger(logger)
         if port_name is None:
             ports = uarm_ports()
             if len(ports) > 0:
@@ -59,11 +62,6 @@ class UArm(object):
         self.port = get_port_property(port_name)
         self.__serial = serial.Serial(baudrate=115200, timeout=.1)
         self.connect()
-    #
-    # def __checking_port_connection(self):
-    #     while self.checking_port_flag:
-    #         self.__isConnected = check_port_plug_in
-    #         time.sleep(0.1)
 
     def disconnect(self):
         """
@@ -135,7 +133,7 @@ class UArm(object):
         else:
             ready_msg = protocol.READY
         if self.__serial.readline().startswith(ready_msg):
-            printf("connected...")
+            printf("Connected...")
             self.__isConnected = True
             return True
         else:
@@ -149,7 +147,6 @@ class UArm(object):
 
     def __gen_response_value(self, response):
         if response.startswith(protocol.OK.lower()):
-            print ("response.rstrip().split(' ')[1:]: {}".format(response.split(' ')[1:]))
             return response.rstrip().split(' ')[1:]
         else:
             return False
@@ -244,7 +241,6 @@ class UArm(object):
         response = self.__send_and_receive(cmd)
 
         value = self.__gen_response_value(response)
-        printf(value, type=DEBUG)
         if value:
             self.firmware_version = value[0][1:]
         else:
@@ -260,7 +256,6 @@ class UArm(object):
         response = self.__send_and_receive(cmd)
 
         value = self.__gen_response_value(response)
-        printf(value, type=DEBUG)
         if value:
             self.hardware_version = value[0][1:]
         else:
@@ -285,7 +280,7 @@ class UArm(object):
         else:
             return False
 
-    def set_position(self, x, y, z, speed=300):
+    def set_position(self, x, y, z, speed=300, relative=False):
         """
         Move uArm to the position (x,y,z) unit is mm, speed unit is mm/sec
         :param x:
@@ -298,7 +293,10 @@ class UArm(object):
         y = str(round(y, 2))
         z = str(round(z, 2))
         s = str(round(speed, 2))
-        command = protocol.SET_POSITION.format(x, y, z, s)
+        if relative:
+            command = protocol.SET_POSITION_RELATIVE.format(x, y, z, s)
+        else:
+            command = protocol.SET_POSITION.format(x, y, z, s)
         response = self.__send_and_receive(command)
         if response.startswith(protocol.OK.lower()):
             return True
@@ -530,10 +528,8 @@ class UArm(object):
         """
         response = self.__send_and_receive(protocol.GET_TIP_SENSOR)
         value = self.__gen_response_value(response)
-        # print ("res: {}".format(response))
 
         if value:
-            print ("type(value):{} value:{}, value[1:]: {}".format(type(value), value, value[1:]))
             if "".join(value)[1:] == "0":
                 return True
             else:
@@ -550,7 +546,6 @@ class UArm(object):
         """
         cmd = protocol.GET_EEPROM.format(address, data_type)
         response = self.__send_and_receive(cmd)
-        print("response: {}".format(response))
         value = self.__gen_response_value(response)
         if value:
             # print("val: {}".format(type)))

@@ -1,14 +1,17 @@
 from __future__ import print_function
 import sys
+import copy
+import time
+import os
+import serial
+
 from ... import PY3
 from ...uarm import UArm
 from ..list_uarms import get_uarm_port_cli
 from ...protocol import *
-import copy
-import time
-import os
 from ..firmware  import flash,get_uarm_port_cli, download, default_config
-import serial
+from ...util import printf
+
 
 if PY3:
     izip = zip
@@ -32,9 +35,9 @@ default_calibration_hex = 'calibration.hex'
 
 
 
-def calibrate(port_name, calibration_hex_path):
-    flash(port_name, calibration_hex_path)  # Flash the calibration firmware
-    sp = serial.Serial(port=port_name, baudrate=115200, timeout=0.1)
+def calibrate(port_name):
+      # Flash the calibration firmware
+    sp = serial.Serial(port=port_name, baudrate=115200)
     READY = '[STEP]READY'
     START = '[STEP]START'
     COMPLETE = '[STEP]COMPLETE'
@@ -63,7 +66,7 @@ def calibrate(port_name, calibration_hex_path):
 def get_serial_line(sp):
     line = sp.readline()
     if line != b'':
-        print(line)
+        printf(line)
     return line
 
 
@@ -132,15 +135,15 @@ def main(args):
 
     if args.check:
         uarm = UArm(port_name=port_name, debug=debug)
-        print("All Calibration: {}".format("COMPLETED" if read_completed_flag(uarm, CALIBRATION_FLAG) else "NOT COMPLETED"))
-        print("Linear Calibration: {}".format("COMPLETED" if read_completed_flag(uarm, CALIBRATION_LINEAR_FLAG) else "NOT COMPLETED"))
-        print("Manual Calibration: {}".format("COMPLETED" if read_completed_flag(uarm, CALIBRATION_SERVO_FLAG) else "NOT COMPLETED"))
+        printf("All Calibration: {}".format("COMPLETED" if read_completed_flag(uarm, CALIBRATION_FLAG) else "NOT COMPLETED"))
+        printf("Linear Calibration: {}".format("COMPLETED" if read_completed_flag(uarm, CALIBRATION_LINEAR_FLAG) else "NOT COMPLETED"))
+        printf("Manual Calibration: {}".format("COMPLETED" if read_completed_flag(uarm, CALIBRATION_SERVO_FLAG) else "NOT COMPLETED"))
         for linear_offset,manual_offset, i in izip(read_linear_offset(uarm), read_manual_offset(uarm), range(4)):
             print ("Servo {} INTERCEPT: {}, SLOPE: {}, MANUAL: {}".format(i,linear_offset['INTERCEPT'], linear_offset['SLOPE'], manual_offset))
     else:
         uarm = UArm(port_name=port_name, debug=debug)
         calibration_completed_flag = read_completed_flag(uarm, CALIBRATION_FLAG)
-        print("All Calibration: {}".format("COMPLETED" if calibration_completed_flag else "NOT COMPLETED"))
+        printf("All Calibration: {}".format("COMPLETED" if calibration_completed_flag else "NOT COMPLETED"))
         if calibration_completed_flag:
             if PY3:
                 choice = input("Calibration Completed, Are you sure to continue? Yes, please press Y\n")
@@ -153,7 +156,8 @@ def main(args):
                     raw_input("Please don't quit until calibration completed. Continue please press Enter.\n")
                 firmware_path = os.path.join(os.getcwd(), default_config['filename'])
                 download(default_config['download_url'], firmware_path)
-                calibrate(port_name, os.path.join(application_path, default_calibration_hex))
+                flash(port_name, default_calibration_hex)
+                calibrate(port_name)
                 flash(port_name, firmware_path)
             else:
                 print ("Exit")
@@ -164,7 +168,8 @@ def main(args):
                 raw_input("Please don't quit until calibration completed. Continue please press Enter.\n")
             firmware_path = os.path.join(os.getcwd(), default_config['filename'])
             download(default_config['download_url'], firmware_path)
-            calibrate(port_name, os.path.join(application_path, default_calibration_hex))
+            flash(port_name, default_calibration_hex)
+            calibrate(port_name)
             flash(port_name, firmware_path)
 
 
