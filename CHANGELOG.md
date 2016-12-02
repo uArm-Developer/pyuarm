@@ -5,6 +5,15 @@
 - Firmware 2.2
 
 ### Changes
+1. Support wait for set_position
+
+## [2.2.5.1] - 2016-11-25
+### Updated -Alex Tan
+
+### Compatible
+- Firmware 2.2
+
+### Changes
 1. Fix Tip Sensor return False always
 2. Rewrite logger logic
 3. Add Relative coordinate support

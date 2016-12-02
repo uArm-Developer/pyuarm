@@ -168,7 +168,7 @@ class UArm(object):
         # Prepare and send the command to the robot
         self.__gen_serial_id()
         cmnd = "#{} {}".format(self.serial_id,cmnd)
-        # printf(cmnd, type=ERROR)
+        printf("Coummunication | Send Message: {}, total length: {}".format(cmnd,len(cmnd)), type=DEBUG)
         if PY3:
             cmndString = bytes(cmnd + "\n", encoding='ascii')
         else:
@@ -178,7 +178,7 @@ class UArm(object):
             self.__serial.write(cmndString)
 
         except serial.serialutil.SerialException as e:
-            printf("while sending command {}. Disconnecting Serial! \nError: {}".format(cmndString, str(e)),type=ERROR)
+            # printf("while sending command {}. Disconnecting Serial! \nError: {}".format(cmndString, str(e)),type=ERROR)
             self.__isConnected = False
             return ""
 
@@ -195,7 +195,8 @@ class UArm(object):
                 response = response.replace('${} '.format(self.serial_id),'')
                 printf("Communication| [{}] {}{}".format(cmnd, " " * (30 - len(cmnd)), response), type=DEBUG)
             else:
-                printf("Communication| ERROR: received error from robot: {}".format(response),type=ERROR)
+                printf("Communication| ERROR: send {}, received error from robot: {}".format(cmndString, response), type=ERROR)
+                # printf("Communication| ERROR: received error from robot: {}".format(response),type=ERROR)
                 return ""
             return response.lower()
         except serial.serialutil.SerialException as e:
@@ -280,7 +281,7 @@ class UArm(object):
         else:
             return False
 
-    def set_position(self, x, y, z, speed=300, relative=False):
+    def set_position(self, x, y, z, speed=300, relative=False, wait=False):
         """
         Move uArm to the position (x,y,z) unit is mm, speed unit is mm/sec
         :param x:
@@ -298,6 +299,10 @@ class UArm(object):
         else:
             command = protocol.SET_POSITION.format(x, y, z, s)
         response = self.__send_and_receive(command)
+        if wait:
+            while self.is_moving():
+                printf("Still Moving",type=DEBUG)
+                time.sleep(0.05)
         if response.startswith(protocol.OK.lower()):
             return True
         else:
@@ -430,7 +435,8 @@ class UArm(object):
         response = self.__send_and_receive(protocol.GET_IS_MOVE)
         value = self.__gen_response_value(response)
         if value:
-            if value[1:] == "1":
+            # printf("".join(value[1:]))
+            if "".join(value)[1:] == "1":
                 return True
             else:
                 return False
