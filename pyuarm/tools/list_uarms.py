@@ -33,7 +33,6 @@ def get_uarm_port_cli():
     elif len(ports) == 1:
         return uarm_list[0]
     elif len(ports) == 0:
-        print ("No uArm ports is found.")
         return None
 
 

@@ -1,3 +1,13 @@
+## [2.3.0.2] - 2016-12-04
+### Updated -Alex Tan
+
+### Compatible
+- Firmware 2.2
+
+### Changes
+1.  Support Unblock Mode
+2.  rewrite FlashFirmware & calibrate. Flash Firmware only support external avrdude, calibrate only support query
+
 ## [2.2.5.1] - 2016-11-25
 ### Updated -Alex Tan
 

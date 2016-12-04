@@ -1,2 +1,0 @@
-arduino.avrdude=6.0.1-arduino5
-arduino.avr-gcc=4.9.2-atmel3.5.3-arduino2

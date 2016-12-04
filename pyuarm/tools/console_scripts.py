@@ -1,8 +1,9 @@
 import argparse
+
+#from pyuarm.tools import flash_firmware, calibrate
+from . import miniterm, list_uarms, calibrate, flash_firmware
 from ..version import __version__
-from . import miniterm, list_uarms
-from .firmware import flash_firmware
-from .calibration import calibrate
+from .. import util
 
 
 def main():
@@ -25,10 +26,12 @@ def main():
     pf = subparsers.add_parser("firmware")
     pf.add_argument("-p", "--port", help="specify port number")
     pf.add_argument("--path", help="firmware path")
-    pf.add_argument("-d", "--download", help="download firmware from {}".format(flash_firmware.default_config['download_url']),
-                        action="store_true")
+    pf.add_argument("-d", "--download", help="download firmware from {}".format(
+        flash_firmware.default_config['download_url']),
+                    action="store_true")
 
     args = parser.parse_args()
+    util.init_logger(util.get_default_logger(True))
 
     if args.cmd:
         if args.cmd == 'miniterm':

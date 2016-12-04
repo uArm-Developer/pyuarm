@@ -429,20 +429,97 @@ class UArm(object):
         # else:
         #     return False
 
+    def set_gripper(self, catch):
+        """
+        Turn On/Off Gripper
+        :param catch: True On/ False Off
+        :return:
+        """
+        self.__push_request_item(protocol.SET_GRIPPER.format(1 if catch else 0), False)
 
-    # def set_servo_angle(self, servo_number, angle):
-    #     """
-    #     Set uArm Servo Angle, 0 - 180 degrees, this Function will include the manual servo offset.
-    #     :param servo_number: lease reference protocol.py SERVO_BOTTOM, SERVO_LEFT, SERVO_RIGHT, SERVO_HAND
-    #     :param angle: 0 - 180 degrees
-    #     :return: succeed True or Failed False
-    #     """
-    #     cmd = protocol.SET_ANGLE.format(str(servo_number), str(angle))
-    #     response = self.__send_and_receive(cmd)
-    #     if response.startswith(protocol.OK.lower()):
-    #         return True
-    #     else:
-    #         return False
+    def get_tip_sensor(self):
+        """
+        Get Status from Tip Sensor
+        :return: True On/ False Off
+        """
+        serial_id= self.__push_request_item(protocol.GET_TIP_SENSOR,wait=True)
+        response = self.__pop_response_item(serial_id=serial_id)
+        if response is None:
+            printf ("No Message response {}".format(serial_id))
+            # printf ("Serial MSG ID not correct:request - {}, response - {}".format(serial_id,response['id']))
+            return
+        # if serial_id != response['id']:
+        #     return None
+        try:
+            if response['params'][1] == 'V0':
+                return True
+            elif response['params'][1] == 'V1':
+                return False
+        except Exception as e:
+            printf("Error {}".format(e))
+
+
+    def set_wrist(self, angle):
+        """
+        Set uArm Hand Wrist Angle. Include servo offset.
+        :param angle:
+        :return:
+        """
+        self.set_servo_angle(protocol.SERVO_HAND, angle)
+
+    def set_servo_angle(self, servo_number, angle):
+        """
+        Set uArm Servo Angle, 0 - 180 degrees, this Function will include the manual servo offset.
+        :param servo_number: lease reference protocol.py SERVO_BOTTOM, SERVO_LEFT, SERVO_RIGHT, SERVO_HAND
+        :param angle: 0 - 180 degrees
+        :return: succeed True or Failed False
+        """
+        self.serial_id = self.__push_request_item(protocol.SET_ANGLE.format(str(servo_number), str(angle)), False)
+
+    def set_buzzer(self, frequency, duration):
+        """
+        Turn on the uArm Buzzer
+        :param frequency: The frequency, in Hz
+        :param duration: The duration of the buzz, in seconds
+        :return:
+        """
+        self.serial_id = self.__push_request_item(protocol.SET_BUZZER.format(frequency, duration), False)
+
+    def get_position(self):
+        """
+        Get Current uArm position (x,y,z) mm
+        :return: Returns an array of the format [x, y, z] of the robots current location
+        """
+        serial_id= self.__push_request_item(protocol.GET_COOR,wait=True)
+        response = self.__pop_response_item(serial_id=serial_id)
+        if response is None:
+            printf ("No Message response {}".format(serial_id))
+            # printf ("Serial MSG ID not correct:request - {}, response - {}".format(serial_id,response['id']))
+            return
+        # if serial_id != response['id']:
+        #     return None
+        try:
+            x = float(response['params'][1][1:])
+            y = float(response['params'][2][1:])
+            z = float(response['params'][3][1:])
+            coordinate = [x,y,z]
+            return coordinate
+            # if response['params'][1] == 'V1':
+            #     return True
+            # elif response['params'][1] == 'V0':
+            #     return False
+        except Exception as e:
+            printf("Error {}".format(e))
+            return None
+
+        # response = self.__send_and_receive(protocol.GET_COOR)
+        # value = self.__gen_response_value(response)
+        # if value:
+        #     parse_cmd = self.__parse_cmd(response, ["x", "y", "z"])
+        #     coordinate = [parse_cmd["x"], parse_cmd["y"], parse_cmd["z"]]
+        #     return coordinate
+        # else:
+        #     return False
     #
     #
     # def set_wrist(self, angle):
@@ -598,21 +675,7 @@ class UArm(object):
     #         return False
     #
     #
-    # def get_tip_sensor(self):
-    #     """
-    #     Get Status from Tip Sensor
-    #     :return: True On/ False Off
-    #     """
-    #     response = self.__send_and_receive(protocol.GET_TIP_SENSOR)
-    #     value = self.__gen_response_value(response)
-    #
-    #     if value:
-    #         if "".join(value)[1:] == "0":
-    #             return True
-    #         else:
-    #             return False
-    #     else:
-    #         return False
+
     #
     # def get_rom_data(self, address, data_type=protocol.EEPROM_DATA_TYPE_BYTE):
     #     """
