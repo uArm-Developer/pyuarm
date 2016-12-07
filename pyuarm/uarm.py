@@ -105,24 +105,29 @@ class UArm(object):
                 # time.sleep(0.03) # This is the best delay for current uArm IOT chip (UNO)
 
     def __receive_thread_process(self):
-        while not self.__stop_flag:
-            line = self.__serial.readline()
-            # printf("line: {}".format(line))
-            if not line:
-                continue
-            if PY3:
-                line = str(line, encoding='ascii').rstrip()
-            if line.startswith("$"):
-                printf("Received MSG: {}".format(line), DEBUG)
-                values = line.split(' ')
-                id = int(values[0].replace('$',''))
-                id_item = self.__send_queue_id.get()
-                if id_item['wait']:
-                    item = {"id":id, "params":values[1:]}
-                    self.__receive_queue.put(item)
-            elif line.startswith(protocol.READY):
-                printf("Received MSG: {}".format(line), DEBUG)
-                self.__isConnected = True
+        try:
+            while not self.__stop_flag:
+                line = self.__serial.readline()
+                # printf("line: {}".format(line))
+                if not line:
+                    continue
+                if PY3:
+                    line = str(line, encoding='ascii').rstrip()
+                if line.startswith("$"):
+                    printf("Received MSG: {}".format(line), DEBUG)
+                    values = line.split(' ')
+                    id = int(values[0].replace('$',''))
+                    id_item = self.__send_queue_id.get()
+                    if id_item['wait']:
+                        item = {"id":id, "params":values[1:]}
+                        self.__receive_queue.put(item)
+                elif line.startswith(protocol.READY):
+                    printf("Received MSG: {}".format(line), DEBUG)
+                    self.__isConnected = True
+        except serial.SerialException as e:
+            printf("Error Occurred: {} - {}".format(e.errno, e))
+            self.__isConnected = False
+
 
     def disconnect(self):
         """
@@ -178,21 +183,6 @@ class UArm(object):
         is_connected will return the uarm connected status
         :return: connected status
         """
-        # try:
-        #     if PY3:
-        #         self.__gen_serial_id()
-        #         cmnd = "#{} {}".format(self.serial_id, protocol.GET_FIRMWARE_VERSION)
-        #         cmndString = bytes(cmnd + "\n", encoding='ascii')
-        #         self.__serial.write(cmndString)
-        #         response = str(self.__serial.readline(),encoding='ascii')
-        #     else:
-        #         self.__gen_serial_id()
-        #         cmnd = "#{} {}".format(self.serial_id, protocol.GET_FIRMWARE_VERSION)
-        #         cmndString = bytes(cmnd + "\n")
-        #         self.__serial.write(cmndString)
-        #         response = self.__serial.readline()
-        # except serial.serialutil.SerialException:
-        #     self.__isConnected = False
         if self.__serial.isOpen() and self.__isConnected:
             return True
         else:
@@ -232,85 +222,6 @@ class UArm(object):
             return response.rstrip().split(' ')[1:]
         else:
             return False
-
-
-    # def __send_and_receive(self, cmnd, timeout=None):
-    #     """
-    #     This command will send a command and receive the uArm response. There must always be a response!
-    #     Responses should be recieved immediately after sending the command, after which the robot will proceed to
-    #     perform the action.
-    #     :param cmnd: a String command, to send to the robot
-    #     :return: The robots response
-    #     """
-    #
-    #     if not self.is_connected():
-    #         printf("Communication| Tried to send a command while robot was not connected!")
-    #         return ""
-    #
-    #     # Prepare and send the command to the robot
-    #     self.__gen_serial_id()
-    #     cmnd = "#{} {}".format(self.serial_id,cmnd)
-    #     printf("Coummunication | Send Message: {}, total length: {}".format(cmnd,len(cmnd)), type=DEBUG)
-    #     if PY3:
-    #         cmndString = bytes(cmnd + "\n", encoding='ascii')
-    #     else:
-    #         cmndString = bytes(cmnd + "\n")
-    #
-    #     try:
-    #         self.__serial.write(cmndString)
-    #
-    #     except serial.serialutil.SerialException as e:
-    #         # printf("while sending command {}. Disconnecting Serial! \nError: {}".format(cmndString, str(e)),type=ERROR)
-    #         self.__isConnected = False
-    #         return ""
-    #
-    #     try:
-    #         if PY3:
-    #             response = str(self.__serial.readline(),encoding='ascii')
-    #         else:
-    #             response = self.__serial.readline()
-    #         if response.startswith("${}".format(self.serial_id)):
-    #             if "E20" in response or "E21" in response:
-    #                 printf("Communication| ERROR: send {}, received error from robot: {}".format(cmndString, response), type=ERROR)
-    #                 return ""
-    #             response = response.replace('\n', '')
-    #             response = response.replace('${} '.format(self.serial_id),'')
-    #             printf("Communication| [{}] {}{}".format(cmnd, " " * (30 - len(cmnd)), response), type=DEBUG)
-    #         else:
-    #             printf("Communication| ERROR: send {}, received error from robot: {}".format(cmndString, response), type=ERROR)
-    #             # printf("Communication| ERROR: received error from robot: {}".format(response),type=ERROR)
-    #             return ""
-    #         return response.lower()
-    #     except serial.serialutil.SerialException as e:
-    #         printf("while sending command {}. Disconnecting Serial! \nError: {}".format(cmnd,str(e)), type=ERROR)
-    #         self.__isConnected = False
-    #         return ""
-
-    # def __parse_cmd(self, message, arguments):
-    #     response_dict = {n: 0 for n in arguments}  # Fill the dictionary with zero's
-    #
-    #     # Do error checking, in case communication didn't work
-    #     if message is False:
-    #         printf("UArm.__parse_cmd(): Since an error occurred in communication, returning 0's for all arguments!")
-    #         return response_dict
-    #
-    #     # if command not in message:
-    #     #     printf("UArm.__parse_cmd(): ERROR: The message did not come with the appropriate command!")
-    #     #     return response_dict
-    #     #
-    #     # # Get rid of the "command" part of the message, so it's just arguments and their numbers
-    #     # message = message.replace(command, "")
-    #
-    #     # Get the arguments and place them into the array
-    #     for i, arg in enumerate(arguments):
-    #         if i < len(arguments) - 1:
-    #             response_dict[arg] = message[message.find(arg) + 1: message.find(arguments[i + 1])]
-    #         else:
-    #             response_dict[arg] = message[message.find(arg) + 1:]
-    #
-    #         response_dict[arg] = float(response_dict[arg])
-    #
-    #     return response_dict
 
 # -------------------------------------------------------- Commands ----------------------------------------------------
 
@@ -512,6 +423,37 @@ class UArm(object):
             printf("Error {}".format(e))
             return None
 
+    def set_polar_coordinate(self, rotation, stretch, height, speed=100, wait=False):
+        """
+        Polar Coordinate, rotation, stretch, height.
+        :param rotation:
+        :param stretch:
+        :param height:
+        :param speed:
+        :return:
+        """
+        rotation = str(round(rotation, 2))
+        stretch = str(round(stretch, 2))
+        height = str(round(height, 2))
+        speed = str(round(speed, 2))
+        command = protocol.SET_POLAR.format(stretch, rotation, height, speed)
+        self.__push_request_item(command, False)
+        if wait:
+            while self.is_moving():
+                printf("Still Moving",type=DEBUG)
+
+
+    # def report_position(self, interval):
+
+    # def get_polar_coordinate(self):
+    #     cmd = protocol.GET_POLAR
+    #     response = self.__send_and_receive(cmd)
+    #     if response.startswith("s"):
+    #         parse_cmd = self.__parse_cmd(response[1:], ["s", "r", "h"])
+    #         polar_crd = [parse_cmd["s"], parse_cmd["r"], parse_cmd["h"]]
+    #         return polar_crd
+    #     else:
+    #         return False
         # response = self.__send_and_receive(protocol.GET_COOR)
         # value = self.__gen_response_value(response)
         # if value:
@@ -625,30 +567,7 @@ class UArm(object):
     #     else:
     #         return False
     #
-    # # def set_polar_coordinate(self, rotation, stretch, height, speed=100):
-    # #     """
-    # #     Polar Coordinate, rotation, stretch, height.
-    # #     :param rotation:
-    # #     :param stretch:
-    # #     :param height:
-    # #     :param speed:
-    # #     :return:
-    # #     """
-    # #     cmd = protocol.SET_POLAR.format(stretch, rotation, height, speed)
-    # #     if self.__send_and_receive(cmd).startswith("s"):
-    # #         return True
-    # #     else:
-    # #         return False
-    # #
-    # # def get_polar_coordinate(self):
-    # #     cmd = protocol.GET_POLAR
-    # #     response = self.__send_and_receive(cmd)
-    # #     if response.startswith("s"):
-    # #         parse_cmd = self.__parse_cmd(response[1:], ["s", "r", "h"])
-    # #         polar_crd = [parse_cmd["s"], parse_cmd["r"], parse_cmd["h"]]
-    # #         return polar_crd
-    # #     else:
-    # #         return False
+
     #
     # def get_servo_angle(self, servo_number=None):
     #     """

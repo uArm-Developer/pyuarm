@@ -55,3 +55,6 @@ GET_EEPROM              = "M211 N0 A{} T{}"
 SET_EEPROM              = "M212 N0 A{} T{} V{}"
 GET_ANALOG              = "P241 N{}"
 GET_DIGITAL             = "P240 N{}"
+
+# Current POSITION feedback
+REPORT_POSITION         = "M120 V{}"
