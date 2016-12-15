@@ -1,4 +1,2 @@
-progressbar>=2.3
 pyserial>=3.0
-requests>=2.10.0
 sphinx_bootstrap_theme>=0.4.9

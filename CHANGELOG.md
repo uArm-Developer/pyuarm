@@ -1,3 +1,13 @@
+## [2.3.0.7] - 2016-12-04
+### Updated -Alex Tan
+
+### Compatible
+- Firmware 2.2
+
+### Changes
+1. Fix Bugs for Non-block Mode
+2. Add Teach function
+
 ## [2.3.0.3] - 2016-12-04
 ### Updated -Alex Tan
 

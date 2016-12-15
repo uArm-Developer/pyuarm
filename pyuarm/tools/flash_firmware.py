@@ -11,9 +11,9 @@ import sys
 import os
 import platform
 import subprocess
-from ..util import printf
+from ..util import printf,ua_dir
 from .list_uarms import get_uarm_port_cli
-from os.path import expanduser
+
 
 if sys.version > '3':
     PY3 = True
@@ -32,8 +32,7 @@ default_config = {
     "download_flag": False
 }
 
-home_dir = os.path.join(expanduser("~"), ".uarm", "")
-ua_dir = os.path.join(home_dir, "assistant")
+
 
 def exit_fun():
     try:

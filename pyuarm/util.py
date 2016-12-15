@@ -1,5 +1,9 @@
 import logging
 from .version import __version__
+import os
+from os.path import expanduser
+home_dir = os.path.join(expanduser("~"), ".uarm", "")
+ua_dir = os.path.join(home_dir, "assistant")
 
 ERROR = 2
 INFO  = 1
@@ -30,6 +34,12 @@ def init_logger(logger):
     global pylogger
     pylogger = logger
     printf('pyuarm version: ' + __version__)
+
+def close_logger():
+    handlers = pylogger.handlers
+    for p in handlers:
+        p.close()
+        pylogger.removeHandler(p)
 
 def printf(msg, type=INFO):
     """

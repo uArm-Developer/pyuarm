@@ -101,7 +101,7 @@ class UArmCmd(Cmd):
         """
         if self.uarm is not None:
             if self.uarm.is_connected():
-                self.uarm.disconnect()
+                self.uarm.close()
 
     def do_set_position(self, arg):
         """
@@ -162,20 +162,20 @@ class UArmCmd(Cmd):
                            ]
         return completions
 
-    def do_sim(self, arg):
-        """
-        sim
-        format: sim X Y Z
-        validate the coordinate.
-        eg. sim 100 200 100
-        succeed
-        """
-        if self.__is_connected():
-            values = arg.split(' ')
-            if len(values) == 3:
-                result = self.uarm.get_simulation(int(values[0]), int(values[1]), int(values[2]))
-                msg = "succeed" if result else "failed"
-                print (msg)
+    # def do_sim(self, arg):
+    #     """
+    #     sim
+    #     format: sim X Y Z
+    #     validate the coordinate.
+    #     eg. sim 100 200 100
+    #     succeed
+    #     """
+    #     if self.__is_connected():
+    #         values = arg.split(' ')
+    #         if len(values) == 3:
+    #             result = self.uarm.get_simulation(int(values[0]), int(values[1]), int(values[2]))
+    #             msg = "succeed" if result else "failed"
+    #             print (msg)
 
     def do_set_angle(self, arg):
         """
@@ -311,48 +311,6 @@ class UArmCmd(Cmd):
             serial_mode = SerialMode(self.uarm)
             serial_mode.cmdloop()
 
-    # def do_firmware(self, arg):
-    #     """
-    #     Firmware command
-    #     sub command: version, upgrade, force
-    #     version - display Remote Firmware version and local Firmware version (if connected)
-    #     upgrade - if remote version latter than local firmware version, will flash the latest firmware to uarm
-    #     force - force upgrade
-    #
-    #     """
-    #     if arg == 'version':
-    #         print ("Remote Firmware Version: {}".format(firmware_helper.get_latest_version()))
-    #         if self.__is_connected():
-    #             print ("Local Firmware Version: {}".format(self.uarm.firmware_version))
-    #     elif arg == 'upgrade':
-    #         if self.uarm is not None:
-    #             if self.uarm.is_connected():
-    #                 self.uarm.disconnect()
-    #             subprocess.call(['uarm-firmware','-u', '-p', self.uarm.port])
-    #         else:
-    #             subprocess.call(['uarm-firmware','-u'])
-    #     elif arg == 'force':
-    #         if self.uarm is not None:
-    #             if self.uarm.is_connected():
-    #                 self.uarm.disconnect()
-    #             subprocess.call(['uarm-firmware','-d', '-f', '-p', self.uarm.port])
-    #         else:
-    #             subprocess.call(['uarm-firmware','-df'])
-    #     elif arg == '':
-    #         print ("please input argument: {}".format(','.join(self.FIRMWARE)))
-    #     else:
-    #         print ("command not found: {}".format(arg))
-    #
-    # def complete_firmware(self, text, line, begidx, endidx):
-    #     if not text:
-    #         completions = self.FIRMWARE[:]
-    #     else:
-    #         completions = [f
-    #                        for f in self.FIRMWARE
-    #                        if f.startswith(text)
-    #                        ]
-    #     return completions
-
     def do_help(self, arg):
         values = arg.split(' ')
         if len(values) == 1 and values[0] == '':
@@ -371,7 +329,7 @@ class UArmCmd(Cmd):
         """
         if self.uarm is not None:
             if self.uarm.is_connected():
-                self.uarm.disconnect()
+                self.uarm.close()
         print ("Quiting")
         raise SystemExit
 

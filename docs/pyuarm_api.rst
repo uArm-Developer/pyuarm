@@ -45,7 +45,7 @@ pyuarm.tools.firmware.flash_firmware
 pyuarm.tools.calibration.calibrate
 ~~~~~~~~~~~~~~~~~~~~~~
 
-.. automodule:: pyuarm.tools.calibration.calibrate
+.. automodule:: pyuarm.tools.calibrate
     :members:
     :undoc-members:
     :show-inheritance:
