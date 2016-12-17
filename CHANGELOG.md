@@ -1,8 +1,8 @@
-## [2.2.5.2] - 2016-11-25
+## [2.2.5.3] - 2016-11-25
 ### Updated -Alex Tan
 
 ### Compatible
-- Firmware 2.2
+- Firmware 2.2.1.x
 
 ### Changes
 1. Support wait for set_position
