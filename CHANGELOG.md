@@ -1,4 +1,4 @@
-## [2.2.5.1] - 2016-11-25
+## [2.2.5.2] - 2016-11-25
 ### Updated -Alex Tan
 
 ### Compatible
@@ -6,6 +6,7 @@
 
 ### Changes
 1. Support wait for set_position
+2. Fix get_analog, get_digital
 
 ## [2.2.5.1] - 2016-11-25
 ### Updated -Alex Tan

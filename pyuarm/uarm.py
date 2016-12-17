@@ -48,7 +48,7 @@ class UArm(object):
         port is a device name: depending on operating system. eg. `/dev/ttyUSB0` on GNU/Linux or `COM3` on Windows.
         logger will display all info/debug/error/warning messages.
         """
-        self.serial_id = 0
+        self.serial_id = 1
         if logger is None:
             util.init_logger(util.get_default_logger(debug))
         else:
@@ -140,8 +140,8 @@ class UArm(object):
             return False
 
     def __gen_serial_id(self):
-        if self.serial_id == 999:
-            self.serial_id = 0
+        if self.serial_id == 65535:
+            self.serial_id = 1
         else:
             self.serial_id += 1
 
@@ -593,15 +593,30 @@ class UArm(object):
         return serial_number
 
     def get_analog(self,pin):
-        cmd = protocol.GET_ANALOG.format(pin)
-        response = self.__send_and_receive(cmd)
-        if response.startswith("s"):
-            val = response[1:]
+        """
+        Get Analog Value from specific PIN
+        :param pin:
+        :return:
+        """
+        try:
+            cmd = protocol.GET_ANALOG.format(pin)
+            response = self.__send_and_receive(cmd)
+            values = response.split(' ')
+            printf(values, type=DEBUG)
+            val = values[1][1:]
             return int(float(val))
+        except Exception as e:
+            printf("Error {}".format(e))
+            return None
 
     def get_digital(self,pin):
-        cmd = protocol.GET_DIGITAL.format(pin)
-        response = self.__send_and_receive(cmd)
-        if response.startswith("s"):
-            val = response[1:]
-            return val
+        try:
+            cmd = protocol.GET_DIGITAL.format(pin)
+            response = self.__send_and_receive(cmd)
+            values = response.split(' ')
+            printf(values, type=DEBUG)
+            val = values[1][1:]
+            return int(float(val))
+        except Exception as e:
+            printf("Error {}".format(e))
+            return None
