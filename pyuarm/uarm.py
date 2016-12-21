@@ -90,7 +90,7 @@ class UArm(object):
                 else:
                     self.__serial.write(msg)
                 id_item = {"id": item['id'], "wait": item['wait']}
-                self.__send_queue_id.put(id_item,block=self.block)
+                self.__send_queue_id.put(id_item,block=item['wait'])
                 self.__send_queue.task_done()
         except Exception as e:
             printf("Send Process exception  {}".format(e))
@@ -233,6 +233,8 @@ class UArm(object):
         if self.__serial is not None:
             if self.__serial.isOpen() and self.__isConnected:
                 return True
+            else:
+                return False
         else:
             return False
 
@@ -464,6 +466,30 @@ class UArm(object):
             printf("Error {}".format(e))
             return None
 
+
+    def is_moving(self):
+        """
+        Detect is uArm moving
+        :return: Returns a 0 or a 1, depending on whether or not the robot is moving.
+        """
+        serial_id = self.__push_request_item(protocol.GET_IS_MOVE,True)
+        response = self.__pop_response_item(serial_id)
+        if response is None:
+            printf ("No Message response {}".format(serial_id))
+            # printf ("Serial MSG ID not correct:request - {}, response - {}".format(serial_id,response['id']))
+            return
+        # if serial_id != response['id']:
+        #     return None
+        try:
+            if response['params'][1] == 'V1':
+                return True
+            elif response['params'][1] == 'V0':
+                return False
+        except Exception as e:
+            printf("Error {}".format(e))
+
+
+
 # -------------------------------------------------------- Set Commands -----------------------------------------------#
     def set_position(self, x, y, z, speed=300, relative=False, wait=False):
         """
@@ -483,13 +509,15 @@ class UArm(object):
                 command = protocol.SET_POSITION_RELATIVE.format(x, y, z, s)
             else:
                 command = protocol.SET_POSITION.format(x, y, z, s)
-            serial_id = self.__push_request_item(command, wait)
+            serial_id = self.__push_request_item(command, self.block)
             if wait:
+                while self.is_moving():
+                    time.sleep(0.05)
+            if self.block:
                 response = self.__pop_response_item(serial_id=serial_id)
                 if response is None:
                     printf("No Message response {}".format(serial_id))
                     return
-            if wait:
                 if response['params'][0].startswith(protocol.OK):
                     return True
                 else:
@@ -569,7 +597,7 @@ class UArm(object):
             else:
                 return False
 
-    def set_servo_attach(self, servo_number=None, move=False, wait=True):
+    def set_servo_attach(self, servo_number=None, move=False):
         """
         Set Servo status attach, Servo Attach will lock the servo, You can't move uArm with your hands.
         :param servo_number: If None, will attach all servos, please reference protocol.py SERVO_BOTTOM, SERVO_LEFT, SERVO_RIGHT, SERVO_HAND
@@ -582,7 +610,7 @@ class UArm(object):
                 self.set_position(pos[0],pos[1],pos[2],speed=0)
             cmd = protocol.ATTACH_SERVO.format(servo_number)
             serial_id = self.__push_request_item(cmd, wait=self.block)
-            if wait:
+            if self.block:
                 response = self.__pop_response_item(serial_id=serial_id)
                 if response is None:
                     printf("No Message response {}".format(serial_id))
@@ -596,7 +624,7 @@ class UArm(object):
             if move:
                 pos = self.get_position()
                 self.set_position(pos[0],pos[1],pos[2],speed=0)
-            if wait:
+            if self.block:
                 if self.set_servo_attach(0) \
                         and self.set_servo_attach(1) \
                         and self.set_servo_attach(2) \
@@ -605,12 +633,12 @@ class UArm(object):
                 else:
                     return False
             else:
-                self.set_servo_attach(0,wait=wait)
-                self.set_servo_attach(1,wait=wait)
-                self.set_servo_attach(2,wait=wait)
-                self.set_servo_attach(3,wait=wait)
+                self.set_servo_attach(0)
+                self.set_servo_attach(1)
+                self.set_servo_attach(2)
+                self.set_servo_attach(3)
 
-    def set_servo_detach(self, servo_number=None, wait=True):
+    def set_servo_detach(self, servo_number=None):
         """
         Set Servo status detach, Servo Detach will unlock the servo, You can move uArm with your hands. But move function won't be effect until you attach.
         :param servo_number: If None, will detach all servos, please reference protocol.py SERVO_BOTTOM, SERVO_LEFT, SERVO_RIGHT, SERVO_HAND
@@ -619,7 +647,7 @@ class UArm(object):
         if servo_number is not None:
             cmd = protocol.DETACH_SERVO.format(servo_number)
             serial_id = self.__push_request_item(cmd, wait=self.block)
-            if wait:
+            if self.block:
                 response = self.__pop_response_item(serial_id=serial_id)
                 if response is None:
                     printf("No Message response {}".format(serial_id))
@@ -630,17 +658,17 @@ class UArm(object):
                 else:
                     return False
         else:
-            if wait:
+            if self.block:
                 if self.set_servo_detach(0) and self.set_servo_detach(1) \
                         and self.set_servo_detach(2) and self.set_servo_detach(3):
                     return True
                 else:
                     return False
             else:
-                self.set_servo_detach(0, wait=wait)
-                self.set_servo_detach(1, wait=wait)
-                self.set_servo_detach(2, wait=wait)
-                self.set_servo_detach(3, wait=wait)
+                self.set_servo_detach(0)
+                self.set_servo_detach(1)
+                self.set_servo_detach(2)
+                self.set_servo_detach(3)
 
     def set_rom_data(self, address, data, data_type=protocol.EEPROM_DATA_TYPE_BYTE):
         """
