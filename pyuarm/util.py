@@ -2,8 +2,7 @@ import logging
 from .version import __version__
 import os
 from os.path import expanduser
-home_dir = os.path.join(expanduser("~"), ".uarm", "")
-ua_dir = os.path.join(home_dir, "assistant")
+home_dir = os.path.join(expanduser("~"), "uarm", "")
 
 ERROR = 2
 INFO  = 1

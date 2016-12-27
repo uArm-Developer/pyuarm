@@ -1,7 +1,8 @@
 import time
 from queue import Queue
 from threading import Thread
-
+import os
+from ..util import home_dir
 
 class Teach:
 
@@ -10,9 +11,12 @@ class Teach:
     __record_thread = None
     __play_thread = None
 
-    def __init__(self, filepath, uarm):
+    def __init__(self, uarm, record_filepath=None):
         self.uarm = uarm
-        self.filepath = filepath
+        if record_filepath is not None:
+            self.filepath = record_filepath
+        else:
+            self.filepath = os.path.join(home_dir, "temp_record.txt")
         self.__record_flag = False
         self.__play_flag = False
 
@@ -31,10 +35,12 @@ class Teach:
     def stop_record(self):
         self.__record_flag = False
 
-    def start_play(self,speed=1):
+    def start_play(self, speed=1, filepath=None):
         if not self.__play_flag:
+            if filepath is None:
+                filepath = self.filepath
             self.__play_flag = True
-            self.__play_thread = Thread(target=self.__play, args=(speed,))
+            self.__play_thread = Thread(target=self.__play, args=(filepath, speed,))
             self.__play_thread.start()
 
     def stop_play(self):
@@ -49,8 +55,10 @@ class Teach:
     def wait_queue(self):
         self.__queue.join()
 
-    def get_total_points(self):
-        play_file = open(self.filepath, "r")
+    def get_total_points(self,filepath=None):
+        if filepath is None:
+            filepath = self.filepath
+        play_file = open(filepath, "r")
         lines = play_file.readlines()
         total = len(lines)
         play_file.close()
@@ -74,13 +82,13 @@ class Teach:
         self.__queue.join()
         print("Record Stop")
 
-    def __play(self, speed=1):
+    def __play(self, filepath, speed=1):
         self.__queue = Queue()
         if speed != 0:
             delay_time = 0.02 / speed
         else:
             delay_time = 0
-        play_file = open(self.filepath, "r")
+        play_file = open(filepath, "r")
         lines = play_file.readlines()
         total = len(lines)
         count = 0
