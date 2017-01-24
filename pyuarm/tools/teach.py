@@ -95,7 +95,7 @@ class Teach:
         last_progress = 0
         # start_time = time.time()
         while self.__play_flag and len(lines) > 0:
-            line = lines.pop()
+            line = lines.pop(0)
             count += 1
             values = line.split(',')
             self.uarm.set_position(float(values[1]), float(values[2]), float(values[3]), speed=0, wait=False)
