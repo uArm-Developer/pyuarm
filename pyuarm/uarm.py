@@ -7,9 +7,9 @@ from . import PY3
 import time
 import threading
 if PY3:
-    from queue import Queue
+    from queue import Queue, Empty
 else:
-    from Queue import Queue
+    from Queue import Queue, Empty
 
 def get_uarm(logger=None):
     """
@@ -268,13 +268,19 @@ class UArm(object):
         :param serial_id:
         :return:
         """
-        if self.__receive_queue.not_empty:
-            item = self.__receive_queue.get(self.timeout)
+        item = None
+        try:
+            item = self.__receive_queue.get(timeout=self.timeout)
+        except Empty:
+            pass
+        if item is not None:
             self.__receive_queue.task_done()
             if serial_id != item['id']:
                 return None
             else:
                 return item
+        else:
+            return None
 
 # -------------------------------------------------------- Commands ---------------------------------------------------#
 
@@ -366,10 +372,15 @@ class UArm(object):
         :return: Returns an array of the format [x, y, z] of the robots current location
         """
         try:
-            serial_id= self.__push_request_item(protocol.GET_COOR,wait=True)
+            serial_id = self.__push_request_item(protocol.GET_COOR, wait=True)
             response = self.__pop_response_item(serial_id=serial_id)
+            # response = None
+            # while True:
+            #     response = self.__pop_response_item(serial_id=serial_id)
+            #     if response is not None:
+                    # break
             if response is None:
-                printf ("No Message response {}".format(serial_id))
+                printf("No Message response {}".format(serial_id))
                 return
             x = float(response['params'][1][1:])
             y = float(response['params'][2][1:])
@@ -462,6 +473,27 @@ class UArm(object):
                 return 0
             elif response['params'][1] == 'V1':
                 return 1
+        except Exception as e:
+            printf("Error {}".format(e))
+            return None
+
+    def get_servo_status(self, servo_num):
+        """
+        Get Servo attach status,
+        :param servo_num:
+        :return: Boolean False detach, True Attach
+        """
+        try:
+            cmd = protocol.GET_SERVO_STATUS.format(servo_num)
+            serial_id= self.__push_request_item(cmd,wait=True)
+            response = self.__pop_response_item(serial_id=serial_id)
+            if response is None:
+                printf ("No Message response {}".format(serial_id))
+                return
+            if response['params'][1] == 'V0':
+                return False
+            elif response['params'][1] == 'V1':
+                return True
         except Exception as e:
             printf("Error {}".format(e))
             return None
@@ -604,10 +636,14 @@ class UArm(object):
         :param move: if True, will move to current position immediately
         :return: succeed True or Failed False
         """
-        if servo_number is not None:
-            if move:
+        if move:
+            while True:
                 pos = self.get_position()
-                self.set_position(pos[0],pos[1],pos[2],speed=0)
+                if pos is not None:
+                    self.set_position(pos[0], pos[1], pos[2], speed=0)
+                    break
+                time.sleep(0.01)
+        if servo_number is not None:
             cmd = protocol.ATTACH_SERVO.format(servo_number)
             serial_id = self.__push_request_item(cmd, wait=self.block)
             if self.block:
@@ -621,9 +657,6 @@ class UArm(object):
                 else:
                     return False
         else:
-            if move:
-                pos = self.get_position()
-                self.set_position(pos[0],pos[1],pos[2],speed=0)
             if self.block:
                 if self.set_servo_attach(0) \
                         and self.set_servo_attach(1) \
