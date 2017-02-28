@@ -181,13 +181,13 @@ class UArm(object):
                 pos_array = [float(values[1][1:]), float(values[2][1:]),
                              float(values[3][1:]), float(values[4][1:])]
                 self.__position_queue.put(pos_array, block=False)
-            elif line.startswith(protocol.REPORT_BUTTON_PRESSED):
-                printf("BUTTON REPORT: {}".format(line), DEBUG)
-                values = line.split(' ')
-                if values[1] == protocol.BUTTON_MENU:
-                    self.__menu_button_queue.put(values[2][1:])
-                elif values[1] == protocol.BUTTON_PLAY:
-                    self.__play_button_queue.put(values[2][1:])
+            # elif line.startswith(protocol.REPORT_BUTTON_PRESSED):
+            #     printf("BUTTON REPORT: {}".format(line), DEBUG)
+            #     values = line.split(' ')
+            #     if values[1] == protocol.BUTTON_MENU:
+            #         self.__menu_button_queue.put(values[2][1:])
+            #     elif values[1] == protocol.BUTTON_PLAY:
+            #         self.__play_button_queue.put(values[2][1:])
 
     def __receive_thread_process(self):
         """
@@ -376,6 +376,26 @@ class UArm(object):
             printf("Error {}".format(e), ERROR)
             return None
 
+    def get_is_moving(self):
+        """
+        Get is uArm Moving
+        :return: True or False
+        """
+        try:
+            serial_id, response = self.send_and_receive(protocol.GET_IS_MOVE)
+            if response is None:
+                printf("No Message response {}".format(serial_id), ERROR)
+                return None
+            if response[0] == protocol.OK:
+                v = int(response[1][1:])
+                if v == 0:
+                    return False
+                elif v == 1:
+                    return True
+        except Exception as e:
+            printf("Error {}".format(e), ERROR)
+            return None
+
     def get_polar(self):
         """
         get Polar coordinate
@@ -544,14 +564,18 @@ class UArm(object):
             else:
                 command = protocol.SET_POSITION.format(x, y, z, s)
             if wait:
-                serial_id, response = self.send_and_receive(command)
-                if response is None:
-                    printf("No Message response {}".format(serial_id))
-                    return None
-                if response[0] == protocol.OK:
-                    return True
-                else:
-                    return False
+                self.__send_msg(command)
+                # start_time = time.time()
+                while self.get_is_moving():
+                    time.sleep(0.05)
+                # serial_id, response = self.send_and_receive(command)
+                # if response is None:
+                #     printf("No Message response {}".format(serial_id))
+                #     return None
+                # if response[0] == protocol.OK:
+                #     return True
+                # else:
+                #     return False
             else:
                 self.__send_msg(command)
         except Exception as e:
@@ -745,14 +769,18 @@ class UArm(object):
         speed = str(round(speed, 2))
         command = protocol.SET_POLAR.format(stretch, rotation, height, speed)
         if wait:
-            serial_id, response = self.send_and_receive(command)
-            if response is None:
-                printf("No Message response {}".format(serial_id))
-                return None
-            if response[0].startswith(protocol.OK):
-                return True
-            else:
-                return False
+            self.__send_msg(command)
+            while self.get_is_moving():
+                time.sleep(0.05)
+        # if wait:
+        #     serial_id, response = self.send_and_receive(command)
+        #     if response is None:
+        #         printf("No Message response {}".format(serial_id))
+        #         return None
+        #     if response[0].startswith(protocol.OK):
+        #         return True
+        #     else:
+        #         return False
         else:
             self.__send_msg(command)
 
