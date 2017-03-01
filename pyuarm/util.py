@@ -151,8 +151,8 @@ class UArmConnectException(Exception):
 
 # ################################### Other ################################
 
-def progressbar(cur, total):
+def progressbar(title, cur, total):
     percent = '{:.2%}'.format(cur / total)
-    print("[%-50s] %s" % (
+    print(title + "[%-50s] %s" % (
                             '=' * int(math.floor(cur * 50 / total)),
                             percent), end='\r')

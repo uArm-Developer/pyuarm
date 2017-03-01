@@ -2,7 +2,7 @@ from __future__ import print_function
 from __future__ import division
 
 __version__ = '1.1.0'
-__author__  = 'Alex Tan'
+__author__ = 'Alex Tan'
 '''
 This Tool is for uArm firmware flashing. Also support download firmware online
 '''
@@ -41,37 +41,41 @@ def read_std_output(cmd, progress_step=None):
     global process
     try:
         process = Popen(cmd, stdout=PIPE,
-                          stderr=STDOUT, shell=False, bufsize=1)
+                        stderr=STDOUT, shell=False, bufsize=1)
         progress = 0
         total_progress = 150
+        title = "Flashing: "
         while True:
             data = process.stdout.read(1)
             if data == '' or process.poll() != None:
                 break
             if data != '':
-                if data == b'#': # Progress
+                if data == b'#':  # Progress
                     progress += 1
                     if progress_step is None:
-                        progressbar(progress, total_progress)
+                        progressbar(title, progress, total_progress)
                     else:
                         progress_step(progress, total_progress)
         time.sleep(0.1)
-        printf("Flashing EOF", INFO)
+        print("")
+        # printf("Flashing EOF", INFO)
         process.wait()
         exitcode = process.returncode
         process.stdout.close()
         process.terminate()
-        if exitcode == 1: # Error
+        if exitcode == 1:  # Error
 
             return
-        else: # succeed
+        else:  # succeed
             pass
-    except FileNotFoundError as e:
-        if process is not None:
-            process.terminate()
-        # error
+    except OSError as e:
+        # if process is not None:
+        #     process.terminate()
+        printf("Error Occurred, {}".format(e), ERROR)
+            # error
 
-def download(url, filepath): ## To - improve, add logger to support show the download prgress
+
+def download(url, filepath):  ## To - improve, add logger to support show the download prgress
     try:
         if PY3:
             u = urllib.request.urlopen(url)
@@ -79,10 +83,10 @@ def download(url, filepath): ## To - improve, add logger to support show the dow
         else:
             u = urllib2.urlopen(url)
             fileTotalbytes = int(u.info().getheaders("Content-Length")[0])
-        print ("writing to {}, file size: {} bytes ".format(filepath, str(fileTotalbytes)))
+        printf("writing to {}, file size: {} bytes ".format(filepath, str(fileTotalbytes)))
 
         data_blocks = []
-        total=0
+        total = 0
 
         while True:
             block = u.read(1024)
@@ -90,21 +94,21 @@ def download(url, filepath): ## To - improve, add logger to support show the dow
             total += len(block)
             # hash = ((60*total)//fileTotalbytes)
             # per =total / fileTotalbytes
-            progressbar(total, fileTotalbytes)
+            title = "Downloading: "
+            progressbar(title, total, fileTotalbytes)
             # if PY3:
             #     print("[{}{}] {:.0%}".format('#' * hash, ' ' * (60-hash), per), end="\r")
             # else:
             #     print("[{}{}] {:.0%}".format('#' * hash, ' ' * (60 - hash), per), end="\r")
             if not len(block):
-                printf("\nCompleted!", INFO)
                 break
+        print("")
 
-        data=b''.join(data_blocks) #had to add b because I was joining bytes not strings
+        data = b''.join(data_blocks)  # had to add b because I was joining bytes not strings
         u.close()
 
-
         with open(filepath, "wb") as f:
-                f.write(data)
+            f.write(data)
     except Exception as e:
         printf("Error: " + str(e))
 
@@ -122,7 +126,7 @@ def gen_flash_cmd(port, firmware_path, avrdude_path=None, debug=False):
         avrdude_bin = 'avrdude'
         error_description = "avrdude is required, Please use `sudo apt-get install avrdude`"
     else:
-        return None,"Not support System"
+        return None, "Not support System"
     cmd = []
     if avrdude_path is not None:
         cmd.append(os.path.join(avrdude_path, avrdude_bin))
@@ -137,19 +141,19 @@ def gen_flash_cmd(port, firmware_path, avrdude_path=None, debug=False):
     cmd.append('-Uflash:w:{}:i'.format(firmware_path))
     if debug:
         cmd.append('-v')
-    return cmd,error_description
+    return cmd, error_description
 
 
 def flash(port, firmware_path, avrdude_path=None):
-        cmd,error_description = gen_flash_cmd(port,firmware_path,avrdude_path)
-        printf("Flash Command:\n{}".format(' '.join(cmd)), INFO)
-        try:
-            flash_thread = threading.Thread(target=read_std_output, args=(cmd,))
-            flash_thread.start()
-            # subprocess.call(cmd)
-        except OSError as e:
-            printf(("Error occurred: error code {0}, error msg: {1}".format(str(e.errno), e.strerror)), DEBUG)
-            printf(error_description, ERROR)
+    cmd, error_description = gen_flash_cmd(port, firmware_path, avrdude_path)
+    printf("Flash Command:\n{}".format(' '.join(cmd)), INFO)
+    try:
+        flash_thread = threading.Thread(target=read_std_output, args=(cmd,))
+        flash_thread.start()
+        # subprocess.call(cmd)
+    except OSError as e:
+        printf(("Error occurred: error code {0}, error msg: {1}".format(str(e.errno), e.strerror)), DEBUG)
+        printf(error_description, ERROR)
 
 
 def main(args):
@@ -170,6 +174,7 @@ def main(args):
     else:
         printf("No uArm Port Found", ERROR)
 
+
 if __name__ == '__main__':
     try:
         import argparse
@@ -179,11 +184,9 @@ if __name__ == '__main__':
         parser.add_argument("--path", help="firmware path")
         parser.add_argument("--debug", help="open Debug Mode")
         parser.add_argument("-d", "--download",
-                        help="download firmware from {}".format(default_config['firmware_url']),
-                        action="store_true")
+                            help="download firmware from {}".format(default_config['firmware_url']),
+                            action="store_true")
         args = parser.parse_args()
         main(args)
     except SystemExit:
         exit_fun()
-
-
