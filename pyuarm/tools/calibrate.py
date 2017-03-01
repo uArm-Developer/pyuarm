@@ -105,6 +105,7 @@ def main(args):
         debug = False
 
     uarm = UArm(port_name=port_name, debug=debug)
+    uarm.connect()
     printf("All Calibration: {}".format("COMPLETED" if read_completed_flag(uarm, CALIBRATION_FLAG) else "NOT COMPLETED"))
     printf("Linear Calibration: {}".format("COMPLETED" if read_completed_flag(uarm, CALIBRATION_LINEAR_FLAG) else "NOT COMPLETED"))
     printf("Manual Calibration: {}".format("COMPLETED" if read_completed_flag(uarm, CALIBRATION_SERVO_FLAG) else "NOT COMPLETED"))

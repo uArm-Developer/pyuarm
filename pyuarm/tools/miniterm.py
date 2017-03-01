@@ -12,7 +12,7 @@ from .list_uarms import get_uarm_port_cli, uarm_ports
 from ..uarm import UArm
 from .. import util
 
-version = "0.1.5"
+version = "0.1.6"
 
 
 class UArmCmd(Cmd):
@@ -114,12 +114,12 @@ class UArmCmd(Cmd):
             values = arg.split(' ')
             if len(values) == 3:
                 result = self.uarm.set_position(int(values[0]), int(values[1]), int(values[2]), wait=True)
-                msg = "succeed" if result else "failed"
-                print(msg)
+                # msg = "succeed" if result else "failed"
+                # print(msg)
             elif len(values) == 4:
-                result = self.uarm.set_position(int(values[0]), int(values[1]), int(values[2]), int(values[3]), wait=True)
-                msg = "succeed" if result else "failed"
-                print(msg)
+                result = self.uarm.set_position(int(values[0]), int(values[1]), int(values[2]), speed=int(values[3]), wait=True)
+                # msg = "succeed" if result else "failed"
+                # print(msg)
 
     def do_sp(self, args):
         """

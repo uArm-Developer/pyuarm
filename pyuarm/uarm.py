@@ -564,18 +564,14 @@ class UArm(object):
             else:
                 command = protocol.SET_POSITION.format(x, y, z, s)
             if wait:
-                self.__send_msg(command)
-                # start_time = time.time()
+                serial_id, response = self.send_and_receive(command)
                 while self.get_is_moving():
                     time.sleep(0.05)
-                # serial_id, response = self.send_and_receive(command)
-                # if response is None:
-                #     printf("No Message response {}".format(serial_id))
-                #     return None
-                # if response[0] == protocol.OK:
-                #     return True
-                # else:
-                #     return False
+                if response is not None:
+                    if response[0] == protocol.OK:
+                        return True
+                    else:
+                        return False
             else:
                 self.__send_msg(command)
         except Exception as e:
