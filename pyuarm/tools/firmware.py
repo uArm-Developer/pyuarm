@@ -1,5 +1,16 @@
 from __future__ import print_function
 from __future__ import division
+import platform
+import threading
+from ..util import *
+from .list_uarms import get_uarm_port_cli
+from subprocess import Popen, PIPE, STDOUT
+import time
+from .. import PY3
+if PY3:
+    import urllib.request
+else:
+    import urllib2
 
 __version__ = '1.1.0'
 __author__ = 'Alex Tan'
@@ -7,26 +18,7 @@ __author__ = 'Alex Tan'
 This Tool is for uArm firmware flashing. Also support download firmware online
 '''
 
-import sys
-import os
-import platform
-import threading
-from ..util import *
-from .list_uarms import get_uarm_port_cli
-from subprocess import Popen, PIPE, STDOUT, check_output
-import time
-
-global process
-
-if sys.version > '3':
-    PY3 = True
-else:
-    PY3 = False
-
-if PY3:
-    import urllib.request
-else:
-    import urllib2
+process = None
 
 
 def exit_fun():
@@ -46,7 +38,7 @@ def read_std_output(cmd, progress_step=None):
         title = "Flashing: "
         while True:
             data = process.stdout.read(1)
-            if data == '' or process.poll() != None:
+            if data == '' or process.poll() is not None:
                 break
             if data != '':
                 if data == b'#':  # Progress
@@ -74,7 +66,6 @@ def read_std_output(cmd, progress_step=None):
         # if process is not None:
         #     process.terminate()
         printf("Error Occurred, {}".format(e), ERROR)
-            # error
 
 
 def download(url, filepath):  ## To - improve, add logger to support show the download prgress
@@ -94,14 +85,8 @@ def download(url, filepath):  ## To - improve, add logger to support show the do
             block = u.read(1024)
             data_blocks.append(block)
             total += len(block)
-            # hash = ((60*total)//fileTotalbytes)
-            # per =total / fileTotalbytes
             title = "Downloading: "
             progressbar(title, total, fileTotalbytes)
-            # if PY3:
-            #     print("[{}{}] {:.0%}".format('#' * hash, ' ' * (60-hash), per), end="\r")
-            # else:
-            #     print("[{}{}] {:.0%}".format('#' * hash, ' ' * (60 - hash), per), end="\r")
             if not len(block):
                 break
         print("")

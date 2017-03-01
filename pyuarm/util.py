@@ -9,6 +9,7 @@ import os
 from os.path import expanduser
 import io
 import json
+from logging import DEBUG, ERROR, INFO
 if PY3:
     import urllib.request as req
 else:
@@ -40,7 +41,7 @@ def load_config():
             settings = json.load(data_file)
         return settings
     except Exception as e:
-        printf ("Error occured when reading settings. {}".format(e))
+        printf("Error occurred when reading settings. {}".format(e))
         return default_config
 
 
@@ -57,6 +58,7 @@ def save_default_config():
     settings = default_config
     save_config(settings)
 
+
 # ############## online config file #################
 def get_online_config():
     online_config_url = "http://download.ufactory.cc/version.json"
@@ -65,7 +67,6 @@ def get_online_config():
     return online_config_data
 
 # ################################### Log ################################
-from logging import DEBUG, ERROR, INFO
 STREAM = 55
 pylogger = None
 stream_logger = None
@@ -105,10 +106,10 @@ def init_logger(logger):
 def set_stream_logger():
     global stream_logger
     stream_logger = logging.getLogger('UA_STREAM')
-    myFormatter = logging.Formatter('%(message)s')
+    my_formatter = logging.Formatter('%(message)s')
     stream_logger.setLevel(logging.DEBUG)
     sch = logging.StreamHandler()
-    sch.setFormatter(myFormatter)
+    sch.setFormatter(my_formatter)
     if PY3:
         sch.terminator = ""
     sch.setLevel(logging.DEBUG)
