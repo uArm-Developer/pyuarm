@@ -11,11 +11,10 @@ import sys
 import os
 import platform
 import threading
-from ..util import ua_dir, default_config, printf, progressbar
+from ..util import *
 from .list_uarms import get_uarm_port_cli
 from subprocess import Popen, PIPE, STDOUT, check_output
 import time
-from logging import INFO, DEBUG, ERROR
 
 global process
 
@@ -53,9 +52,12 @@ def read_std_output(cmd, progress_step=None):
                 if data == b'#':  # Progress
                     progress += 1
                     if progress_step is None:
-                        progressbar(title, progress, total_progress)
+                        if get_logger_level() != DEBUG:
+                            progressbar(title, progress, total_progress)
                     else:
                         progress_step(progress, total_progress)
+                if not progress_step:
+                    printf(data, STREAM)
         time.sleep(0.1)
         print("")
         # printf("Flashing EOF", INFO)
@@ -157,10 +159,18 @@ def flash(port, firmware_path, avrdude_path=None):
 
 
 def main(args):
+
+    if args.debug:
+        set_default_logger(debug=True)
+        set_stream_logger()
+    else:
+        set_default_logger()
+
     if args.port:
         port_name = args.port
     else:
         port_name = get_uarm_port_cli()
+
     if args.path:
         firmware_path = args.path
     else:
@@ -182,7 +192,7 @@ if __name__ == '__main__':
         parser = argparse.ArgumentParser()
         parser.add_argument("--port", help="specify port number")
         parser.add_argument("--path", help="firmware path")
-        parser.add_argument("--debug", help="open Debug Mode")
+        parser.add_argument("--debug", help="open Debug Mode", action="store_true")
         parser.add_argument("-d", "--download",
                             help="download firmware from {}".format(default_config['firmware_url']),
                             action="store_true")

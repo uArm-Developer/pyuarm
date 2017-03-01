@@ -65,11 +65,15 @@ def get_online_config():
     return online_config_data
 
 # ################################### Log ################################
-ERROR = 2
-INFO  = 1
-DEBUG = 0
-
+from logging import DEBUG, ERROR, INFO
+STREAM = 55
 pylogger = None
+stream_logger = None
+
+
+def get_logger_level():
+    if pylogger is not None:
+        return pylogger.level
 
 
 def set_default_logger(debug=False):
@@ -98,6 +102,19 @@ def init_logger(logger):
     printf('pyuarm version: ' + __version__)
 
 
+def set_stream_logger():
+    global stream_logger
+    stream_logger = logging.getLogger('UA_STREAM')
+    myFormatter = logging.Formatter('%(message)s')
+    stream_logger.setLevel(logging.DEBUG)
+    sch = logging.StreamHandler()
+    sch.setFormatter(myFormatter)
+    if PY3:
+        sch.terminator = ""
+    sch.setLevel(logging.DEBUG)
+    stream_logger.addHandler(sch)
+
+
 def close_logger():
     handlers = pylogger.handlers
     for p in handlers:
@@ -120,6 +137,14 @@ def printf(msg, type=INFO):
         pylogger.debug(msg)
     elif type == ERROR:
         pylogger.error(msg)
+    elif type == STREAM:
+        if pylogger.level == DEBUG:
+            if PY3:
+                if stream_logger is None:
+                    set_stream_logger()
+                stream_logger.debug(msg.decode(encoding=sys.getdefaultencoding()))
+            else:
+                print(msg, end='')
 
 # ################################### Exception ################################
 
