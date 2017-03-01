@@ -1,7 +1,7 @@
 import argparse
 
 #from pyuarm.tools import flash_firmware, calibrate
-from . import miniterm, list_uarms, calibrate, flash_firmware
+from . import miniterm, list_uarms, calibrate, firmware
 from ..version import __version__
 from .. import util
 
@@ -27,7 +27,7 @@ def main():
     pf.add_argument("-p", "--port", help="specify port number")
     pf.add_argument("--path", help="firmware path")
     pf.add_argument("-d", "--download", help="download firmware from {}".format(
-        flash_firmware.default_config['download_url']),
+        firmware.default_config['download_url']),
                     action="store_true")
 
     args = parser.parse_args()
@@ -41,7 +41,7 @@ def main():
         elif args.cmd == 'list':
             list_uarms.main()
         elif args.cmd == 'firmware':
-            flash_firmware.main(args)
+            firmware.main(args)
 
 if __name__ == '__main__':
     main()

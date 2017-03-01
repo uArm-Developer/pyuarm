@@ -1,17 +1,78 @@
+from __future__ import division
+from __future__ import print_function
+import math
+import sys
+from . import PY3
 import logging
 from .version import __version__
 import os
 from os.path import expanduser
-home_dir = os.path.join(expanduser("~"), ".uarm", "")
+import io
+import json
+if PY3:
+    import urllib.request as req
+else:
+    import urllib2 as req
+# ################################### Config ################################
+home_dir = os.path.join(expanduser("~"), "uarm", "")
 ua_dir = os.path.join(home_dir, "assistant")
 
+config_file = os.path.join(ua_dir, "config.json")
+default_config = {
+    "branch": "pro",
+    "firmware_filename": "firmware.hex",
+    "bluetooth_filename": "bluetooth.hex",
+    "hardware_id": "USB VID:PID=0403:6001",
+    "calibration_filename": "calibration.hex",
+    "calibration_url": "http://download.ufactory.cc/firmware/pro/calibration.hex",
+    "firmware_url": "http://download.ufactory.cc/firmware/dev/firmware.hex",
+    "driver_url": "http://download.ufactory.cc/driver/ftdi_win.zip",
+    "bluetooth_url": "http://download.ufactory.cc/firmware/pro/bluetooth.hex",
+    "latest_version": "",
+}
+
+
+def load_config():
+    try:
+        if not os.path.exists(config_file):
+            save_default_config()
+        with io.open(config_file, "r", encoding="utf-8") as data_file:
+            settings = json.load(data_file)
+        return settings
+    except Exception as e:
+        printf ("Error occured when reading settings. {}".format(e))
+        return default_config
+
+
+def save_config(settings):
+    cf = open(config_file, "w")
+    json.dump(settings, open(config_file, 'w'),
+              sort_keys=False, indent=4)
+    cf.close()
+
+
+def save_default_config():
+    json.dump(default_config, open(config_file, 'w'),
+              sort_keys=False, indent=4, separators=(',', ': '))
+    settings = default_config
+    save_config(settings)
+
+# ############## online config file #################
+def get_online_config():
+    online_config_url = "http://download.ufactory.cc/version.json"
+    response = req.urlopen(online_config_url)
+    online_config_data = json.loads(response.read().decode(response.info().get_param('charset') or 'utf-8'))
+    return online_config_data
+
+# ################################### Log ################################
 ERROR = 2
 INFO  = 1
 DEBUG = 0
 
-global pylogger
+pylogger = None
 
-def get_default_logger(debug=False):
+
+def set_default_logger(debug=False):
     if debug:
         logging_level = logging.DEBUG
     else:
@@ -23,23 +84,26 @@ def get_default_logger(debug=False):
     ch.setFormatter(formatter)
     ch.setLevel(logging_level)
     logger.addHandler(ch)
-    return logger
+    init_logger(logger)
+
 
 def init_logger(logger):
     """
     initialize global logger
-    :param debug: if True, Turn on the logger debug
+    :param logger
     :return:
     """
     global pylogger
     pylogger = logger
     printf('pyuarm version: ' + __version__)
 
+
 def close_logger():
     handlers = pylogger.handlers
     for p in handlers:
         p.close()
         pylogger.removeHandler(p)
+
 
 def printf(msg, type=INFO):
     """
@@ -48,12 +112,16 @@ def printf(msg, type=INFO):
     :param type:
     :return:
     """
+    if pylogger is None:
+        set_default_logger()
     if type == INFO:
         pylogger.info(msg)
     elif type == DEBUG:
         pylogger.debug(msg)
     elif type == ERROR:
         pylogger.error(msg)
+
+# ################################### Exception ################################
 
 
 class UArmConnectException(Exception):
@@ -79,3 +147,12 @@ class UArmConnectException(Exception):
 
     def __str__(self):
         return repr(self.error + "-" + self.message)
+
+
+# ################################### Other ################################
+
+def progressbar(cur, total):
+    percent = '{:.2%}'.format(cur / total)
+    print("[%-50s] %s" % (
+                            '=' * int(math.floor(cur * 50 / total)),
+                            percent), end='\r')

@@ -10,10 +10,14 @@ This Tool is for uArm firmware flashing. Also support download firmware online
 import sys
 import os
 import platform
-import subprocess
-from ..util import printf,ua_dir
+import threading
+from ..util import ua_dir, default_config, printf, progressbar
 from .list_uarms import get_uarm_port_cli
+from subprocess import Popen, PIPE, STDOUT, check_output
+import time
+from logging import INFO, DEBUG, ERROR
 
+global process
 
 if sys.version > '3':
     PY3 = True
@@ -25,20 +29,47 @@ if PY3:
 else:
     import urllib2
 
-default_config = {
-    "filename": "firmware.hex",
-    "hardware_id": "USB VID:PID=0403:6001",
-    "download_url": "http://download.ufactory.cc/firmware/firmware_dev.hex",
-    "download_flag": False
-}
-
-
 
 def exit_fun():
     try:
         input("\nPress Enter to Exit...")
     except Exception:
         pass
+
+
+def read_std_output(cmd, progress_step=None):
+    global process
+    try:
+        process = Popen(cmd, stdout=PIPE,
+                          stderr=STDOUT, shell=False, bufsize=1)
+        progress = 0
+        total_progress = 150
+        while True:
+            data = process.stdout.read(1)
+            if data == '' or process.poll() != None:
+                break
+            if data != '':
+                if data == b'#': # Progress
+                    progress += 1
+                    if progress_step is None:
+                        progressbar(progress, total_progress)
+                    else:
+                        progress_step(progress, total_progress)
+        time.sleep(0.1)
+        printf("Flashing EOF", INFO)
+        process.wait()
+        exitcode = process.returncode
+        process.stdout.close()
+        process.terminate()
+        if exitcode == 1: # Error
+
+            return
+        else: # succeed
+            pass
+    except FileNotFoundError as e:
+        if process is not None:
+            process.terminate()
+        # error
 
 def download(url, filepath): ## To - improve, add logger to support show the download prgress
     try:
@@ -57,14 +88,15 @@ def download(url, filepath): ## To - improve, add logger to support show the dow
             block = u.read(1024)
             data_blocks.append(block)
             total += len(block)
-            hash = ((60*total)//fileTotalbytes)
-            per =total / fileTotalbytes
-            if PY3:
-                print("[{}{}] {:.0%}".format('#' * hash, ' ' * (60-hash), per), end="\r")
-            else:
-                print("[{}{}] {:.0%}".format('#' * hash, ' ' * (60 - hash), per), end="\r")
+            # hash = ((60*total)//fileTotalbytes)
+            # per =total / fileTotalbytes
+            progressbar(total, fileTotalbytes)
+            # if PY3:
+            #     print("[{}{}] {:.0%}".format('#' * hash, ' ' * (60-hash), per), end="\r")
+            # else:
+            #     print("[{}{}] {:.0%}".format('#' * hash, ' ' * (60 - hash), per), end="\r")
             if not len(block):
-                print ("\nCompleted!")
+                printf("\nCompleted!", INFO)
                 break
 
         data=b''.join(data_blocks) #had to add b because I was joining bytes not strings
@@ -74,7 +106,7 @@ def download(url, filepath): ## To - improve, add logger to support show the dow
         with open(filepath, "wb") as f:
                 f.write(data)
     except Exception as e:
-        print ("Error: " + str(e))
+        printf("Error: " + str(e))
 
 
 def gen_flash_cmd(port, firmware_path, avrdude_path=None, debug=False):
@@ -110,12 +142,15 @@ def gen_flash_cmd(port, firmware_path, avrdude_path=None, debug=False):
 
 def flash(port, firmware_path, avrdude_path=None):
         cmd,error_description = gen_flash_cmd(port,firmware_path,avrdude_path)
-        printf("Flash Command: {}".format(' '.join(cmd)))
+        printf("Flash Command:\n{}".format(' '.join(cmd)), INFO)
         try:
-            subprocess.call(cmd)
+            flash_thread = threading.Thread(target=read_std_output, args=(cmd,))
+            flash_thread.start()
+            # subprocess.call(cmd)
         except OSError as e:
-            print(("Error occurred: error code {0}, error msg: {1}".format(str(e.errno), e.strerror)))
-            print(error_description)
+            printf(("Error occurred: error code {0}, error msg: {1}".format(str(e.errno), e.strerror)), DEBUG)
+            printf(error_description, ERROR)
+
 
 def main(args):
     if args.port:
@@ -125,15 +160,15 @@ def main(args):
     if args.path:
         firmware_path = args.path
     else:
-        firmware_path = os.path.join(ua_dir, default_config['filename'])
+        firmware_path = os.path.join(ua_dir, default_config['firmware_filename'])
 
     if args.download:
-        download(default_config['download_url'], firmware_path)
+        download(default_config['firmware_url'], firmware_path)
 
     if port_name is not None:
         flash(port_name, firmware_path)
     else:
-        printf("No uArm Port Found")
+        printf("No uArm Port Found", ERROR)
 
 if __name__ == '__main__':
     try:
@@ -142,8 +177,9 @@ if __name__ == '__main__':
         parser = argparse.ArgumentParser()
         parser.add_argument("--port", help="specify port number")
         parser.add_argument("--path", help="firmware path")
+        parser.add_argument("--debug", help="open Debug Mode")
         parser.add_argument("-d", "--download",
-                        help="download firmware from {}".format(default_config['download_url']),
+                        help="download firmware from {}".format(default_config['firmware_url']),
                         action="store_true")
         args = parser.parse_args()
         main(args)

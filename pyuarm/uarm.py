@@ -57,7 +57,7 @@ class UArm(object):
         if port_name is not None:
             self.port_name = port_name
         if logger is None:
-            init_logger(get_default_logger(debug))
+            set_default_logger(debug)
         else:
             init_logger(logger)
         self.port_name = None
