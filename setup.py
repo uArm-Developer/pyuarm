@@ -1,6 +1,6 @@
 from distutils.util import convert_path
 from setuptools import setup, find_packages
-import platform
+# import platform
 
 # Get Version from version.py file
 main_ns = {}

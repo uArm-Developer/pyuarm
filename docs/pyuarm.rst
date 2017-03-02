@@ -1,6 +1,6 @@
-===============================
+======
 pyuarm
-===============================
+======
 
 Overview
 ========
@@ -23,8 +23,8 @@ Features
 
 Requirements
 ============
-- Python 2.7x and Python 3.4x
-- uArm Firmware ( `uarm_helper firmware -d`)
+- Python 2.7x and Python 3.4x or above
+- Latest uArm Firmware
 
 Installation
 ============
@@ -34,6 +34,19 @@ pyuarm
 This install a package that can be used from Python (``import pyuarm``).
 
 To install for all users on the system, administrator rights (root) may be required.
+
+Firmware
+--------
+
+pyuarm requires you install uArm Firmware, Please install firmware before.
+
+There are three ways to install firmware.
+
+- Use GUI uArm Assistant
+
+- Use ``uarmcli firmware -d`` after you install pyuarm
+
+- if ``uarmcli`` not working, you could use this way ``python -m pyuarm.tools.firmware -d``
 
 From PyPI
 ~~~~~~~~~

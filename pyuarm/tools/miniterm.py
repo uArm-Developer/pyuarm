@@ -9,7 +9,7 @@
 
 from cmd import Cmd
 from .list_uarms import get_uarm_port_cli, uarm_ports
-from ..uarm import UArm
+from ..uarm import UArm, UArmConnectException
 from .. import util
 
 version = "0.1.6"
@@ -42,7 +42,7 @@ class UArmCmd(Cmd):
 
     def __init__(self, port=None, debug=False, *args, **kwargs):
         Cmd.__init__(self, *args, **kwargs)
-        self.connect(port=port, debug=debug)
+        self.__connect(port=port, debug=debug)
 
     def __is_connected(self):
         if self.uarm is None:
@@ -61,11 +61,11 @@ class UArmCmd(Cmd):
         Please connect to uArm before you do any control action
         """
         if len(arg) != 0:
-            self.connect(arg)
+            self.__connect(arg)
         elif len(arg) == 0:
-            self.connect()
+            self.__connect()
 
-    def connect(self, port=None, debug=False, timeout=1):
+    def __connect(self, port=None, debug=False, timeout=1):
         """
         connect uArm.
         :param port:
@@ -82,7 +82,7 @@ class UArmCmd(Cmd):
                     uarm_port = get_uarm_port_cli()
                     try:
                         self.uarm = UArm(port_name=uarm_port, debug=debug, timeout=timeout)
-                    except util.UArmConnectException as e:
+                    except UArmConnectException as e:
                         print("uArm Connect failed, {}".format(str(e)))
                 elif len(ports) == 1:
                     self.uarm = UArm(debug=debug, timeout=timeout)
@@ -182,10 +182,10 @@ class UArmCmd(Cmd):
         set_angle
         format: write_angle servo_number angle
         servo_number:
-            0 bottom servo,
-            1 left servo,
-            2 right servo,
-            3 hand servo
+        - 0 bottom servo,
+        - 1 left servo,
+        - 2 right servo,
+        - 3 hand servo
         eg.
         >>> set_angle 0 90
         succeed
@@ -205,9 +205,9 @@ class UArmCmd(Cmd):
         Read current servo angle.
         format: read_angle servo_number
         servo_number:
-            0 bottom servo,
-            1 left servo,
-            2 right servo,
+        - 0 bottom servo,
+        - 1 left servo,
+        - 2 right servo,
         if no servo_number provide, will list all servos angle
         eg.
         >>> get_angle
@@ -263,16 +263,18 @@ class UArmCmd(Cmd):
     def do_servo(self, arg):
         """
         Servo status
-        format: servo attach servo_number
-                servo detach servo_number
+        format:
+        - servo attach servo_number
+        - servo detach servo_number
         servo_number:
-            0 bottom servo,
-            1 left servo,
-            2 right servo,
-            3 hand servo
-            all
-        eg. servo attach all
-            servo detach all
+        - 0 bottom servo,
+        - 1 left servo,
+        - 2 right servo,
+        - 3 hand servo
+        - all
+        eg.
+        - servo attach all
+        - servo detach all
         """
         if self.__is_connected():
             values = arg.split(' ')

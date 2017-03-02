@@ -1,4 +1,5 @@
 import re
+from pkg_resources import parse_version
 __version__ = '2.4.0.7'
 support_versions = ['2.1']
 
@@ -18,3 +19,10 @@ def is_supported_version(version):
         if major_version == v:
             return True
     return False
+
+
+def check_version_update(version1, version2):
+    if parse_version(version1) > parse_version(version2):
+        return True
+    else:
+        return False

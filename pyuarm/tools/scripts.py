@@ -3,6 +3,7 @@ import argparse
 from . import miniterm, list_uarms, calibrate, firmware
 from ..version import __version__
 
+
 def main():
     parser = argparse.ArgumentParser()
 

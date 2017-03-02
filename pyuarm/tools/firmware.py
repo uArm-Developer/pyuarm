@@ -2,9 +2,13 @@ from __future__ import print_function
 from __future__ import division
 import platform
 import threading
-from ..util import *
+import os
+from ..util import progressbar
+from ..log import get_logger_level, printf, ERROR, DEBUG, STREAM, set_default_logger, set_stream_logger
+from ..config import get_online_config, save_default_config, save_config, load_config, ua_dir, home_dir
 from .list_uarms import get_uarm_port_cli
 from subprocess import Popen, PIPE, STDOUT
+from ..version import check_version_update
 import time
 from .. import PY3
 if PY3:
@@ -143,8 +147,30 @@ def flash(port, firmware_path, avrdude_path=None):
         printf(error_description, ERROR)
 
 
-def main(args):
+def get_latest_firmware_version(branch='pro'):
+    try:
+        config = get_online_config()
+        if branch == 'pro':
+            vs = config['data']['firmware']['pro']
+        elif branch == 'dev':
+            vs = config['data']['firmware']['dev']
+        versions = {}
+        for v in vs:
+            versions = {v['version']: v['url']}
+        latest_version = max(versions.keys())
+        latest_version_url = versions[latest_version]
+        settings = load_config()
+        if settings['latest_version'] != "":
+            if check_version_update(latest_version, settings['latest_version']):
+                settings['latest_version'] = latest_version
+                settings['firmware_url'] = latest_version_url
+                save_config(settings)
+    except KeyError:
+        save_default_config()
 
+
+def main(args):
+    settings = load_config()
     if args.debug:
         set_default_logger(debug=True)
         set_stream_logger()
@@ -159,10 +185,10 @@ def main(args):
     if args.path:
         firmware_path = args.path
     else:
-        firmware_path = os.path.join(ua_dir, default_config['firmware_filename'])
+        firmware_path = os.path.join(ua_dir, settings['firmware_filename'])
 
     if args.download:
-        download(default_config['firmware_url'], firmware_path)
+        download(settings['firmware_url'], firmware_path)
 
     if port_name is not None:
         flash(port_name, firmware_path)
@@ -178,9 +204,7 @@ if __name__ == '__main__':
         parser.add_argument("--port", help="specify port number")
         parser.add_argument("--path", help="firmware path")
         parser.add_argument("--debug", help="open Debug Mode", action="store_true")
-        parser.add_argument("-d", "--download",
-                            help="download firmware from {}".format(default_config['firmware_url']),
-                            action="store_true")
+        parser.add_argument("-d", "--download", help="download firmware online", action="store_true")
         args = parser.parse_args()
         main(args)
     except SystemExit:

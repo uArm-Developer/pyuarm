@@ -44,7 +44,7 @@ class UArmSerial(UArmLineReader):
 
     def connection_made(self, transport):
         super(UArmSerial, self).connection_made(transport)
-        sys.stdout.write('port opened\n')
+        # sys.stdout.write('port opened\n')
         self.connected_status = True
 
     def handle_line(self, data):
@@ -54,10 +54,10 @@ class UArmSerial(UArmLineReader):
     def connection_lost(self, exc):
         self.data = []
         self.connected_status = False
-        print("Connect_status: {}".format(self.get_connect_status()))
+        # print("Connect_status: {}".format(self.get_connect_status()))
         # if exc:
         #     traceback.printf_exc(exc)
-        sys.stdout.write('port closed\n')
+        # sys.stdout.write('port closed\n')
 
 
 class UArmReaderThread(threading.Thread):

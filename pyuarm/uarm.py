@@ -1,41 +1,47 @@
 from __future__ import print_function
 import serial
-from . import version, protocol, util
-from .util import *
-from .tools.list_uarms import uarm_ports, get_port_property, check_port_plug_in
+from . import protocol
+from .log import DEBUG, INFO, ERROR, printf, init_logger, set_default_logger, close_logger
 from . import PY3
 import time
 import threading
+from .tools.list_uarms import uarm_ports, get_port_property
 
 if PY3:
     from queue import Queue, LifoQueue, Empty
 else:
     from Queue import Queue, LifoQueue, Empty
 
-
-def get_uarm(logger=None):
-    """
-    ===============================
-    Get First uArm Port instance
-    ===============================
-    It will return the first uArm Port detected by **pyuarm.tools.list_uarms**,
-    If no available uArm ports, will print *There is no uArm port available* and return None
-
-    .. raw:python
-    >>> import pyuarm
-    >>> uarm = pyuarm.get_uarm()
-    There is no uArm port available
+# ################################### Exception ################################
 
 
-    :returns: uArm() Instance
+class UArmConnectException(Exception):
+    def __init__(self, errno, message=None):
+        """
+        uArm Connect Exception
+        :param errno: 0 Unable to connect uArm, 1 unknown firmware version, 2 unsupported uArm Firmware version
+        :param message:
+        """
+        if message is None:
+            self.message = ""
+        else:
+            self.message = message
+        self.errno = errno
+        if self.errno == 0:
+            self.error = "Unable to connect uArm"
+        elif self.errno == 1:
+            self.error = "Unknown Firmware Version"
+        elif self.errno == 2:
+            self.error = "Unsupported uArm Firmware Version"
+        elif self.errno == 3:
+            self.error = "No available uArm Port"
+        elif self.errno == 4:
+            self.error = "uArm is not connected"
+        else:
+            self.error = "Not Defined Error"
 
-    """
-    ports = uarm_ports()
-    if len(ports) > 0:
-        return UArm(port_name=ports[0], logger=logger)
-    else:
-        printf("There is no uArm port available", ERROR)
-        return None
+    def __str__(self):
+        return repr(self.error + "-" + self.message)
 
 
 class UArm(object):
@@ -47,12 +53,13 @@ class UArm(object):
         :param timeout: default timeout is 5 sec.
         :raise UArmConnectException
 
-        if no port provide, we will detect all connected uArm serial devices.
-        please reference `pyuarm.tools.list_uarms`
-        port is a device name: depending on operating system.
-        eg. `/dev/ttyUSB0` on GNU/Linux or `COM3` on Windows.
-        logger will display all info/debug/error/warning messages.
+        | if no port provide, we will detect all connected uArm serial devices.
+        | please reference `pyuarm.tools.list_uarms`
+        | port is a device name: depending on operating system.
+        | eg. `/dev/ttyUSB0` on GNU/Linux or `COM3` on Windows.
+        | logger will display all info/debug/error/warning messages.
         """
+        self.__init_property()
         self.timeout = timeout
         if port_name is not None:
             self.port_name = port_name
@@ -60,6 +67,9 @@ class UArm(object):
             set_default_logger(debug)
         else:
             init_logger(logger)
+
+    def __init_property(self):
+        self.timeout = None
         self.port_name = None
         self.__data_buf = None
         self.__position_queue = None
@@ -98,9 +108,8 @@ class UArm(object):
 
     def connect(self):
         """
-        This function will open the port immediately. Function will wait for the READY Message for 5 secs. Once received
-        READY message, Function will send the Version search command.
-        :return:
+        This function will open the port immediately. Function will wait for the READY Message for 5 secs.
+        | Once received READY message, will finish connection.
         """
         if self.port_name is None:
             ports = uarm_ports()
@@ -146,6 +155,10 @@ class UArm(object):
                 break
 
     def is_connected(self):
+        """
+        Return the uArm Connection status.
+        :return: boolean
+        """
         if PY3:
             if self.__protocol is not None:
                 return self.__protocol.get_connect_status()
@@ -160,11 +173,22 @@ class UArm(object):
     def disconnect(self):
         """
         Disconnect the serial connection, terminate all queue and thread
-        :return:
         """
         self.__close_serial_core()
         self.__serial.close()
         printf("Disconnect from {}".format(self.port_name))
+
+    def close(self):
+        """
+        Release all resources:
+            | - logger
+            | - queue
+            | - thread
+        """
+        if self.is_connected():
+            self.disconnect()
+        close_logger()
+        self.__init_property()
 
     def __process_line(self, line):
         if line is not None:
@@ -179,21 +203,22 @@ class UArm(object):
                 printf("POSITION REPORT: {}".format(line), DEBUG)
                 values = line.split(' ')
                 pos_array = [float(values[1][1:]), float(values[2][1:]),
-                             float(values[3][1:]), float(values[4][1:])]
+                             float(values[3][1:])]
                 self.__position_queue.put(pos_array, block=False)
-            # elif line.startswith(protocol.REPORT_BUTTON_PRESSED):
-            #     printf("BUTTON REPORT: {}".format(line), DEBUG)
-            #     values = line.split(' ')
-            #     if values[1] == protocol.BUTTON_MENU:
-            #         self.__menu_button_queue.put(values[2][1:])
-            #     elif values[1] == protocol.BUTTON_PLAY:
-            #         self.__play_button_queue.put(values[2][1:])
+                # elif line.startswith(protocol.REPORT_BUTTON_PRESSED):
+                #     printf("BUTTON REPORT: {}".format(line), DEBUG)
+                #     values = line.split(' ')
+                #     if values[1] == protocol.BUTTON_MENU:
+                #         self.__menu_button_queue.put(values[2][1:])
+                #     elif values[1] == protocol.BUTTON_PLAY:
+                #         self.__play_button_queue.put(values[2][1:])
 
     def __receive_thread_process(self):
         """
-        this Function is for receiving thread function, All serial response message would store in __receive_queue.
-        This thread will be finished if serial connection is end.
-        :return:
+        This Function is for receiving thread. Under Python3.x we will use `pyserial threading`_ to manage
+        the send/receive logic.
+        | This thread will be finished if serial connection is end.
+        .. _pyserial threading: http://pyserial.readthedocs.io/en/latest/pyserial_api.html#module-serial.threaded
         """
         while self.is_connected():
             try:
@@ -202,16 +227,16 @@ class UArm(object):
                     if len(self.__data_buf) > 0:
                         line = self.__data_buf.pop()
                 else:
-                    line = self.__serial.readline()
+                    line = self.__serial.readline().rstrip('\r\n')
                     if not line:
                         continue
                 self.__process_line(line)
             except serial.SerialException as e:
-                printf("Receive Process Error {} - {}".format(e.errno, e))
-                if PY3:
+                printf("Receive Process Error - {}".format(e), ERROR)
+                if not PY3:
                     self.__connected = False
             except Exception as e:
-                printf("Error: {}".format(e), ERROR)
+                printf("Receive Process Error - {}".format(e), ERROR)
             time.sleep(0.001)
         # Make Sure all queues were release
         self.__position_queue.join()
@@ -220,9 +245,9 @@ class UArm(object):
 
     def __send_thread_process(self):
         """
-        this function is for sending thread function, All serial writable function should be through this thread,
-        thread will be finished if serial connection is end.
-        :return:
+        This function is for sending thread function.
+        | All functions which start with ``get_`` and with ``wait=True`` function will send out with this thread.
+        | thread will be finished if serial connection is end.
         """
         while self.is_connected():
             try:
@@ -251,10 +276,10 @@ class UArm(object):
 
     def __gen_serial_id(self):
         """
-        Generate a serial id to identify the item.
-        :return:
+        Generate a serial id to identify the message.
+        :return: Integer serial id
         """
-        if self.serial_id == 65535:
+        if self.serial_id == 65535:  # Maximum id
             self.serial_id = 1
         else:
             self.serial_id += 1
@@ -262,10 +287,9 @@ class UArm(object):
 
     def send_and_receive(self, msg):
         """
-
-        :param msg:
-        :return:
-        :return:
+        This function will block until receive the response message.
+        :param msg: String Serial Command
+        :return: (Integer msg_id, String response) and None if no response
         """
         if self.is_connected():
             msg_id = self.__gen_serial_id()
@@ -278,12 +302,12 @@ class UArm(object):
             # print("duration: {}".format(time.time() - start_time))
             return None
         else:
-            printf("No uArm connect", ERROR)
+            raise UArmConnectException(4)
 
-    def __send_msg(self, msg):
+    def send_msg(self, msg):
         """
-
-        :param msg:
+        This function will send out the message and return the serial_id immediately.
+        :param msg: String, Serial Command
         :return:
         """
         if self.is_connected():
@@ -297,19 +321,24 @@ class UArm(object):
             printf("Send #{} {}".format(serial_id, msg), DEBUG)
             return serial_id
         else:
-            printf("No uArm connect", ERROR)
+            raise UArmConnectException(4)
 
 # -------------------------------------------------------- Commands ---------------------------------------------------#
 
     def reset(self):
         """
-        reset to default position
+        Reset include below action:
+        - Attach all servos
+        - Move to default position (0, 150, 150) with speed 100mm/min
+        - Turn off Pump/Gripper
+        - Set Wrist Servo to Angle 90
         :return:
         """
         self.set_servo_attach()
         time.sleep(0.1)
-        self.set_position(0, 150, 150, speed=100)
+        self.set_position(0, 150, 150, speed=100, wait=True)
         self.set_pump(False)
+        self.set_gripper(False)
         self.set_wrist(90)
 
 # -------------------------------------------------------- Get Commands -----------------------------------------------#
@@ -317,8 +346,8 @@ class UArm(object):
     def firmware_version(self):
         """
         Get the firmware version.
-        Protocol Cmd: `protocol.GET_FIRMWARE_VERSION`
-        :return: firmware version, if failed return False
+        Protocol Cmd: ``protocol.GET_FIRMWARE_VERSION``
+        :return: firmware version, if failed return None
         """
         if self.__firmware_version is not None:
             return self.__firmware_version
@@ -338,8 +367,8 @@ class UArm(object):
     def hardware_version(self):
         """
         Get the Product version.
-        Protocol Cmd: `protocol.GET_HARDWARE_VERSION`
-        :return: firmware version, if failed return False
+        Protocol Cmd: `protocol.GET_HARDWARE_VERSION``
+        :return: firmware version, if failed return None
         """
         if self.__hardware_version is not None:
             return self.__hardware_version
@@ -357,8 +386,8 @@ class UArm(object):
 
     def get_position(self):
         """
-        Get Current uArm position (x,y,z) mm
-        :return: Returns an array of the format [x, y, z] of the robots current location
+        Get Current uArm position (x,y,z)
+        :return: Float Array. Returns an array of the format [x, y, z] of the robots current location
         """
         try:
             serial_id, response = self.send_and_receive(protocol.GET_COOR)
@@ -378,8 +407,8 @@ class UArm(object):
 
     def get_is_moving(self):
         """
-        Get is uArm Moving
-        :return: True or False
+        Get the uArm current moving status.
+        :return: Boolean True or False
         """
         try:
             serial_id, response = self.send_and_receive(protocol.GET_IS_MOVE)
@@ -399,7 +428,7 @@ class UArm(object):
     def get_polar(self):
         """
         get Polar coordinate
-        :return: Return an array of the format [rotation, stretch, height]
+        :return: Float Array. Return an array of the format [rotation, stretch, height]
         """
         try:
             serial_id, response = self.send_and_receive(protocol.GET_POLAR)
@@ -541,9 +570,9 @@ class UArm(object):
             printf("Error {}".format(e))
             return None
 
-# -------------------------------------------------------- Set Commands -----------------------------------------------#
+        # -------------------------------------------------------- Set Commands -----------------------------------------------#
 
-    def set_position(self, x, y, z, speed=300, relative=False, wait=False):
+    def set_position(self, x=0.0, y=0.0, z=0.0, speed=300, relative=False, wait=False):
         """
         Move uArm to the position (x,y,z) unit is mm, speed unit is mm/sec
         :param x:
@@ -573,7 +602,7 @@ class UArm(object):
                     else:
                         return False
             else:
-                self.__send_msg(command)
+                self.send_msg(command)
         except Exception as e:
             printf("Error {}".format(e))
             return None
@@ -596,7 +625,7 @@ class UArm(object):
             else:
                 return False
         else:
-            self.__send_msg(command)
+            self.send_msg(command)
 
     def set_gripper(self, catch, wait=False):
         """
@@ -616,7 +645,7 @@ class UArm(object):
             else:
                 return False
         else:
-            self.__send_msg(command)
+            self.send_msg(command)
 
     def set_wrist(self, angle, wait=False):
         """
@@ -646,7 +675,7 @@ class UArm(object):
             else:
                 return False
         else:
-            self.__send_msg(command)
+            self.send_msg(command)
 
     def set_buzzer(self, frequency, duration, wait=False):
         """
@@ -667,7 +696,7 @@ class UArm(object):
             else:
                 return False
         else:
-            self.__send_msg(command)
+            self.send_msg(command)
 
     def set_servo_attach(self, servo_number=None, move=True, wait=False):
         """
@@ -693,7 +722,7 @@ class UArm(object):
                 else:
                     return False
             else:
-                self.__send_msg(command)
+                self.send_msg(command)
         else:
             if move:
                 pos = self.get_position()
@@ -716,8 +745,7 @@ class UArm(object):
         """
         Set Servo status detach, Servo Detach will unlock the servo, You can move uArm with your hands.
         But move function won't be effect until you attach.
-        :param servo_number: If None, will detach all servos, please reference protocol.py SERVO_BOTTOM, SERVO_LEFT,
-         SERVO_RIGHT, SERVO_HAND
+        :param servo_number: If None, will detach all servos, please reference protocol.py SERVO_BOTTOM, SERVO_LEFT, SERVO_RIGHT, SERVO_HAND
         :param wait: if True, will block the thread, until get response or timeout
         :return: succeed True or Failed False
         """
@@ -733,7 +761,7 @@ class UArm(object):
                 else:
                     return False
             else:
-                self.__send_msg(command)
+                self.send_msg(command)
         else:
             if wait:
                 if self.set_servo_detach(servo_number=0, wait=True) \
@@ -765,7 +793,7 @@ class UArm(object):
         speed = str(round(speed, 2))
         command = protocol.SET_POLAR.format(stretch, rotation, height, speed)
         if wait:
-            self.__send_msg(command)
+            self.send_msg(command)
             while self.get_is_moving():
                 time.sleep(0.05)
         # if wait:
@@ -778,73 +806,9 @@ class UArm(object):
         #     else:
         #         return False
         else:
-            self.__send_msg(command)
+            self.send_msg(command)
 
-# ---------------------------------------------------- Report Commands -----------------------------------------------#
-
-    def set_report_button(self, wait=False):
-        """
-        Report Button pressed, this function will temporary disable system built-in
-        :param wait: if True, will block the thread, until get response or timeout
-        :return:
-        """
-        command = protocol.SET_REPORT_BUTTON.format(0)
-        if wait:
-            serial_id, response = self.send_and_receive(command)
-            if response is None:
-                printf("No Message response {}".format(serial_id))
-                return None
-            if response[0] == protocol.OK:
-                return True
-            else:
-                return False
-        else:
-            self.__send_msg(command)
-
-    def close_report_button(self, wait=False):
-        """
-        Close report Button pressed event
-        :param wait: if True, will block the thread, until get response or timeout
-        :return:
-        """
-        command = protocol.SET_REPORT_BUTTON.format(1)
-        if wait:
-            serial_id, response = self.send_and_receive(command)
-            if response is None:
-                printf("No Message response {}".format(serial_id))
-                return None
-            if response[0] == protocol.OK:
-                return True
-            else:
-                return False
-        else:
-            self.__send_msg(command)
-
-    def get_report_button(self, button, wait=False):
-        """
-        If call `set_report_button`, uArm will report button event once buttons have been press.
-        store the position in LIFO queue.
-        :param button , B0 - BUTTON_MENU, B1 - BUTTON_PLAY
-        :param wait: if True, will block the thread, until get response or timeout
-        :return: position array [x,y,z,r]
-        """
-        try:
-            item = None
-            if button == protocol.BUTTON_MENU:
-                if wait:
-                    item = self.__menu_button_queue.get(self.timeout)
-                else:
-                    item = self.__menu_button_queue.get(block=False)
-                self.__menu_button_queue.task_done()
-            elif button == protocol.BUTTON_PLAY:
-                if wait:
-                    item = self.__play_button_queue.get(self.timeout)
-                else:
-                    item = self.__play_button_queue.get(block=False)
-                self.__play_button_queue.task_done()
-            return item
-        except Empty:
-            return None
+        # ---------------------------------------------------- Report Commands -----------------------------------------------#
 
     def set_report_position(self, interval, wait=False):
         """
@@ -865,7 +829,7 @@ class UArm(object):
             else:
                 return False
         else:
-            self.__send_msg(command)
+            self.send_msg(command)
 
     def close_report_position(self, wait=False):
         """
@@ -883,6 +847,9 @@ class UArm(object):
         item = self.__position_queue.get(self.timeout)
         self.__position_queue.task_done()
         return item
+
+    def __del__(self):
+        self.close()
 
 
 if __name__ == '__main__':
