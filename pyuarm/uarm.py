@@ -15,6 +15,15 @@ else:
 # ################################### Exception ################################
 
 
+def catch_exception(func):
+    def __decorator(*args,**kwargs):
+        try:
+            func(*args,**kwargs)
+        except Exception as e:
+            printf("{} - {} - {}".format(type(func).__name__, type(e).__name__, e), ERROR)
+    return __decorator
+
+
 class UArmConnectException(Exception):
     def __init__(self, errno, message=None):
         """
@@ -106,6 +115,7 @@ class UArm(object):
         else:
             self.__connected = False
 
+    @catch_exception
     def connect(self):
         """
         This function will open the port immediately. Function will wait for the READY Message for 5 secs.
@@ -154,6 +164,7 @@ class UArm(object):
             if self.__isReady:
                 break
 
+    @catch_exception
     def is_connected(self):
         """
         Return the uArm Connection status.
@@ -170,6 +181,7 @@ class UArm(object):
             else:
                 return False
 
+    @catch_exception
     def disconnect(self):
         """
         Disconnect the serial connection, terminate all queue and thread
@@ -178,6 +190,7 @@ class UArm(object):
         self.__serial.close()
         printf("Disconnect from {}".format(self.port_name))
 
+    @catch_exception
     def close(self):
         """
         Release all resources:
@@ -196,6 +209,7 @@ class UArm(object):
                 values = line.split(' ')
                 msg_id = int(values[0].replace('$', ''))
                 self.msg_buff[msg_id] = values[1:]
+                printf("MSG Received: {}".format(line, DEBUG))
             elif line.startswith(protocol.READY):
                 printf("Received MSG: {}".format(line), DEBUG)
                 self.__isReady = True
@@ -205,13 +219,6 @@ class UArm(object):
                 pos_array = [float(values[1][1:]), float(values[2][1:]),
                              float(values[3][1:])]
                 self.__position_queue.put(pos_array, block=False)
-                # elif line.startswith(protocol.REPORT_BUTTON_PRESSED):
-                #     printf("BUTTON REPORT: {}".format(line), DEBUG)
-                #     values = line.split(' ')
-                #     if values[1] == protocol.BUTTON_MENU:
-                #         self.__menu_button_queue.put(values[2][1:])
-                #     elif values[1] == protocol.BUTTON_PLAY:
-                #         self.__play_button_queue.put(values[2][1:])
 
     def __receive_thread_process(self):
         """
@@ -225,18 +232,18 @@ class UArm(object):
                 line = None
                 if PY3:
                     if len(self.__data_buf) > 0:
-                        line = self.__data_buf.pop()
+                        line = self.__data_buf.pop().rstrip('\r\n')
                 else:
                     line = self.__serial.readline().rstrip('\r\n')
                     if not line:
                         continue
                 self.__process_line(line)
             except serial.SerialException as e:
-                printf("Receive Process Error - {}".format(e), ERROR)
+                printf("Receive Process Fatal - {}".format(e), ERROR)
                 if not PY3:
                     self.__connected = False
             except Exception as e:
-                printf("Receive Process Error - {}".format(e), ERROR)
+                printf("Receive Process {} - {}".format(type(e).__name__, e), ERROR)
             time.sleep(0.001)
         # Make Sure all queues were release
         self.__position_queue.join()
@@ -262,7 +269,7 @@ class UArm(object):
                 else:
                     self.__serial.write(msg)
                     self.__serial.write('\n')
-                printf(msg, DEBUG)
+                printf("Send {}".format(msg), DEBUG)
                 start_time = time.time()
                 while time.time() - start_time < self.timeout:
                     if msg_id in self.msg_buff.keys():
@@ -343,6 +350,7 @@ class UArm(object):
 
 # -------------------------------------------------------- Get Commands -----------------------------------------------#
     @property
+    @catch_exception
     def firmware_version(self):
         """
         Get the firmware version.
@@ -364,6 +372,7 @@ class UArm(object):
                 printf("Error: {}".format(e), ERROR)
 
     @property
+    @catch_exception
     def hardware_version(self):
         """
         Get the Product version.
@@ -384,90 +393,79 @@ class UArm(object):
             except Exception as e:
                 printf("Error: {}".format(e), ERROR)
 
+    @catch_exception
     def get_position(self):
         """
         Get Current uArm position (x,y,z)
         :return: Float Array. Returns an array of the format [x, y, z] of the robots current location
         """
-        try:
-            serial_id, response = self.send_and_receive(protocol.GET_COOR)
-            if response is None:
-                printf("No Message response {}".format(serial_id), ERROR)
-                return None
-            if response[0] == protocol.OK:
-                x = float(response[1][1:])
-                y = float(response[2][1:])
-                z = float(response[3][1:])
-                coordinate = [x, y, z]
-                return coordinate
+        serial_id, response = self.send_and_receive(protocol.GET_COOR)
+        if response is None:
+            printf("No Message response {}".format(serial_id), ERROR)
             return None
-        except Exception as e:
-            printf("Error {}".format(e), ERROR)
-            return None
+        if response[0] == protocol.OK:
+            x = float(response[1][1:])
+            y = float(response[2][1:])
+            z = float(response[3][1:])
+            coordinate = [x, y, z]
+            return coordinate
+        return None
 
+    @catch_exception
     def get_is_moving(self):
         """
         Get the uArm current moving status.
         :return: Boolean True or False
         """
-        try:
-            serial_id, response = self.send_and_receive(protocol.GET_IS_MOVE)
-            if response is None:
-                printf("No Message response {}".format(serial_id), ERROR)
-                return None
-            if response[0] == protocol.OK:
-                v = int(response[1][1:])
-                if v == 0:
-                    return False
-                elif v == 1:
-                    return True
-        except Exception as e:
-            printf("Error {}".format(e), ERROR)
+        serial_id, response = self.send_and_receive(protocol.GET_IS_MOVE)
+        if response is None:
+            printf("No Message response {}".format(serial_id), ERROR)
             return None
+        if response[0] == protocol.OK:
+            v = int(response[1][1:])
+            if v == 0:
+                return False
+            elif v == 1:
+                return True
 
+    @catch_exception
     def get_polar(self):
         """
         get Polar coordinate
         :return: Float Array. Return an array of the format [rotation, stretch, height]
         """
-        try:
-            serial_id, response = self.send_and_receive(protocol.GET_POLAR)
-            if response is None:
-                printf("No Message response {}".format(serial_id))
-                return
-            if response[0] == protocol.OK:
-                stretch = float(response[1][1:])
-                rotation = float(response[2][1:])
-                height = float(response[3][1:])
-                polar = [rotation, stretch, height]
-                return polar
-            else:
-                return None
-        except Exception as e:
-            printf("Error {}".format(e))
+        serial_id, response = self.send_and_receive(protocol.GET_POLAR)
+        if response is None:
+            printf("No Message response {}".format(serial_id))
+            return
+        if response[0] == protocol.OK:
+            stretch = float(response[1][1:])
+            rotation = float(response[2][1:])
+            height = float(response[3][1:])
+            polar = [rotation, stretch, height]
+            return polar
+        else:
             return None
 
+    @catch_exception
     def get_tip_sensor(self):
         """
         Get Status from Tip Sensor
         :return: True On/ False Off
         """
-        try:
-            serial_id, response = self.send_and_receive(protocol.GET_TIP_SENSOR)
-            if response is None:
-                printf("No Message response {}".format(serial_id))
-                return
-            if response[0] == protocol.OK:
-                if response[1] == 'V0':
-                    return True
-                elif response[1] == 'V1':
-                    return False
-            else:
-                return None
-        except Exception as e:
-            printf("Error {}".format(e))
+        serial_id, response = self.send_and_receive(protocol.GET_TIP_SENSOR)
+        if response is None:
+            printf("No Message response {}".format(serial_id))
+            return
+        if response[0] == protocol.OK:
+            if response[1] == 'V0':
+                return True
+            elif response[1] == 'V1':
+                return False
+        else:
             return None
 
+    @catch_exception
     def get_servo_angle(self, servo_num=None):
         """
         Get Servo Angle
@@ -475,33 +473,30 @@ class UArm(object):
         , servo 1, servo 2, servo 3
         :return:
         """
-        try:
-            serial_id, response = self.send_and_receive(protocol.GET_SERVO_ANGLE)
-            if response is None:
-                printf("No Message response {}".format(serial_id))
-                return None
-            if response[0] == protocol.OK:
-                servo_0 = float(response[1][1:])
-                servo_1 = float(response[2][1:])
-                servo_2 = float(response[3][1:])
-                servo_3 = float(response[4][1:])
-                servo_array = [servo_0, servo_1, servo_2, servo_3]
-                if servo_num is None:
-                    return servo_array
-                elif servo_num == 0:
-                    return servo_0
-                elif servo_num == 1:
-                    return servo_1
-                elif servo_num == 2:
-                    return servo_2
-                elif servo_num == 3:
-                    return servo_3
-            else:
-                return None
-        except Exception as e:
-            printf("Error {}".format(e))
+        serial_id, response = self.send_and_receive(protocol.GET_SERVO_ANGLE)
+        if response is None:
+            printf("No Message response {}".format(serial_id))
+            return None
+        if response[0] == protocol.OK:
+            servo_0 = float(response[1][1:])
+            servo_1 = float(response[2][1:])
+            servo_2 = float(response[3][1:])
+            servo_3 = float(response[4][1:])
+            servo_array = [servo_0, servo_1, servo_2, servo_3]
+            if servo_num is None:
+                return servo_array
+            elif servo_num == 0:
+                return servo_0
+            elif servo_num == 1:
+                return servo_1
+            elif servo_num == 2:
+                return servo_2
+            elif servo_num == 3:
+                return servo_3
+        else:
             return None
 
+    @catch_exception
     def get_analog(self, pin):
         """
         Get Analog Value from specific PIN
@@ -523,6 +518,7 @@ class UArm(object):
             printf("Error {}".format(e))
             return None
 
+    @catch_exception
     def get_digital(self, pin):
         """
         Get Digital Value from specific PIN.
@@ -546,6 +542,7 @@ class UArm(object):
             printf("Error {}".format(e))
             return None
 
+    @catch_exception
     def get_rom_data(self, address, data_type=protocol.EEPROM_DATA_TYPE_BYTE):
         """
         Get DATA From EEPROM
@@ -570,9 +567,10 @@ class UArm(object):
             printf("Error {}".format(e))
             return None
 
-        # -------------------------------------------------------- Set Commands -----------------------------------------------#
+# -------------------------------------------------------- Set Commands -----------------------------------------------#
 
-    def set_position(self, x=0.0, y=0.0, z=0.0, speed=300, relative=False, wait=False):
+    @catch_exception
+    def set_position(self, x=None, y=None, z=None, speed=300, relative=False, wait=False):
         """
         Move uArm to the position (x,y,z) unit is mm, speed unit is mm/sec
         :param x:
@@ -583,30 +581,39 @@ class UArm(object):
         :param wait: if True, will block the thread, until get response or timeout
         :return:
         """
-        try:
+        if relative:
+            if x is None:
+                x = 0.0
+            if y is None:
+                y = 0.0
+            if z is None:
+                z = 0.0
             x = str(round(x, 2))
             y = str(round(y, 2))
             z = str(round(z, 2))
             s = str(round(speed, 2))
-            if relative:
-                command = protocol.SET_POSITION_RELATIVE.format(x, y, z, s)
-            else:
-                command = protocol.SET_POSITION.format(x, y, z, s)
-            if wait:
-                serial_id, response = self.send_and_receive(command)
-                while self.get_is_moving():
-                    time.sleep(0.05)
-                if response is not None:
-                    if response[0] == protocol.OK:
-                        return True
-                    else:
-                        return False
-            else:
-                self.send_msg(command)
-        except Exception as e:
-            printf("Error {}".format(e))
-            return None
+            command = protocol.SET_POSITION_RELATIVE.format(x, y, z, s)
+        else:
+            if x is None or y is None or z is None:
+                raise Exception('x, y, z can not be None in absolute mode')
+            x = str(round(x, 2))
+            y = str(round(y, 2))
+            z = str(round(z, 2))
+            s = str(round(speed, 2))
+            command = protocol.SET_POSITION.format(x, y, z, s)
+        if wait:
+            serial_id, response = self.send_and_receive(command)
+            while self.get_is_moving():
+                time.sleep(0.05)
+            if response is not None:
+                if response[0] == protocol.OK:
+                    return True
+                else:
+                    return False
+        else:
+            self.send_msg(command)
 
+    @catch_exception
     def set_pump(self, on, wait=False):
         """
         Control uArm Pump On or OFF
@@ -627,6 +634,7 @@ class UArm(object):
         else:
             self.send_msg(command)
 
+    @catch_exception
     def set_gripper(self, catch, wait=False):
         """
         Turn On/Off Gripper
@@ -647,6 +655,7 @@ class UArm(object):
         else:
             self.send_msg(command)
 
+    @catch_exception
     def set_wrist(self, angle, wait=False):
         """
         Set uArm Hand Wrist Angle. Include servo offset.
@@ -656,6 +665,7 @@ class UArm(object):
         """
         return self.set_servo_angle(protocol.SERVO_HAND, angle, wait=wait)
 
+    @catch_exception
     def set_servo_angle(self, servo_number, angle, wait=False):
         """
         Set uArm Servo Angle, 0 - 180 degrees, this Function will include the manual servo offset.
@@ -677,6 +687,7 @@ class UArm(object):
         else:
             self.send_msg(command)
 
+    @catch_exception
     def set_buzzer(self, frequency, duration, wait=False):
         """
         Turn on the uArm Buzzer
@@ -698,6 +709,7 @@ class UArm(object):
         else:
             self.send_msg(command)
 
+    @catch_exception
     def set_servo_attach(self, servo_number=None, move=True, wait=False):
         """
         Set Servo status attach, Servo Attach will lock the servo, You can't move uArm with your hands.
@@ -741,6 +753,7 @@ class UArm(object):
                 self.set_servo_attach(servo_number=2, move=False)
                 self.set_servo_attach(servo_number=3, move=False)
 
+    @catch_exception
     def set_servo_detach(self, servo_number=None, wait=False):
         """
         Set Servo status detach, Servo Detach will unlock the servo, You can move uArm with your hands.
@@ -777,6 +790,7 @@ class UArm(object):
                 self.set_servo_detach(servo_number=2)
                 self.set_servo_detach(servo_number=3)
 
+    @catch_exception
     def set_polar_coordinate(self, rotation, stretch, height, speed=100, wait=False):
         """
         Polar Coordinate, rotation, stretch, height.
@@ -808,8 +822,9 @@ class UArm(object):
         else:
             self.send_msg(command)
 
-        # ---------------------------------------------------- Report Commands -----------------------------------------------#
+# ---------------------------------------------------- Report Commands -----------------------------------------------#
 
+    @catch_exception
     def set_report_position(self, interval, wait=False):
         """
         Report Current Position in (interval) seconds.
@@ -831,6 +846,7 @@ class UArm(object):
         else:
             self.send_msg(command)
 
+    @catch_exception
     def close_report_position(self, wait=False):
         """
         Stop Reporting the position
@@ -838,6 +854,7 @@ class UArm(object):
         """
         self.set_report_position(0, wait=wait)
 
+    @catch_exception
     def get_report_position(self):
         """
         If call `set_report_position`, uArm will report current position during the interval.

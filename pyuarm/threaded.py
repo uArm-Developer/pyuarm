@@ -178,7 +178,7 @@ if __name__ == '__main__':
     import traceback
 
     #~ PORT = 'spy:///dev/ttyUSB0'
-    PORT = '/dev/tty.usbserial-A104LTMQ'
+    PORT = '/dev/tty.usbserial-A600CRJU'
     args = []
     ser = serial.serial_for_url(PORT, baudrate=115200, timeout=1)
     with UArmReaderThread(ser, UArmSerial, args) as protocol:

@@ -8,7 +8,7 @@ from .uarm import UArm
 # Get UArm Instance
 
 
-def get_uarm(logger=None):
+def get_uarm(debug=False,logger=None):
     """
     Get First uArm Port instance
     It will return the first uArm Port detected by **pyuarm.tools.list_uarms**,
@@ -22,7 +22,7 @@ def get_uarm(logger=None):
     """
     ports = uarm_ports()
     if len(ports) > 0:
-        return UArm(port_name=ports[0], logger=logger)
+        return UArm(port_name=ports[0], logger=logger, debug=debug)
     else:
         printf("There is no uArm port available", ERROR)
         close_logger()
