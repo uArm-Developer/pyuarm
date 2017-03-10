@@ -1,7 +1,7 @@
 import re
 from pkg_resources import parse_version
 __version__ = '2.4.0.9'
-support_versions = ['2.1']
+support_versions = ['2.2']
 
 
 def is_a_version(version):
