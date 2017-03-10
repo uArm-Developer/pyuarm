@@ -1,6 +1,6 @@
 import re
 from pkg_resources import parse_version
-__version__ = '2.4.0.10'
+__version__ = '2.4.0.11'
 support_versions = ['2.2']
 
 

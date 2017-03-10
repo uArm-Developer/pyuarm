@@ -11,7 +11,11 @@ else:
 
 # ################################### Config ################################
 home_dir = os.path.join(expanduser("~"), "uarm", "")
+if not os.path.exists(home_dir):
+    os.mkdir(home_dir)
 ua_dir = os.path.join(home_dir, "assistant")
+if not os.path.exists(ua_dir):
+    os.mkdir(ua_dir)
 
 config_file = os.path.join(ua_dir, "config.json")
 default_config = {
