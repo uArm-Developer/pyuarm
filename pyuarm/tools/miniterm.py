@@ -10,7 +10,7 @@
 from cmd import Cmd
 from .list_uarms import get_uarm_port_cli, uarm_ports
 from ..uarm import UArm, UArmConnectException
-from .. import util
+from ..log import DEBUG, printf
 
 version = "0.1.6"
 
@@ -356,7 +356,7 @@ class SerialMode(Cmd):
                 print("${} {}".format(serial_id, ' '.join(response)))
             except TypeError as e:
                 print("Command not correct")
-                util.print("Error: {}".format(e), util.DEBUG)
+                printf("Error: {}".format(e), DEBUG)
 
     def do_quit(self, args):
         return True

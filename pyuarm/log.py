@@ -1,3 +1,4 @@
+from __future__ import print_function
 from logging import DEBUG, ERROR, INFO
 import sys
 from . import PY3
