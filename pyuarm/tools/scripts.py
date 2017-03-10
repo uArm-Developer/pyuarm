@@ -25,9 +25,7 @@ def main():
     pf.add_argument("-p", "--port", help="specify port number")
     pf.add_argument("--path", help="firmware path")
     pf.add_argument("--debug", help="Turn on Debug Mode", action="store_true")
-    pf.add_argument("-d", "--download", help="download firmware from {}".format(
-        firmware.default_config['firmware_url']),
-                    action="store_true")
+    pf.add_argument("-d", "--download", help="download firmware online", action="store_true")
 
     args = parser.parse_args()
 

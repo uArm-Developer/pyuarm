@@ -1,3 +1,13 @@
+## [2.4.0.9] - 2017-03-10
+### Updated -Alex Tan
+
+- Firmware 2.2.1
+
+# Changes
+1. Rewrite threading part improve performance
+2. Add Wait parameters for Set Functions.
+
+
 ## [2.3.0.7] - 2016-12-04
 ### Updated -Alex Tan
 

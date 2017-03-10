@@ -109,8 +109,8 @@ def main(args):
     printf("All Calibration: {}".format("COMPLETED" if read_completed_flag(uarm, CALIBRATION_FLAG) else "NOT COMPLETED"))
     printf("Linear Calibration: {}".format("COMPLETED" if read_completed_flag(uarm, CALIBRATION_LINEAR_FLAG) else "NOT COMPLETED"))
     printf("Manual Calibration: {}".format("COMPLETED" if read_completed_flag(uarm, CALIBRATION_SERVO_FLAG) else "NOT COMPLETED"))
-    for linear_offset,manual_offset, i in izip(read_linear_offset(uarm), read_manual_offset(uarm), range(4)):
-        print ("Servo {} INTERCEPT: {}, SLOPE: {}, MANUAL: {}".format(i,linear_offset['INTERCEPT'], linear_offset['SLOPE'], manual_offset))
+    for linear_offset, manual_offset, i in izip(read_linear_offset(uarm), read_manual_offset(uarm), range(4)):
+        printf("Servo {} INTERCEPT: {}, SLOPE: {}, MANUAL: {}".format(i, linear_offset['INTERCEPT'], linear_offset['SLOPE'], manual_offset))
 
 
 def run():
@@ -122,7 +122,7 @@ def run():
         args = parser.parse_args()
         main(args)
     except Exception as e:
-        print (str(e))
+        printf("{} - {}".format(type(e).__name__, e))
 
 if __name__ == '__main__':
     run()

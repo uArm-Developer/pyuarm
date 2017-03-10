@@ -38,18 +38,18 @@ class UArmCmd(Cmd):
     # doc_header = "documented commands:"
     ruler = '-'
 
-    uarm = None
+    arm = None
 
     def __init__(self, port=None, debug=False, *args, **kwargs):
         Cmd.__init__(self, *args, **kwargs)
         self.__connect(port=port, debug=debug)
 
     def __is_connected(self):
-        if self.uarm is None:
+        if self.arm is None:
             print("No uArm is connected, please use connect")
             return False
         else:
-            if self.uarm.is_connected():
+            if self.arm.connection_state:
                 return True
             else:
                 print("No uArm is connected, please use connect command")
@@ -73,35 +73,36 @@ class UArmCmd(Cmd):
         :return:
         """
 
-        if self.uarm is None:
+        if self.arm is None:
             if port is not None:
-                self.uarm = UArm(port_name=port, debug=debug, timeout=timeout)
+                self.arm = UArm(port_name=port, debug=debug, timeout=timeout)
             else:
                 ports = uarm_ports()
                 if len(ports) > 1:
                     uarm_port = get_uarm_port_cli()
                     try:
-                        self.uarm = UArm(port_name=uarm_port, debug=debug, timeout=timeout)
+                        self.arm = UArm(port_name=uarm_port, debug=debug, timeout=timeout)
                     except UArmConnectException as e:
                         print("uArm Connect failed, {}".format(str(e)))
                 elif len(ports) == 1:
-                    self.uarm = UArm(debug=debug, timeout=timeout)
+                    self.arm = UArm(debug=debug, timeout=timeout)
+                    self.arm.connect()
                 elif len(ports) == 0:
                     print("No uArm ports is found.")
         else:
-            if self.uarm.is_connected():
-                print("uArm is already connected, port: {}".format(self.uarm.port.device))
+            if self.arm.connection_state:
+                print("uArm is already connected, port: {}".format(self.arm.port_name))
             else:
-                if self.uarm.connect():
+                if self.arm.connect():
                     print("uArm port: {} is reconnected")
 
-    def do_disconnect(self):
+    def do_disconnect(self, arg):
         """
         disconnect, Release uarm port.
         """
-        if self.uarm is not None:
-            if self.uarm.is_connected():
-                self.uarm.disconnect()
+        if self.arm is not None:
+            if self.arm.connection_state:
+                self.arm.disconnect()
 
     def do_set_position(self, arg):
         """
@@ -113,11 +114,11 @@ class UArmCmd(Cmd):
         if self.__is_connected():
             values = arg.split(' ')
             if len(values) == 3:
-                result = self.uarm.set_position(int(values[0]), int(values[1]), int(values[2]), wait=True)
+                result = self.arm.set_position(int(values[0]), int(values[1]), int(values[2]), wait=True)
                 # msg = "succeed" if result else "failed"
                 # print(msg)
             elif len(values) == 4:
-                result = self.uarm.set_position(int(values[0]), int(values[1]), int(values[2]), speed=int(values[3]), wait=True)
+                result = self.arm.set_position(int(values[0]), int(values[1]), int(values[2]), speed=int(values[3]), wait=True)
                 # msg = "succeed" if result else "failed"
                 # print(msg)
 
@@ -132,7 +133,7 @@ class UArmCmd(Cmd):
         get_position get current coordinate
         """
         if self.__is_connected():
-            coords = self.uarm.get_position()
+            coords = self.arm.get_position()
             print("Current coordinate: X:{} Y:{} Z:{}".format(*coords))
 
     def do_pump(self, arg):
@@ -142,10 +143,10 @@ class UArmCmd(Cmd):
         """
         if self.__is_connected():
             if arg == 'on':
-                result = self.uarm.set_pump(True, wait=True)
+                result = self.arm.set_pump(True, wait=True)
                 print("succeed" if result else "failed")
             elif arg == 'off':
-                result = self.uarm.set_pump(False, wait=True)
+                result = self.arm.set_pump(False, wait=True)
                 print("succeed" if result else "failed")
             elif arg == '':
                 print("please input argument: {}".format(','.join(self.ON_OFF)))
@@ -173,7 +174,7 @@ class UArmCmd(Cmd):
     #     if self.__is_connected():
     #         values = arg.split(' ')
     #         if len(values) == 3:
-    #             result = self.uarm.get_simulation(int(values[0]), int(values[1]), int(values[2]))
+    #             result = self.arm.get_simulation(int(values[0]), int(values[1]), int(values[2]))
     #             msg = "succeed" if result else "failed"
     #             print (msg)
 
@@ -195,7 +196,7 @@ class UArmCmd(Cmd):
             if len(values) == 2:
                 servo_num = int(values[0])
                 angle = float(values[1])
-                result = self.uarm.set_servo_angle(servo_num, angle, wait=True)
+                result = self.arm.set_servo_angle(servo_num, angle, wait=True)
                 msg = "succeed" if result else "failed"
                 print(msg)
 
@@ -217,12 +218,12 @@ class UArmCmd(Cmd):
             values = arg.split(' ')
             if len(values) == 1:
                 if values[0] == '':
-                    angles = self.uarm.get_servo_angle()
+                    angles = self.arm.get_servo_angle()
                     print("Current Servo Angles: t:{}, l:{}, r:{}, h:{}".format(*angles))
 
                 else:
                     servo_num = int(values[0])
-                    angle = self.uarm.get_servo_angle(servo_num)
+                    angle = self.arm.get_servo_angle(servo_num)
                     print(angle)
 
     def do_alert(self, arg):
@@ -238,7 +239,7 @@ class UArmCmd(Cmd):
             if len(values) == 2:
                 frequency = int(values[0])
                 duration = float(values[1])
-                result = self.uarm.set_buzzer(frequency, duration, wait=True)
+                result = self.arm.set_buzzer(frequency, duration, wait=True)
                 msg = "succeed" if result else "failed"
                 print(msg)
 
@@ -246,17 +247,17 @@ class UArmCmd(Cmd):
     #     if self.__is_connected():
     #         values = arg.split(' ')
     #         if len(values) == 4:
-    #             result = self.uarm.set_polar_coordinate(values[0], values[1], values[2], values[3])
+    #             result = self.arm.set_polar_coordinate(values[0], values[1], values[2], values[3])
     #             msg = "succeed" if result else "failed"
     #             print (msg)
     #         if len(values) == 3:
-    #             result = self.uarm.set_polar_coordinate(values[0], values[1], values[2])
+    #             result = self.arm.set_polar_coordinate(values[0], values[1], values[2])
     #             msg = "succeed" if result else "failed"
     #             print (msg)
     #
     # def do_get_polar(self, arg):
     #     if self.__is_connected():
-    #         result = self.uarm.get_polar_coordinate()
+    #         result = self.arm.get_polar_coordinate()
     #         if result:
     #             print ("polar coordinate: {}".format(result))
 
@@ -281,18 +282,18 @@ class UArmCmd(Cmd):
             if len(values) == 2:
                 if values[0] == 'attach':
                     if values[1] == 'all':
-                        self.uarm.set_servo_attach()
+                        self.arm.set_servo_attach()
                     elif values[1].isdigit():
                         v = int(values[1])
                         if 0 <= v <= 3:
-                            self.uarm.set_servo_attach(v)
+                            self.arm.set_servo_attach(v)
                 elif values[0] == 'detach':
                     if values[1] == 'all':
-                        self.uarm.set_servo_detach()
+                        self.arm.set_servo_detach()
                     elif values[1].isdigit():
                         v = int(values[1])
                         if 0 <= v <= 3:
-                            self.uarm.set_servo_detach(v)
+                            self.arm.set_servo_detach(v)
 
     def complete_servo(self, text, line, begidx, endidx):
         if not text:
@@ -310,7 +311,7 @@ class UArmCmd(Cmd):
         You could direct input the communication protocol here.
         """
         if self.__is_connected():
-            serial_mode = SerialMode(self.uarm)
+            serial_mode = SerialMode(self.arm)
             serial_mode.cmdloop()
 
     def do_help(self, arg):
@@ -329,9 +330,9 @@ class UArmCmd(Cmd):
         """
         Quit, if uarm is connected, will disconnect before quit
         """
-        if self.uarm is not None:
-            if self.uarm.is_connected():
-                self.uarm.disconnect()
+        if self.arm is not None:
+            if self.arm.connection_state:
+                self.arm.disconnect()
         print("Quiting")
         raise SystemExit
 
@@ -345,17 +346,17 @@ class SerialMode(Cmd):
 
     def __init__(self, uarm):
         Cmd.__init__(self)
-        self.uarm = uarm
+        self.arm = uarm
 
     def default(self, line):
-        if self.uarm.is_connected():
+        if self.arm.connection_state:
             try:
-                serial_id, response = self.uarm.send_and_receive(line)
+                serial_id, response = self.arm.send_and_receive(line)
                 # print(serial_id, response)
                 print("${} {}".format(serial_id, ' '.join(response)))
             except TypeError as e:
                 print("Command not correct")
-                util.printf("Error: {}".format(e), util.DEBUG)
+                util.print("Error: {}".format(e), util.DEBUG)
 
     def do_quit(self, args):
         return True

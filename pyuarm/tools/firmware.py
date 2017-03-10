@@ -4,7 +4,7 @@ import platform
 import threading
 import os
 from ..util import progressbar
-from ..log import get_logger_level, printf, ERROR, DEBUG, STREAM, set_default_logger, set_stream_logger
+from ..log import get_logger_level, printf, ERROR, DEBUG, STREAM, set_default_logger, set_stream_logger, INFO
 from ..config import get_online_config, save_default_config, save_config, load_config, ua_dir, home_dir
 from .list_uarms import get_uarm_port_cli
 from subprocess import Popen, PIPE, STDOUT

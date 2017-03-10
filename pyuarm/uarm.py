@@ -16,12 +16,12 @@ else:
 
 
 def catch_exception(func):
-    def __decorator(*args,**kwargs):
+    def decorator(*args, **kwargs):
         try:
-            func(*args,**kwargs)
+            return func(*args, **kwargs)
         except Exception as e:
             printf("{} - {} - {}".format(type(func).__name__, type(e).__name__, e), ERROR)
-    return __decorator
+    return decorator
 
 
 class UArmConnectException(Exception):
@@ -97,7 +97,7 @@ class UArm(object):
         self.__transport = None
         self.__protocol = None
         self.port = None
-        self.__connected = None
+        self.__connect_flag = False
 
     def __init_serial_core(self):
         if PY3:
@@ -107,13 +107,13 @@ class UArm(object):
             self.__reader_thread.connect()
             self.__transport, self.__protocol = self.__reader_thread.connect()
         else:
-            self.__connected = True
+            self.__connect_flag = True
 
     def __close_serial_core(self):
         if PY3:
             self.__reader_thread.stop()
         else:
-            self.__connected = False
+            self.__connect_flag = False
 
     @catch_exception
     def connect(self):
@@ -155,7 +155,7 @@ class UArm(object):
     def __connect(self):
         start_time = time.time()
         while time.time() - start_time < 5:
-            if self.is_connected():
+            if self.connection_state:
                 break
         self.__receive_thread.start()
         self.__send_thread.start()
@@ -164,8 +164,8 @@ class UArm(object):
             if self.__isReady:
                 break
 
-    @catch_exception
-    def is_connected(self):
+    @property
+    def connection_state(self):
         """
         Return the uArm Connection status.
         :return: boolean
@@ -177,7 +177,7 @@ class UArm(object):
                 return False
         else:
             if self.__serial is not None:
-                return self.__serial.is_open and self.__connected
+                return self.__serial.is_open and self.__connect_flag
             else:
                 return False
 
@@ -198,7 +198,7 @@ class UArm(object):
             | - queue
             | - thread
         """
-        if self.is_connected():
+        if self.connection_state:
             self.disconnect()
         close_logger()
         self.__init_property()
@@ -209,7 +209,7 @@ class UArm(object):
                 values = line.split(' ')
                 msg_id = int(values[0].replace('$', ''))
                 self.msg_buff[msg_id] = values[1:]
-                printf("MSG Received: {}".format(line, DEBUG))
+                printf("MSG Received: {}".format(line), DEBUG)
             elif line.startswith(protocol.READY):
                 printf("Received MSG: {}".format(line), DEBUG)
                 self.__isReady = True
@@ -227,7 +227,7 @@ class UArm(object):
         | This thread will be finished if serial connection is end.
         .. _pyserial threading: http://pyserial.readthedocs.io/en/latest/pyserial_api.html#module-serial.threaded
         """
-        while self.is_connected():
+        while self.connection_state:
             try:
                 line = None
                 if PY3:
@@ -241,7 +241,7 @@ class UArm(object):
             except serial.SerialException as e:
                 printf("Receive Process Fatal - {}".format(e), ERROR)
                 if not PY3:
-                    self.__connected = False
+                    self.__connect_flag = False
             except Exception as e:
                 printf("Receive Process {} - {}".format(type(e).__name__, e), ERROR)
             time.sleep(0.001)
@@ -256,7 +256,7 @@ class UArm(object):
         | All functions which start with ``get_`` and with ``wait=True`` function will send out with this thread.
         | thread will be finished if serial connection is end.
         """
-        while self.is_connected():
+        while self.connection_state:
             try:
                 item = self.__send_queue.get()
                 if item is None:
@@ -298,7 +298,7 @@ class UArm(object):
         :param msg: String Serial Command
         :return: (Integer msg_id, String response) and None if no response
         """
-        if self.is_connected():
+        if self.connection_state:
             msg_id = self.__gen_serial_id()
             item = {'id': msg_id, 'msg': msg}
             self.__send_queue.put(item)
@@ -317,7 +317,7 @@ class UArm(object):
         :param msg: String, Serial Command
         :return:
         """
-        if self.is_connected():
+        if self.connection_state:
             serial_id = self.__gen_serial_id()
             _msg = '#{} {}'.format(serial_id, msg)
             if PY3:
