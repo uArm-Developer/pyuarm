@@ -30,7 +30,7 @@ Features
 Requirements
 ============
 - Python 2.7x or Python 3.4x above
-- uArmProtocol Firmware (Please use ``uarm_helper firmware -d`` to upgrade your firmware)
+- uArmProtocol Firmware (Please use ``uarmcli firmware -d`` or ``python -m pyuarm.tools.firmware -d`` to upgrade your firmware)
 
 Installation
 ============

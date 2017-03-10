@@ -1,6 +1,6 @@
 from distutils.util import convert_path
 from setuptools import setup, find_packages
-import platform
+# import platform
 
 # Get Version from version.py file
 main_ns = {}
@@ -21,8 +21,8 @@ setup(name='pyuarm',
     author='Alex Tan',
     packages=find_packages(),
     entry_points={
-            'console_scripts': [
-                'uarm_helper = pyuarm.tools.console_scripts:main',
+            'scripts': [
+                'uarmcli = pyuarm.tools.scripts:main',
             ]
     },
     author_email='developer@ufactory.cc',

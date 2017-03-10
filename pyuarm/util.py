@@ -1,80 +1,38 @@
-import logging
-from .version import __version__
-import os
-from os.path import expanduser
-home_dir = os.path.join(expanduser("~"), "uarm", "")
+from __future__ import division
+from __future__ import print_function
+import math
+from .tools.list_uarms import uarm_ports
+from .log import printf, close_logger, ERROR
+from .uarm import UArm
 
-ERROR = 2
-INFO  = 1
-DEBUG = 0
+# Get UArm Instance
 
-global pylogger
 
-def get_default_logger(debug=False):
-    if debug:
-        logging_level = logging.DEBUG
+def get_uarm(debug=False,logger=None):
+    """
+    Get First uArm Port instance
+    It will return the first uArm Port detected by **pyuarm.tools.list_uarms**,
+    If no available uArm ports, will print *There is no uArm port available* and return None
+    .. raw:python
+    >>> import pyuarm
+    >>> uarm = pyuarm.get_uarm()
+    There is no uArm port available
+    :returns: uArm() Instance
+
+    """
+    ports = uarm_ports()
+    if len(ports) > 0:
+        return UArm(port_name=ports[0], logger=logger, debug=debug)
     else:
-        logging_level = logging.INFO
-    logger = logging.getLogger('pyuarm')
-    logger.setLevel(logging_level)
-    formatter = logging.Formatter('%(name)s - %(levelname)s - %(message)s')
-    ch = logging.StreamHandler()
-    ch.setFormatter(formatter)
-    ch.setLevel(logging_level)
-    logger.addHandler(ch)
-    return logger
+        printf("There is no uArm port available", ERROR)
+        close_logger()
+        return None
 
-def init_logger(logger):
-    """
-    initialize global logger
-    :param debug: if True, Turn on the logger debug
-    :return:
-    """
-    global pylogger
-    pylogger = logger
-    printf('pyuarm version: ' + __version__)
-
-def close_logger():
-    handlers = pylogger.handlers
-    for p in handlers:
-        p.close()
-        pylogger.removeHandler(p)
-
-def printf(msg, type=INFO):
-    """
-    global print log function
-    :param msg:
-    :param type:
-    :return:
-    """
-    if type == INFO:
-        pylogger.info(msg)
-    elif type == DEBUG:
-        pylogger.debug(msg)
-    elif type == ERROR:
-        pylogger.error(msg)
+# ################################### Other ################################
 
 
-class UArmConnectException(Exception):
-    def __init__(self, errno, message=None):
-        """
-        uArm Connect Exception
-        :param errno: 0 Unable to connect uArm, 1 unknown firmware version, 2 unsupported uArm Frimware version
-        :param message:
-        """
-        if message is None:
-            self.message = ""
-        else:
-            self.message = message
-        self.errno = errno
-        if self.errno == 0:
-            self.error = "Unable to connect uArm"
-        elif self.errno == 1:
-            self.error = "Unknown Firmware Version"
-        elif self.errno == 2:
-            self.error = "Unsupported uArm Firmware Version"
-        else:
-            self.error = "Not Defined Error"
-
-    def __str__(self):
-        return repr(self.error + "-" + self.message)
+def progressbar(title, cur, total):
+    percent = '{:.2%}'.format(cur / total)
+    print(title + "[%-50s] %s" % (
+                            '=' * int(math.floor(cur * 50 / total)),
+                            percent), end='\r')

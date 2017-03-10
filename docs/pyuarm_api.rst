@@ -3,7 +3,7 @@ pyuarm API
 ==========
 
 Classes
---------
+-------
 
 .. automodule:: pyuarm.uarm
     :members:
@@ -13,7 +13,7 @@ Classes
 Exception
 ---------
 
-.. autoclass:: pyuarm.util.UArmConnectException
+.. autoclass:: pyuarm.UArmConnectException
 
 
 Constants
@@ -22,7 +22,7 @@ Constants
 TO-DO
 
 Module Functions and attributes
---------------------------------
+-------------------------------
 
 pyuarm.tools.list_uarms
 ~~~~~~~~~~~~~~~~~~~~~~~
@@ -33,16 +33,16 @@ pyuarm.tools.list_uarms
     :show-inheritance:
     :exclude-members: main
 
-pyuarm.tools.firmware.flash_firmware
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+pyuarm.tools.firmware
+~~~~~~~~~~~~~~~~~~~~~
 
-.. automodule:: pyuarm.tools.firmware.flash_firmware
+.. automodule:: pyuarm.tools.firmware
     :members:
     :undoc-members:
     :show-inheritance:
     :exclude-members: main
 
-pyuarm.tools.calibration.calibrate
+pyuarm.tools.calibrate
 ~~~~~~~~~~~~~~~~~~~~~~
 
 .. automodule:: pyuarm.tools.calibrate
@@ -53,7 +53,7 @@ pyuarm.tools.calibration.calibrate
 
 
 pyuarm.tools.miniterm
-~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~
 
 .. automodule:: pyuarm.tools.miniterm
     :members:
