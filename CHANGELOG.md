@@ -1,3 +1,13 @@
+##[2.4.0.12] - 2017-03-11
+### Update -Alex Tan
+
+- Firmware 2.2.1
+
+#### Changes
+
+1. Improve Firmware flash
+2. Improve Log description
+
 ## [2.4.0.9] - 2017-03-10
 ### Updated -Alex Tan
 

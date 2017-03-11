@@ -20,7 +20,7 @@ def catch_exception(func):
         try:
             return func(*args, **kwargs)
         except Exception as e:
-            printf("{} - {} - {}".format(type(func).__name__, type(e).__name__, e), ERROR)
+            printf("{} - {} - {}".format(type(e).__name__, func.__name__, e), ERROR)
     return decorator
 
 
@@ -307,7 +307,7 @@ class UArm(object):
                 if msg_id in self.msg_buff.keys():
                     return msg_id, self.msg_buff[msg_id]
             # print("duration: {}".format(time.time() - start_time))
-            return None
+            return None, None
         else:
             raise UArmConnectException(4)
 
