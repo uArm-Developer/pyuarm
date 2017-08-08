@@ -1,9 +1,5 @@
 ===============================
-Develop branch, Experiment
-===============================
-
-===============================
-pyuarm
+pyuarm (uArm Metal only)
 ===============================
 
 ## This Branch is currently on Developing.
