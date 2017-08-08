@@ -8,6 +8,9 @@ pyuarm
 
 ## This Branch is currently on Developing.
 
+This library support uArm Metal only, for Swift and Swift PRO,
+please use https://github.com/uArm-Developer/pyuf instead.
+
 Overview
 ========
 
